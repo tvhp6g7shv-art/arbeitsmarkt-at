@@ -44,6 +44,23 @@
   --viz-gut:            #006300;
   --viz-kritisch:       #d03b3b;
 
+  /* Divergierende Skala für Veränderungen: Grün = Rückgang, Rot = Anstieg.
+     Neutral in der Mitte ist Grau, nie ein dritter Farbton.
+     Geprüft mit dem Palettenvalidator: die beiden Pole #2f9e63 / #a52a1f
+     liegen bei Deuteranopie ΔE 13,8 auseinander (Ziel ≥ 8), Normalsicht 29,9
+     (Boden 15), beide über 3:1 Kontrast zur hellen Fläche. Das Grün ist
+     bewusst heller als das Rot — so trägt die Helligkeit die Unterscheidung
+     mit, nicht der Farbton allein. */
+  --viz-div-neutral:    #f0efec;
+  --viz-div-gut-1:      #dcefe4;
+  --viz-div-gut-2:      #a5d7bb;
+  --viz-div-gut-3:      #6ec293;
+  --viz-div-gut-4:      #2f9e63;
+  --viz-div-schlecht-1: #f8ddd6;
+  --viz-div-schlecht-2: #e8ae9f;
+  --viz-div-schlecht-3: #cc6e58;
+  --viz-div-schlecht-4: #a52a1f;
+
   --viz-font: system-ui, -apple-system, "Segoe UI", sans-serif;
   --viz-radius: 10px;
   --viz-gap: 20px;
@@ -61,6 +78,11 @@
     --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
     --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
     --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
+    --viz-div-neutral: #383835;
+    --viz-div-gut-1: #1e4a37; --viz-div-gut-2: #276e4f;
+    --viz-div-gut-3: #33936a; --viz-div-gut-4: #45b87a;
+    --viz-div-schlecht-1: #4d201a; --viz-div-schlecht-2: #7a2a20;
+    --viz-div-schlecht-3: #9e3325; --viz-div-schlecht-4: #c2402f;
   }
 }
 :root[data-theme="dark"] .viz-root {
@@ -75,6 +97,11 @@
   --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
   --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
   --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
+  --viz-div-neutral: #383835;
+  --viz-div-gut-1: #1e4a37; --viz-div-gut-2: #276e4f;
+  --viz-div-gut-3: #33936a; --viz-div-gut-4: #45b87a;
+  --viz-div-schlecht-1: #4d201a; --viz-div-schlecht-2: #7a2a20;
+  --viz-div-schlecht-3: #9e3325; --viz-div-schlecht-4: #c2402f;
 }
 
 /* --- Grundgerüst (in Oxygen ersetzt du das durch deine eigenen Sektionen) ---
@@ -258,7 +285,7 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
   <section class="viz-karte" data-chart="karte">
     <header class="viz-kopfzeile">
       <div>
-        <h2>Verteilung der Arbeitslosigkeit nach Bezirken</h2>
+        <h2>Entwicklung der Arbeitslosigkeit nach Bezirken gegenüber dem Vorjahr</h2>
         <p class="viz-unterzeile" id="u-karte"></p>
       </div>
       <button class="viz-tabelle-schalter" data-ziel="t-karte">Tabelle</button>
@@ -266,6 +293,7 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
     </header>
     <div class="viz-chart viz-chart-karte" id="c-karte"></div>
     <div class="viz-verborgen" id="t-karte"></div>
+    <p class="viz-unterzeile" style="margin-top:12px" id="h-karte"></p>
   </section>
 
   <!-- 5 — BUNDESLÄNDER-TABELLE (zugleich die Tabellenansicht zur Karte) -->
@@ -439,12 +467,12 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
   </dialog>
 </div>
 
-<!-- ?v=15 bricht den Browser-Cache. GitHub Pages liefert JS mit
+<!-- ?v=16 bricht den Browser-Cache. GitHub Pages liefert JS mit
      Cache-Control: max-age=600 aus — ohne diese Ziffer sieht ein
      Besucher nach einem Upload bis zu 10 Minuten die alte Datei,
      und wer die Seite schon einmal offen hatte, unter Umstaenden
      deutlich laenger. BEI JEDEM UPLOAD HOCHZAEHLEN. -->
-<script src="charts.js?v=15" defer></script>
+<script src="charts.js?v=16" defer></script>
 
 <script>
 /* Startet das Dashboard, sobald ECharts und charts.js geladen sind. */

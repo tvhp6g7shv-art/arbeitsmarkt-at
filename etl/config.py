@@ -309,8 +309,12 @@ AUSBILDUNG_GRUPPEN = [
     ("lehre",    "Lehre",                      ["LT", "LE", "LM"]),
     ("mittel",   "Mittlere Schule",            ["MS", "MK", "MT"]),
     ("matura",   "Höhere Schule (Matura)",     ["HA", "HK", "HT", "HS"]),
-    ("akademie", "Akademie oder Bachelor",     ["AK", "FB", "UB"]),
-    ("hoch",     "Fachhochschule, Universität", ["FH", "UV"]),
+    # Zusammengefasst seit v16: Die frühere Trennung lief nach ABSCHLUSSNIVEAU
+    # (AK/FB/UB = Akademie und Bachelor, FH/UV = Master, Diplom, Doktorat),
+    # die Beschriftung klang aber nach Einrichtung — „Fachhochschule,
+    # Universität" schloss die dortigen Bachelor scheinbar aus. Beides in
+    # einer Gruppe ist ehrlicher. Die Tabelle zeigt weiterhin alle 18 Stufen.
+    ("hoch",     "Hochschule",                 ["AK", "FB", "UB", "FH", "UV"]),
     ("unklar",   "Ungeklärt",                  ["XX"]),
 ]
 

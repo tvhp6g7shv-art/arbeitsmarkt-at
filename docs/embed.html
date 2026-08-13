@@ -6,7 +6,7 @@
 <title>Arbeitsmarkt Österreich — Grafik</title>
 <meta name="robots" content="noindex">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
-<script src="charts.js?v=15" defer></script>
+<script src="charts.js?v=16" defer></script>
 <style>
 /* Dieselben Variablen wie im Dashboard — hier eingebettet, damit die Grafik
    auch auf fremden Seiten richtig aussieht, egal welches CSS dort gilt. */
@@ -20,6 +20,11 @@
   --viz-seq-1: #cde2fb; --viz-seq-2: #86b6ef; --viz-seq-3: #3987e5;
   --viz-seq-4: #256abf; --viz-seq-5: #184f95; --viz-seq-6: #0d366b;
   --viz-gut: #006300;   --viz-kritisch: #d03b3b;
+  --viz-div-neutral: #f0efec;
+  --viz-div-gut-1: #dcefe4; --viz-div-gut-2: #a5d7bb;
+  --viz-div-gut-3: #6ec293; --viz-div-gut-4: #2f9e63;
+  --viz-div-schlecht-1: #f8ddd6; --viz-div-schlecht-2: #e8ae9f;
+  --viz-div-schlecht-3: #cc6e58; --viz-div-schlecht-4: #a52a1f;
   --viz-font: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -33,6 +38,11 @@
     --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
     --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
     --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
+    --viz-div-neutral: #383835;
+    --viz-div-gut-1: #1e4a37; --viz-div-gut-2: #276e4f;
+    --viz-div-gut-3: #33936a; --viz-div-gut-4: #45b87a;
+    --viz-div-schlecht-1: #4d201a; --viz-div-schlecht-2: #7a2a20;
+    --viz-div-schlecht-3: #9e3325; --viz-div-schlecht-4: #c2402f;
   }
 }
 * { box-sizing: border-box; }
@@ -81,7 +91,7 @@ const CHARTS = {
   ausbildung:   { titel: "Arbeitslosigkeit nach höchster abgeschlossener Ausbildung", dateien: ["ausbildung"],             bau: (A, d) => A.baueAusbildung(d.ausbildung, "AT") },
   verlauf:      { titel: "Verlauf der Arbeitslosigkeit in den größten Ausbildungsgruppen",         dateien: ["ausbildung"],               bau: (A, d) => A.baueVerlauf(d.ausbildung, "absolut"), hoch: true },
   generationen: { titel: "Darstellung der Arbeitslosigkeit nach Generationen",          dateien: ["generationen"],             bau: (A, d) => A.baueGenerationen(d.generationen, "AT") },
-  karte:        { titel: "Verteilung der Arbeitslosigkeit nach Bezirken",              dateien: ["karte", "karte_geo"],       bau: (A, d) => A.baueKarte(d.karte, d.karte_geo), karte: true },
+  karte:        { titel: "Entwicklung der Arbeitslosigkeit nach Bezirken ggü. Vorjahr",              dateien: ["karte", "karte_geo"],       bau: (A, d) => A.baueKarte(d.karte, d.karte_geo), karte: true },
   fluss:        { titel: "Zugänge und Abgänge in die Arbeitslosigkeit",                    dateien: ["fluss"],                    bau: (A, d) => A.baueFluss(d.fluss) },
   dauer:        { titel: "Dauer der bestehenden Arbeitslosigkeit",                   dateien: ["dauer"],                    bau: (A, d) => A.baueDauer(d.dauer) },
   schulung:     { titel: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",                   dateien: ["schulung"],                 bau: (A, d) => A.baueSchulung(d.schulung) },

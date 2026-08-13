@@ -348,7 +348,10 @@ function baueAusbildung(daten, region) {
    Sechs Linien über die letzten 18 Monate. Feste Farbzuordnung je Gruppe:
    die Farbe folgt der Sache, nicht dem Rang. „Ungeklärt" bleibt draußen —
    die Kategorie sagt nichts aus und kostet nur eine Farbe. */
-const VERLAUF_GRUPPEN = ["pflicht", "lehre", "mittel", "matura", "akademie", "hoch"];
+/* Anzeigereihenfolge im Verlaufsdiagramm. „akademie" ist seit v16 in
+   „hoch" aufgegangen — bleibt hier als Rückfall stehen, damit ein noch
+   nicht neu gerechneter Datenstand nicht plötzlich eine Linie verliert. */
+const VERLAUF_GRUPPEN = ["pflicht", "lehre", "mittel", "matura", "hoch", "akademie"];
 
 function baueVerlauf(daten, modus = "absolut") {
   const quelle = daten?.zeitreihe_gruppen;
@@ -368,9 +371,13 @@ function baueVerlauf(daten, modus = "absolut") {
   const istIndex = modus === "index";
   const startMonat = monat(monate[0]);
 
-  document.getElementById("u-verlauf").textContent = istIndex
+  const hatHochschule = vorhanden.includes("hoch");
+  document.getElementById("u-verlauf").textContent = (istIndex
     ? `Entwicklung seit ${startMonat}, Ausgangswert = 100 · Österreich gesamt`
-    : `Bestand am Monatsende, Österreich gesamt · letzte ${monate.length} Monate`;
+    : `Bestand am Monatsende, Österreich gesamt · letzte ${monate.length} Monate`)
+    + (hatHochschule
+        ? " · „Hochschule“ umfasst Akademie, Bachelor, Master, Diplom und Doktorat"
+        : "");
 
   const serien = vorhanden.map((schluessel, i) => {
     const roh = quelle.serien[schluessel];
@@ -535,14 +542,50 @@ function baueKarte(karte, geo) {
     return;
   }
 
-  document.getElementById("u-karte").textContent =
-    `Registrierte Arbeitslose am ${monat(karte.stand)} · ${karte.regionen.length} Regionen`;
+  /* Die Karte zeigt die VERÄNDERUNG, nicht den Bestand. Der Bestand folgt
+     im Wesentlichen der Einwohnerzahl — Wien ist groß, Rust ist klein, das
+     weiß man vorher. Interessant ist, wo sich etwas bewegt. */
+  const mitWert = karte.regionen.filter(
+    (r) => r.veraenderung_pct !== null && r.veraenderung_pct !== undefined);
+  const ohneWert = karte.regionen.length - mitWert.length;
+  const spanne = Math.max(1, ...mitWert.map((r) => Math.abs(r.veraenderung_pct)));
+  /* Symmetrisch um null runden, sonst wirkt eine Seite stärker als sie ist. */
+  const grenze = Math.ceil(spanne * 2) / 2;
+
+  const staerkster_rueckgang = [...mitWert].sort((a, b) => a.veraenderung_pct - b.veraenderung_pct)[0];
+  const staerkster_anstieg = [...mitWert].sort((a, b) => b.veraenderung_pct - a.veraenderung_pct)[0];
+
+  /* „Juli 2025" statt „Juli 2026 des Vorjahres" — Datum selbst zurückrechnen. */
+  const vorjahresmonat = (() => {
+    const dat = new Date(karte.stand);
+    dat.setFullYear(dat.getFullYear() - 1);
+    return dat.toLocaleDateString("de-AT", { month: "long", year: "numeric" });
+  })();
+
+  setzeText("u-karte",
+    `Veränderung gegenüber ${vorjahresmonat} · ` +
+    `Grün = Rückgang, Rot = Anstieg · ${karte.regionen.length} Regionen` +
+    (ohneWert ? ` · ${ohneWert} ohne Vergleichswert` : ""));
+
+  setzeText("h-karte",
+    (staerkster_rueckgang && staerkster_anstieg
+      ? `Stärkster Rückgang: ${staerkster_rueckgang.name} ` +
+        `(${pz(staerkster_rueckgang.veraenderung_pct)} %). ` +
+        `Stärkster Anstieg: ${staerkster_anstieg.name} ` +
+        `(+${pz(staerkster_anstieg.veraenderung_pct)} %). `
+      : "") +
+    "Die Farbe zeigt nur die Richtung und Stärke der Veränderung. " +
+    "Ein hoher Anstieg in einem kleinen Bezirk kann wenige hundert Personen " +
+    "bedeuten — die absoluten Zahlen stehen in der Tabelle.");
 
   echarts.registerMap("at-bezirke", flaechenNormalisieren(geo));
   const d = echarts.init(feld, null, { renderer: "canvas" });
   const nachName = Object.fromEntries(karte.regionen.map((r) => [r.name, r]));
-  const werte = karte.regionen.map((r) => ({ name: r.name, value: r.bestand }));
-  const max = Math.max(...karte.regionen.map((r) => r.bestand));
+  const werte = karte.regionen.map((r) => ({
+    name: r.name,
+    value: r.veraenderung_pct === null || r.veraenderung_pct === undefined
+      ? "-" : r.veraenderung_pct,
+  }));
 
   d.setOption({
     ...basis(),
@@ -554,19 +597,28 @@ function baueKarte(karte, geo) {
         const v = r.veraenderung_pct;
         return `<strong>${r.name}</strong><br>` +
           `<span style="color:${stil("--viz-muted")}">${r.bundesland ?? ""}</span><br>` +
-          `${zahl(r.bestand)} Arbeitslose` +
-          (v === null || v === undefined ? "" :
-            `<br><span style="color:${v > 0 ? stil("--viz-kritisch") : stil("--viz-gut")}">` +
-            `${v > 0 ? "▲" : "▼"} ${pz(Math.abs(v))} % ggü. Vorjahr</span>`);
+          (v === null || v === undefined
+            ? `<span style="color:${stil("--viz-muted")}">keine Vergleichszahl</span><br>`
+            : `<span style="color:${v > 0 ? stil("--viz-kritisch") : stil("--viz-gut")}">` +
+              `${v > 0 ? "▲ Anstieg" : "▼ Rückgang"} ${pz(Math.abs(v))} %</span><br>`) +
+          `<span style="color:${stil("--viz-muted")}">${zahl(r.bestand)} Arbeitslose</span>`;
       },
     },
     visualMap: {
-      min: 0, max: max, left: 12, bottom: 14, orient: "vertical",
-      itemWidth: 12, itemHeight: 130, calculable: true,
-      formatter: (v) => zahl(Math.round(v)),
+      type: "continuous",
+      min: -grenze, max: grenze, left: 12, bottom: 14, orient: "vertical",
+      itemWidth: 12, itemHeight: 150, calculable: true,
+      /* Beschriftung sagt, was die Farbe bedeutet — sonst muss man raten,
+         ob Grün „viel" oder „gut" heißt. */
+      text: ["Anstieg", "Rückgang"],
+      formatter: (v) => (v > 0 ? "+" : "") + pz(v) + " %",
       textStyle: { color: stil("--viz-muted"), fontSize: 11 },
-      inRange: { color: [stil("--viz-seq-1"), stil("--viz-seq-2"), stil("--viz-seq-3"),
-                         stil("--viz-seq-4"), stil("--viz-seq-5"), stil("--viz-seq-6")] },
+      inRange: { color: [
+        stil("--viz-div-gut-4"), stil("--viz-div-gut-3"), stil("--viz-div-gut-2"),
+        stil("--viz-div-gut-1"), stil("--viz-div-neutral"),
+        stil("--viz-div-schlecht-1"), stil("--viz-div-schlecht-2"),
+        stil("--viz-div-schlecht-3"), stil("--viz-div-schlecht-4"),
+      ] },
     },
     series: [{
       type: "map", map: "at-bezirke", data: werte,
@@ -579,15 +631,22 @@ function baueKarte(karte, geo) {
   });
   diagramme.push(d);
 
-  document.getElementById("t-karte").innerHTML = tabelle(
+  /* Tabelle nach Veränderung sortiert — stärkster Rückgang zuerst. Das ist
+     dieselbe Frage, die die Karte stellt, nur in Zahlen. */
+  setzeHtml("t-karte", tabelle(
     [{ titel: "Region", wert: (z) => z.name },
      { titel: "Bundesland", wert: (z) => z.bundesland ?? "–" },
-     { titel: "Personen", num: true, wert: (z) => zahl(z.bestand) },
      { titel: "ggü. Vorjahr", num: true,
        wert: (z) => z.veraenderung_pct === null || z.veraenderung_pct === undefined ? "–"
-         : `${z.veraenderung_pct > 0 ? "+" : ""}${pz(z.veraenderung_pct)} %` }],
-    [...karte.regionen].sort((x, y) => y.bestand - x.bestand)
-  );
+         : `${z.veraenderung_pct > 0 ? "+" : ""}${pz(z.veraenderung_pct)} %` },
+     { titel: "Personen", num: true, wert: (z) => zahl(z.bestand) }],
+    [...karte.regionen].sort((x, y) => {
+      const a = x.veraenderung_pct, b = y.veraenderung_pct;
+      if (a === null || a === undefined) return 1;
+      if (b === null || b === undefined) return -1;
+      return a - b;
+    })
+  ));
 }
 
 /* --- 6 — AMS-Bezirke: nur Tabelle, mit klarer Einordnung ------------ */
@@ -1186,7 +1245,7 @@ const EINBETT_TITEL = {
   ausbildung: "Arbeitslosigkeit nach höchster abgeschlossener Ausbildung",
   verlauf: "Verlauf der Arbeitslosigkeit in den größten Ausbildungsgruppen",
   generationen: "Darstellung der Arbeitslosigkeit nach Generationen",
-  karte: "Verteilung der Arbeitslosigkeit nach Bezirken",
+  karte: "Entwicklung der Arbeitslosigkeit nach Bezirken gegenüber dem Vorjahr",
   fluss: "Zugänge und Abgänge in die Arbeitslosigkeit",
   dauer: "Dauer der bestehenden Arbeitslosigkeit",
   schulung: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",

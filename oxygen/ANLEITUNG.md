@@ -157,6 +157,8 @@ Diagramme fertig ausgearbeitet. Kopier dir den passenden Block heraus:
 | KPI-Kacheln | `baueKpis()` | `kpi.json`, `zeitreihe.json` |
 | Zeitreihe | `baueZeitreihe()` | `zeitreihe.json` |
 | Ausbildungsstand | `baueAusbildung()` | `ausbildung.json` |
+| Verlauf Ausbildungsgruppen | `baueVerlauf()` | `ausbildung.json` |
+| Generationen | `baueGenerationen()` | `generationen.json` |
 | Karte (Bundesländer) | `baueKarte()` | `bundeslaender.json`, `bundeslaender_geo.json` |
 | Bundesländer-Tabelle | `baueLaender()` | `bundeslaender.json` |
 | Bezirks-Tabelle | `baueBezirke()` | `bezirke.json`, `meta.json` |

@@ -22,6 +22,14 @@ AMS_DATEIEN = {
     # "Bundesland": daraus bauen wir das Mapping RGSCode -> Bundesland.
     # Spalten: Datum;RGSCode;RGSName;Bundesland;Status;Geschlecht;BESTAND
     "bundesland_mapping": "LZBL_Gesamtuebersicht_RGS_Bundesland.csv",
+
+    # Arbeitslose nach Altersgruppen (5-Jahres-Schritte) und Vormerkdauer.
+    # Grundlage für die Generationen-Auswertung.
+    # Laut data.gv.at-Beschreibung: Datum, RGSCode, RGSName, Geschlecht,
+    # Vormerkdauer, Altersgruppe, Bestand, DS_VMD.
+    # Die exakte Schreibweise der Altersgruppen ist von außen nicht
+    # dokumentiert — das Skript erkennt sie selbst (siehe alter_grenzen()).
+    "alter": "Bestand_AL_Geschlecht_Altersgruppen_VMD_RGS.csv",
 }
 
 # Eurostat — Arbeitslosenquote nach Bildungsstand und NUTS-2-Region.
@@ -125,6 +133,35 @@ AUSBILDUNG_GRUPPEN = [
     ("akademie", "Akademie oder Bachelor",     ["AK", "FB", "UB"]),
     ("hoch",     "Fachhochschule, Universität", ["FH", "UV"]),
     ("unklar",   "Ungeklärt",                  ["XX"]),
+]
+
+# ---------------------------------------------------------------------------
+# Generationen
+#
+# Geburtsjahrgänge nach der gängigen Abgrenzung des Pew Research Center.
+# Wichtig: Das AMS liefert ALTERSGRUPPEN, keine Geburtsjahrgänge. Die
+# Zuordnung ist deshalb eine Näherung — das Skript rechnet für jeden Monat
+# aus, welche Geburtsjahre eine Altersgruppe abdeckt, und ordnet sie der
+# Generation mit der größten Überschneidung zu. An zwei Rändern
+# (Altersgruppe 45–49 und die offene oberste Gruppe) liegen Generationen-
+# grenzen mitten in einer Gruppe; dort ist die Zuordnung unscharf.
+#
+# Reihenfolge = Anzeigereihenfolge (jung nach alt).
+# ---------------------------------------------------------------------------
+
+# Obergrenze für offene Altersgruppen ("60 und mehr"). Ohne diese Grenze
+# spannt die oberste Gruppe rechnerisch bis Geburtsjahr 1900 und würde
+# fälschlich der ältesten Generation zugeschlagen. 74 ist die realistische
+# Obergrenze für beim AMS vorgemerkte Personen.
+ALTER_OBERGRENZE = 74
+
+GENERATIONEN = [
+    ("alpha",  "Generation Alpha",     2013, 2100),
+    ("z",      "Generation Z",         1997, 2012),
+    ("y",      "Millennials (Gen Y)",  1981, 1996),
+    ("x",      "Generation X",         1965, 1980),
+    ("boomer", "Babyboomer",           1946, 1964),
+    ("still",  "Vor 1946 geboren",     1900, 1945),
 ]
 
 # ---------------------------------------------------------------------------

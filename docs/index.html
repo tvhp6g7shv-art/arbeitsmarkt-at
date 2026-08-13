@@ -27,6 +27,8 @@
   /* Kategoriale Serien — Reihenfolge ist bewusst gewählt, nicht cyceln */
   --viz-series-1:       #2a78d6;
   --viz-series-2:       #eb6834;
+  --viz-series-3:       #1baf7a;
+  --viz-series-4:       #eda100;
 
   /* Sequenzielle Skala (eine Farbe, hell → dunkel) für die Karte */
   --viz-seq-1:          #cde2fb;
@@ -52,6 +54,7 @@
     --viz-muted: #898781;   --viz-grid: #2c2c2a; --viz-axis: #383835;
     --viz-border: rgba(255,255,255,0.10);
     --viz-series-1: #3987e5; --viz-series-2: #d95926;
+    --viz-series-3: #199e70; --viz-series-4: #c98500;
     --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
     --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
     --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
@@ -64,6 +67,7 @@
   --viz-muted: #898781;   --viz-grid: #2c2c2a; --viz-axis: #383835;
   --viz-border: rgba(255,255,255,0.10);
   --viz-series-1: #3987e5; --viz-series-2: #d95926;
+  --viz-series-3: #199e70; --viz-series-4: #c98500;
   --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
   --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
   --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
@@ -122,6 +126,12 @@ body { margin:0; background: #f9f9f7; font-family: system-ui, -apple-system, "Se
   background: none; border: 1px solid var(--viz-border); border-radius: 6px; padding: 4px 10px;
 }
 .viz-tabelle-schalter:hover { color: var(--viz-text); }
+.viz-modus { display: inline-flex; border: 1px solid var(--viz-border); border-radius: 6px; overflow: hidden; }
+.viz-modus button {
+  font: inherit; font-size: .78rem; padding: 4px 10px; cursor: pointer;
+  background: none; border: 0; color: var(--viz-text-2);
+}
+.viz-modus button[aria-pressed="true"] { background: var(--viz-grid); color: var(--viz-text); font-weight: 600; }
 table.viz-tabelle { width: 100%; border-collapse: collapse; font-size: .84rem; font-variant-numeric: tabular-nums; }
 table.viz-tabelle th { text-align: left; font-weight: 600; color: var(--viz-text-2); padding: 9px 10px; border-bottom: 1px solid var(--viz-axis); font-size: .78rem; }
 table.viz-tabelle td { padding: 9px 10px; border-bottom: 1px solid var(--viz-grid); color: var(--viz-text); }
@@ -181,6 +191,39 @@ table.viz-tabelle td.num, table.viz-tabelle th.num { text-align: right; }
     </header>
     <div class="viz-chart viz-chart-hoch" id="c-ausbildung"></div>
     <div class="viz-verborgen" id="t-ausbildung"></div>
+  </section>
+
+  <!-- 3a — VERLAUF DER GRÖSSTEN AUSBILDUNGSGRUPPEN -->
+  <section class="viz-karte" id="s-verlauf" style="display:none">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Verlauf der größten Ausbildungsgruppen</h2>
+        <p class="viz-unterzeile" id="u-verlauf"></p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="viz-modus" id="m-verlauf">
+          <button data-modus="absolut" aria-pressed="true">Absolut</button>
+          <button data-modus="index" aria-pressed="false">Index 2019 = 100</button>
+        </span>
+        <button class="viz-tabelle-schalter" data-ziel="t-verlauf">Tabelle</button>
+      </div>
+    </header>
+    <div class="viz-chart viz-chart-hoch" id="c-verlauf"></div>
+    <div class="viz-verborgen" id="t-verlauf"></div>
+  </section>
+
+  <!-- 3b — GENERATIONEN -->
+  <section class="viz-karte" id="s-generationen" style="display:none">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Nach Generationen</h2>
+        <p class="viz-unterzeile" id="u-generationen"></p>
+      </div>
+      <button class="viz-tabelle-schalter" data-ziel="t-generationen">Tabelle</button>
+    </header>
+    <div class="viz-chart" id="c-generationen"></div>
+    <div class="viz-verborgen" id="t-generationen"></div>
+    <p class="viz-unterzeile" style="margin-top:12px" id="h-generationen"></p>
   </section>
 
   <!-- 4 — KARTE (Bundesländer) -->
@@ -298,12 +341,13 @@ function deltaText(pct) {
 const diagramme = [];
 
 async function start() {
-  let meta, kpi, zeitreihe, ausbildung, bezirke, laender, geo;
+  let meta, kpi, zeitreihe, ausbildung, bezirke, laender, geo, generationen;
   try {
     [meta, kpi, zeitreihe, ausbildung, bezirke, laender] = await Promise.all(
       ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke", "bundeslaender"].map(hole)
     );
     geo = await hole("bundeslaender_geo").catch(() => null);
+    generationen = await hole("generationen").catch(() => null);
   } catch (fehler) {
     document.getElementById("lead").textContent =
       "Die Daten konnten nicht geladen werden. " + fehler.message;
@@ -325,12 +369,25 @@ async function start() {
   baueKpis(kpi, zeitreihe);
   baueZeitreihe(zeitreihe);
   baueAusbildung(ausbildung, "AT");
+  baueVerlauf(ausbildung, "absolut");
+  baueGenerationen(generationen, "AT");
   baueKarte(laender, geo);
+
+  document.getElementById("m-verlauf").addEventListener("click", (e) => {
+    const knopf = e.target.closest("button[data-modus]");
+    if (!knopf) return;
+    for (const b of e.currentTarget.querySelectorAll("button"))
+      b.setAttribute("aria-pressed", String(b === knopf));
+    baueVerlauf(ausbildung, knopf.dataset.modus);
+  });
   baueLaender(laender);
   baueBezirke(bezirke, meta);
   baueFuss(meta);
 
-  auswahl.addEventListener("change", (e) => baueAusbildung(ausbildung, e.target.value));
+  auswahl.addEventListener("change", (e) => {
+    baueAusbildung(ausbildung, e.target.value);
+    baueGenerationen(generationen, e.target.value);
+  });
   window.addEventListener("resize", () => diagramme.forEach((d) => d.resize()));
 }
 
@@ -499,6 +556,159 @@ function baueAusbildung(daten, region) {
      { titel: "Anteil", num: true,
        wert: (z) => stufenSumme ? pz(z.wert / stufenSumme * 100) + " %" : "–" }],
     daten.stufen.map((s, i) => ({ name: s.name, code: s.code, wert: stufenWerte[i] }))
+  );
+}
+
+/* --- 3a — Verlauf der größten Ausbildungsgruppen ---------------------
+   Vier Linien, feste Farbzuordnung je Ausbildungsstufe (die Farbe folgt
+   der Sache, nicht dem Rang — sonst würde ein Wechsel der Reihenfolge die
+   Farben vertauschen). Zwei Ansichten:
+     Absolut — zeigt die tatsächlichen Größenverhältnisse
+     Index   — zeigt die Entwicklung, unabhängig vom Ausgangsniveau
+   Welche vier Stufen gezeigt werden, steht hier: */
+const VERLAUF_STUFEN = ["PS", "LE", "HA", "PO"];
+
+function baueVerlauf(daten, modus = "absolut") {
+  if (!daten?.zeitreihe?.serien) return;
+  const monate = daten.zeitreihe.monate;
+  const namen = Object.fromEntries(daten.stufen.map((s) => [s.code, s.name]));
+
+  const vorhanden = VERLAUF_STUFEN.filter((c) => daten.zeitreihe.serien[c]);
+  if (!vorhanden.length) return;
+  document.getElementById("s-verlauf").style.display = "";
+
+  const feld = document.getElementById("c-verlauf");
+  const d = echarts.getInstanceByDom(feld) || echarts.init(feld, null, { renderer: "svg" });
+  if (!diagramme.includes(d)) diagramme.push(d);
+
+  const farben = [stil("--viz-series-1"), stil("--viz-series-2"),
+                  stil("--viz-series-3"), stil("--viz-series-4")];
+  const istIndex = modus === "index";
+
+  document.getElementById("u-verlauf").textContent = istIndex
+    ? "Entwicklung seit Januar 2019, Ausgangswert = 100 · Österreich gesamt"
+    : "Bestand am Monatsende, Österreich gesamt · seit Januar 2019";
+
+  const serien = vorhanden.map((code, i) => {
+    const roh = daten.zeitreihe.serien[code];
+    const start = roh.find((v) => v > 0) || 1;
+    const werte = istIndex ? roh.map((v) => Math.round(v / start * 1000) / 10) : roh;
+    return {
+      name: namen[code] ?? code,
+      type: "line", data: werte, showSymbol: false,
+      symbol: "circle", symbolSize: 8,
+      lineStyle: { width: 2, color: farben[i] },
+      itemStyle: { color: farben[i] },
+      emphasis: { focus: "series" },
+      endLabel: {           /* Direktbeschriftung — bei vier Serien Pflicht */
+        show: true, formatter: (p) => p.seriesName,
+        color: stil("--viz-text-2"), fontSize: 11, distance: 6,
+      },
+      labelLayout: { moveOverlap: "shiftY" },
+    };
+  });
+
+  d.setOption({
+    ...basis(),
+    grid: { left: 8, right: 190, top: 34, bottom: 8, containLabel: true },
+    legend: { top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 16,
+              textStyle: { color: stil("--viz-text-2"), fontSize: 12 } },
+    tooltip: {
+      ...basis().tooltip, trigger: "axis",
+      axisPointer: { type: "line", lineStyle: { color: stil("--viz-axis"), width: 1 } },
+      formatter: (p) => `<strong>${monat(monate[p[0].dataIndex])}</strong><br>` +
+        p.map((r) => `${r.marker} ${r.seriesName}&nbsp;&nbsp;<strong>` +
+          `${istIndex ? pz(r.value) : zahl(r.value)}</strong>`).join("<br>"),
+    },
+    xAxis: {
+      ...achse(), type: "category", boundaryGap: false, data: monate,
+      splitLine: { show: false },
+      axisLabel: { color: stil("--viz-muted"), fontSize: 11, interval: 0,
+        formatter: (v) => new Date(v).getMonth() === 0 ? new Date(v).getFullYear() : "" },
+    },
+    yAxis: {
+      ...achse(), type: "value", axisLine: { show: false },
+      axisLabel: { color: stil("--viz-muted"), fontSize: 11,
+                   formatter: (v) => istIndex ? v : zahl(v) },
+    },
+    series: serien,
+  }, { replaceMerge: ["series"] });
+
+  // Tabelle: Jahresendwerte, damit sie lesbar bleibt
+  const jahresenden = monate
+    .map((m, i) => ({ m, i }))
+    .filter(({ m }, k) => new Date(m).getMonth() === 11 || k === monate.length - 1);
+  document.getElementById("t-verlauf").innerHTML = tabelle(
+    [{ titel: "Stand", wert: (z) => monat(z.m) },
+     ...vorhanden.map((code) => ({
+       titel: namen[code] ?? code, num: true,
+       wert: (z) => zahl(daten.zeitreihe.serien[code][z.i]),
+     }))],
+    jahresenden.reverse()
+  );
+}
+
+/* --- 3b — Generationen: eine Farbe, Geburtsjahre als Zweitzeile ------
+   Die Zuordnung Altersgruppe → Generation ist eine Näherung; der Hinweis
+   dazu steht unter dem Diagramm, die exakten Altersgruppen in der Tabelle. */
+function baueGenerationen(daten, region) {
+  if (!daten || !daten.generationen?.length) return;
+  document.getElementById("s-generationen").style.display = "";
+
+  const feld = document.getElementById("c-generationen");
+  const d = echarts.getInstanceByDom(feld) || echarts.init(feld, null, { renderer: "svg" });
+  if (!diagramme.includes(d)) diagramme.push(d);
+
+  const je = daten.je_bundesland || {};
+  const werte = daten.generationen.map((g) =>
+    region === "AT" ? g.bestand : (je[region]?.[g.schluessel] ?? 0)
+  );
+  const namen = daten.generationen.map((g) => `${g.name}\n${g.geburtsjahre}`);
+  const summe = werte.reduce((a, b) => a + b, 0);
+
+  document.getElementById("u-generationen").textContent =
+    `${region === "AT" ? "Österreich gesamt" : region} · Stand ${monat(daten.stand)}`;
+  document.getElementById("h-generationen").textContent = daten.hinweis ?? "";
+
+  d.setOption({
+    ...basis(),
+    grid: { left: 172, right: 72, top: 10, bottom: 34 },
+    tooltip: {
+      ...basis().tooltip, trigger: "item",
+      formatter: (p) => {
+        const g = daten.generationen[p.dataIndex];
+        return `<strong>${g.name}</strong><br>` +
+          `<span style="color:${stil("--viz-muted")}">geboren ${g.geburtsjahre} · ` +
+          `heute ${g.alter_von}–${g.alter_bis} Jahre</span><br>` +
+          `${zahl(p.value)} Personen` +
+          (summe ? `<br><span style="color:${stil("--viz-muted")}">` +
+            `${pz(p.value / summe * 100)} % aller Arbeitslosen</span>` : "") +
+          (g.altersgruppen?.length ? `<br><span style="color:${stil("--viz-muted")}">` +
+            `Altersgruppen: ${g.altersgruppen.join(", ")}</span>` : "");
+      },
+    },
+    xAxis: { ...achse(), type: "value", axisLine: { show: false },
+             axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) } },
+    yAxis: { ...achse(), type: "category", data: namen, inverse: true,
+             splitLine: { show: false },
+             axisLabel: { color: stil("--viz-text-2"), fontSize: 12, lineHeight: 15,
+                          width: 158, overflow: "break", margin: 12 } },
+    series: [{
+      type: "bar", data: werte, barWidth: "58%",
+      itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
+      label: { show: true, position: "right", distance: 8,
+               color: stil("--viz-text-2"), fontSize: 11.5,
+               formatter: (p) => zahl(p.value) },
+    }],
+  }, { replaceMerge: ["series", "yAxis"] });
+
+  // Tabelle zeigt die unverfälschte Ebene: die AMS-Altersgruppen selbst
+  const nachSchluessel = Object.fromEntries(daten.generationen.map((g) => [g.schluessel, g.name]));
+  document.getElementById("t-generationen").innerHTML = tabelle(
+    [{ titel: "Altersgruppe", wert: (z) => z.beschriftung },
+     { titel: "Zugeordnete Generation", wert: (z) => nachSchluessel[z.generation] ?? z.generation },
+     { titel: "Personen", num: true, wert: (z) => zahl(z.bestand) }],
+    daten.altersgruppen ?? []
   );
 }
 

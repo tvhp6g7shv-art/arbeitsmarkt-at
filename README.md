@@ -1,7 +1,7 @@
 # Arbeitsmarkt-Dashboard Österreich
 
-Arbeitslosenzahlen nach Ausbildungsstand, Bundesland und Bezirk — monatlich
-automatisch aktualisiert aus offenen Daten.
+Arbeitslosenzahlen nach Ausbildungsstand, Generation, Bundesland und Bezirk —
+monatlich automatisch aktualisiert aus offenen Daten.
 
 **Einrichtung:** → [SETUP.md](SETUP.md)
 **Einbau in Oxygen 6:** → [oxygen/ANLEITUNG.md](oxygen/ANLEITUNG.md)
@@ -34,7 +34,7 @@ Kein Server, keine Datenbank, keine laufenden Kosten.
 | `etl/build.py` | Die Datenpipeline. Lädt, prüft, aggregiert, schreibt. |
 | `etl/config.py` | Alle Einstellungen an einem Ort — Quell-URLs, Sortierungen, Zuordnungen. |
 | `.github/workflows/` | Der Zeitplan, nach dem GitHub das Skript startet. |
-| `docs/index.html` | Vorschauseite und Referenz für alle Diagramme. |
+| `docs/index.html` | Vorschauseite und Referenz für alle Diagramme. Welche vier Ausbildungsstufen im Verlaufsdiagramm erscheinen, steht dort in `VERLAUF_STUFEN`. |
 | `docs/data/` | Die erzeugten JSON-Dateien. Wird automatisch befüllt. |
 | `oxygen/` | Anleitung für den Einbau in Oxygen 6. |
 
@@ -45,6 +45,7 @@ Kein Server, keine Datenbank, keine laufenden Kosten.
 | `kpi.json` | Kernzahlen: Bestand, Vorjahresvergleich, Geschlechterverteilung |
 | `zeitreihe.json` | Monatsverlauf Österreich seit Januar 2019 |
 | `ausbildung.json` | Nach höchster abgeschlossener Ausbildung, gesamt und je Bundesland |
+| `generationen.json` | Nach Generationen (Gen Z, Millennials, Gen X, Boomer) plus Altersgruppen |
 | `bezirke.json` | Je AMS-Bezirk: Bestand und Vorjahresveränderung (Tabelle) |
 | `bundeslaender_geo.json` | Bundeslandgrenzen als GeoJSON für die Karte |
 | `bundeslaender.json` | Je Bundesland: Bestand, Veränderung, Quote, 36-Monats-Verlauf |
@@ -89,6 +90,11 @@ sichtbar sein, die diese Daten zeigt.
   der Tabelle.
 - **Das Diagramm fasst die 18 AMS-Ausbildungsstufen zu 7 Gruppen zusammen.**
   Alle 18 Einzelstufen stehen in der Tabellenansicht.
+- **Generationen sind eine Näherung.** Generationen sind Geburtsjahrgänge, das
+  AMS liefert Altersgruppen in 5-Jahres-Schritten. Jede Altersgruppe wird der
+  Generation mit der größten Überschneidung zugeordnet, für jeden Monat neu
+  berechnet. An den Rändern (Gruppe 45–49 trennt Millennials von Gen X) ist die
+  Zuordnung unscharf. Die exakten Altersgruppen stehen in der Tabelle.
 - **Die Quoten sind jährlich**, die AMS-Zahlen monatlich. Das ist keine
   Ungenauigkeit, sondern der Unterschied der beiden Erhebungen.
 

@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arbeitsmarkt Österreich — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
+<style>
+/* ===================================================================
+   FARBEN UND MASSE
+   In Oxygen 6 überschreibst du diese Variablen einfach im globalen
+   Stylesheet — die Charts ziehen automatisch nach. Die Werte hier sind
+   validierte Voreinstellungen (kontrast- und farbfehlsichtigkeitsgeprüft).
+   =================================================================== */
+.viz-root {
+  color-scheme: light;
+
+  --viz-surface:        #fcfcfb;
+  --viz-plane:          #f9f9f7;
+  --viz-text:           #0b0b0b;
+  --viz-text-2:         #52514e;
+  --viz-muted:          #898781;
+  --viz-grid:           #e1e0d9;
+  --viz-axis:           #c3c2b7;
+  --viz-border:         rgba(11,11,11,0.10);
+
+  /* Kategoriale Serien — Reihenfolge ist bewusst gewählt, nicht cyceln */
+  --viz-series-1:       #2a78d6;
+  --viz-series-2:       #eb6834;
+  --viz-series-3:       #1baf7a;
+  --viz-series-4:       #eda100;
+
+  /* Sequenzielle Skala (eine Farbe, hell → dunkel) für die Karte */
+  --viz-seq-1:          #cde2fb;
+  --viz-seq-2:          #86b6ef;
+  --viz-seq-3:          #3987e5;
+  --viz-seq-4:          #256abf;
+  --viz-seq-5:          #184f95;
+  --viz-seq-6:          #0d366b;
+
+  /* Status — nur für Veränderungen, immer mit Pfeil und Text */
+  --viz-gut:            #006300;
+  --viz-kritisch:       #d03b3b;
+
+  --viz-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --viz-radius: 10px;
+  --viz-gap: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --viz-surface: #1a1a19; --viz-plane: #0d0d0d;
+    --viz-text: #ffffff;    --viz-text-2: #c3c2b7;
+    --viz-muted: #898781;   --viz-grid: #2c2c2a; --viz-axis: #383835;
+    --viz-border: rgba(255,255,255,0.10);
+    --viz-series-1: #3987e5; --viz-series-2: #d95926;
+    --viz-series-3: #199e70; --viz-series-4: #c98500;
+    --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
+    --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
+    --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --viz-surface: #1a1a19; --viz-plane: #0d0d0d;
+  --viz-text: #ffffff;    --viz-text-2: #c3c2b7;
+  --viz-muted: #898781;   --viz-grid: #2c2c2a; --viz-axis: #383835;
+  --viz-border: rgba(255,255,255,0.10);
+  --viz-series-1: #3987e5; --viz-series-2: #d95926;
+  --viz-series-3: #199e70; --viz-series-4: #c98500;
+  --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
+  --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
+  --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
+}
+
+/* --- Grundgerüst (in Oxygen ersetzt du das durch deine eigenen Sektionen) ---
+   Die Seitenfläche gehört nicht zum Dashboard, sondern zur Seite. In Oxygen
+   liefert dein Theme sie; hier setzen wir sie nur für die Vorschau. */
+* { box-sizing: border-box; }
+body { margin:0; background: #f9f9f7; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+@media (prefers-color-scheme: dark) {
+  body:where(:not([data-theme="light"] body)) { background: #0d0d0d; }
+}
+:root[data-theme="dark"] body { background: #0d0d0d; }
+.viz-root { max-width: 1180px; margin: 0 auto; padding: 32px 20px 64px; color: var(--viz-text); font-family: var(--viz-font); }
+.viz-root h1 { font-size: 1.75rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+.viz-root h2 { font-size: 1.0rem; margin: 0 0 2px; font-weight: 600; }
+.viz-lead { color: var(--viz-text-2); margin: 0 0 28px; font-size: .9rem; }
+
+.viz-karte {
+  background: var(--viz-surface);
+  border: 1px solid var(--viz-border);
+  border-radius: var(--viz-radius);
+  padding: 20px;
+  margin-bottom: var(--viz-gap);
+}
+.viz-karte > header { margin-bottom: 14px; }
+.viz-unterzeile { color: var(--viz-muted); font-size: .8rem; margin: 0; }
+
+/* --- KPI-Zeile: Kennzahlkacheln, kein Balkendiagramm --- */
+.viz-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: var(--viz-gap); margin-bottom: var(--viz-gap); }
+.viz-kpi { background: var(--viz-surface); border: 1px solid var(--viz-border); border-radius: var(--viz-radius); padding: 18px 20px; }
+.viz-kpi-titel { font-size: .78rem; color: var(--viz-text-2); margin: 0 0 8px; font-weight: 500; }
+.viz-kpi-wert { font-size: 2.1rem; line-height: 1.05; font-weight: 650; letter-spacing: -0.02em; }
+.viz-kpi-delta { font-size: .82rem; margin-top: 7px; display: flex; align-items: center; gap: 5px; }
+.viz-delta-hoch { color: var(--viz-kritisch); }
+.viz-delta-runter { color: var(--viz-gut); }
+.viz-kpi-spark { height: 34px; margin-top: 10px; }
+
+/* --- Diagrammflächen: Höhe schließt die Achsenbeschriftung ein --- */
+.viz-chart { width: 100%; height: 340px; }
+.viz-chart-hoch { height: 420px; }
+.viz-chart-karte { height: 470px; }
+
+/* --- Filterzeile: EINE Zeile über allem, was sie steuert --- */
+.viz-filter { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: var(--viz-gap); }
+.viz-filter label { font-size: .82rem; color: var(--viz-text-2); }
+.viz-filter select {
+  font: inherit; font-size: .85rem; padding: 7px 11px; border-radius: 7px;
+  border: 1px solid var(--viz-border); background: var(--viz-surface); color: var(--viz-text);
+}
+
+/* --- Tabellenansicht: jedes Diagramm hat eine --- */
+.viz-tabelle-schalter {
+  font: inherit; font-size: .78rem; color: var(--viz-text-2); cursor: pointer;
+  background: none; border: 1px solid var(--viz-border); border-radius: 6px; padding: 4px 10px;
+}
+.viz-tabelle-schalter:hover { color: var(--viz-text); }
+.viz-modus { display: inline-flex; border: 1px solid var(--viz-border); border-radius: 6px; overflow: hidden; }
+.viz-modus button {
+  font: inherit; font-size: .78rem; padding: 4px 10px; cursor: pointer;
+  background: none; border: 0; color: var(--viz-text-2);
+}
+.viz-modus button[aria-pressed="true"] { background: var(--viz-grid); color: var(--viz-text); font-weight: 600; }
+table.viz-tabelle { width: 100%; border-collapse: collapse; font-size: .84rem; font-variant-numeric: tabular-nums; }
+table.viz-tabelle th { text-align: left; font-weight: 600; color: var(--viz-text-2); padding: 9px 10px; border-bottom: 1px solid var(--viz-axis); font-size: .78rem; }
+table.viz-tabelle td { padding: 9px 10px; border-bottom: 1px solid var(--viz-grid); color: var(--viz-text); }
+table.viz-tabelle td.num, table.viz-tabelle th.num { text-align: right; }
+.viz-spark-zelle { width: 130px; }
+.viz-verborgen { display: none; }
+.viz-kopfzeile { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+
+.viz-fuss { color: var(--viz-muted); font-size: .78rem; line-height: 1.6; margin-top: 28px; }
+.viz-fuss a { color: inherit; }
+.viz-hinweis { background: var(--viz-surface); border: 1px solid var(--viz-border); border-left: 3px solid var(--viz-series-2); border-radius: 7px; padding: 13px 16px; font-size: .83rem; color: var(--viz-text-2); margin-bottom: var(--viz-gap); }
+</style>
+</head>
+<body>
+<div class="viz-root" id="dashboard">
+
+  <h1>Arbeitsmarkt Österreich</h1>
+  <p class="viz-lead" id="lead">Daten werden geladen …</p>
+
+  <div class="viz-hinweis">
+    <strong>Zwei Messgrößen, nicht vermischen.</strong> Die absoluten Zahlen sind
+    beim AMS <em>registrierte</em> Arbeitslose (nationale Definition, monatlich).
+    Die Quoten stammen aus der EU-Arbeitskräfteerhebung (ILO-Definition, jährlich)
+    und liegen systematisch niedriger.
+  </div>
+
+  <!-- FILTER: eine Zeile über allem, was sie steuert -->
+  <div class="viz-filter">
+    <label for="f-bundesland">Region</label>
+    <select id="f-bundesland"><option value="AT">Ganz Österreich</option></select>
+  </div>
+
+  <!-- 1 — KPI-ZEILE -->
+  <div class="viz-kpis" id="kpis"></div>
+
+  <!-- 2 — ZEITREIHE -->
+  <section class="viz-karte">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Arbeitslose insgesamt, Monatsverlauf</h2>
+        <p class="viz-unterzeile" id="u-zeitreihe">Bestand am Monatsende, Österreich gesamt</p>
+      </div>
+      <button class="viz-tabelle-schalter" data-ziel="t-zeitreihe">Tabelle</button>
+    </header>
+    <div class="viz-chart" id="c-zeitreihe"></div>
+    <div class="viz-verborgen" id="t-zeitreihe"></div>
+  </section>
+
+  <!-- 3 — AUSBILDUNGSSTAND -->
+  <section class="viz-karte">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Nach höchster abgeschlossener Ausbildung</h2>
+        <p class="viz-unterzeile" id="u-ausbildung"></p>
+      </div>
+      <button class="viz-tabelle-schalter" data-ziel="t-ausbildung">Tabelle</button>
+    </header>
+    <div class="viz-chart viz-chart-hoch" id="c-ausbildung"></div>
+    <div class="viz-verborgen" id="t-ausbildung"></div>
+  </section>
+
+  <!-- 3a — VERLAUF DER GRÖSSTEN AUSBILDUNGSGRUPPEN -->
+  <section class="viz-karte" id="s-verlauf" style="display:none">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Verlauf der größten Ausbildungsgruppen</h2>
+        <p class="viz-unterzeile" id="u-verlauf"></p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="viz-modus" id="m-verlauf">
+          <button data-modus="absolut" aria-pressed="true">Absolut</button>
+          <button data-modus="index" aria-pressed="false">Index 2019 = 100</button>
+        </span>
+        <button class="viz-tabelle-schalter" data-ziel="t-verlauf">Tabelle</button>
+      </div>
+    </header>
+    <div class="viz-chart viz-chart-hoch" id="c-verlauf"></div>
+    <div class="viz-verborgen" id="t-verlauf"></div>
+  </section>
+
+  <!-- 3b — GENERATIONEN -->
+  <section class="viz-karte" id="s-generationen" style="display:none">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Nach Generationen</h2>
+        <p class="viz-unterzeile" id="u-generationen"></p>
+      </div>
+      <button class="viz-tabelle-schalter" data-ziel="t-generationen">Tabelle</button>
+    </header>
+    <div class="viz-chart" id="c-generationen"></div>
+    <div class="viz-verborgen" id="t-generationen"></div>
+    <p class="viz-unterzeile" style="margin-top:12px" id="h-generationen"></p>
+  </section>
+
+  <!-- 4 — KARTE (Bundesländer) -->
+  <section class="viz-karte">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Verteilung nach Bundesländern</h2>
+        <p class="viz-unterzeile" id="u-karte"></p>
+      </div>
+    </header>
+    <div class="viz-chart viz-chart-karte" id="c-karte"></div>
+  </section>
+
+  <!-- 5 — BUNDESLÄNDER-TABELLE (zugleich die Tabellenansicht zur Karte) -->
+  <section class="viz-karte">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Bundesländer im Vergleich</h2>
+        <p class="viz-unterzeile" id="u-laender"></p>
+      </div>
+    </header>
+    <div id="t-laender"></div>
+  </section>
+
+  <!-- 6 — BEZIRKE -->
+  <section class="viz-karte">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>AMS-Bezirke</h2>
+        <p class="viz-unterzeile" id="u-bezirke"></p>
+      </div>
+      <button class="viz-tabelle-schalter" data-ziel="t-bezirke">Einblenden</button>
+    </header>
+    <p class="viz-unterzeile" style="margin-top:10px" id="h-bezirke"></p>
+    <div class="viz-verborgen" id="t-bezirke"></div>
+  </section>
+
+  <p class="viz-fuss" id="fuss"></p>
+</div>
+
+<script>
+/* =====================================================================
+   KONFIGURATION — hier die eigene Adresse eintragen
+   ===================================================================== */
+const DATEN_BASIS = "./data";   // In Oxygen: "https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/data"
+
+/* --- Hilfsmittel ------------------------------------------------------ */
+const wurzel = document.getElementById("dashboard");
+const stil   = (name) => getComputedStyle(wurzel).getPropertyValue(name).trim();
+const zahl   = (n) => (n === null || n === undefined) ? "–" : n.toLocaleString("de-AT");
+/* Prozentwerte immer mit deutschem Dezimalkomma */
+const pz     = (n, stellen = 1) => (n === null || n === undefined) ? "–"
+  : n.toLocaleString("de-AT", { minimumFractionDigits: stellen, maximumFractionDigits: stellen });
+const monat  = (s) => new Date(s).toLocaleDateString("de-AT", { month: "long", year: "numeric" });
+
+async function hole(name) {
+  const antwort = await fetch(`${DATEN_BASIS}/${name}.json`);
+  if (!antwort.ok) throw new Error(`${name}.json konnte nicht geladen werden (HTTP ${antwort.status})`);
+  return antwort.json();
+}
+
+/* Gemeinsames ECharts-Grundgerüst: dünne Marken, zurückhaltendes Raster,
+   Text in Textfarben statt in Serienfarben. */
+function basis() {
+  return {
+    textStyle: { fontFamily: stil("--viz-font"), color: stil("--viz-text-2") },
+    grid: { left: 8, right: 20, top: 18, bottom: 8, containLabel: true },
+    tooltip: {
+      backgroundColor: stil("--viz-surface"),
+      borderColor: stil("--viz-border"),
+      borderWidth: 1,
+      padding: [9, 12],
+      textStyle: { color: stil("--viz-text"), fontSize: 12.5 },
+      extraCssText: "box-shadow:0 4px 16px rgba(0,0,0,.10);border-radius:8px;",
+    },
+  };
+}
+const achse = () => ({
+  axisLine:  { lineStyle: { color: stil("--viz-axis"), width: 1 } },
+  axisTick:  { show: false },
+  axisLabel: { color: stil("--viz-muted"), fontSize: 11 },
+  splitLine: { lineStyle: { color: stil("--viz-grid"), width: 1, type: "solid" } },
+});
+
+/* --- Tabellenansicht: jedes Diagramm hat eine ------------------------- */
+document.addEventListener("click", (e) => {
+  const knopf = e.target.closest(".viz-tabelle-schalter");
+  if (!knopf) return;
+  const feld = document.getElementById(knopf.dataset.ziel);
+  const zeigen = feld.classList.contains("viz-verborgen");
+  feld.classList.toggle("viz-verborgen", !zeigen);
+  knopf.textContent = zeigen ? "Diagramm" : "Tabelle";
+});
+
+function tabelle(spalten, zeilen) {
+  const kopf = spalten.map((s) => `<th class="${s.num ? "num" : ""}">${s.titel}</th>`).join("");
+  const koerper = zeilen.map((z) =>
+    "<tr>" + spalten.map((s) => `<td class="${s.num ? "num" : ""}">${s.wert(z)}</td>`).join("") + "</tr>"
+  ).join("");
+  return `<table class="viz-tabelle"><thead><tr>${kopf}</tr></thead><tbody>${koerper}</tbody></table>`;
+}
+
+function deltaText(pct) {
+  if (pct === null || pct === undefined) return "";
+  const hoch = pct > 0;
+  const klasse = hoch ? "viz-delta-hoch" : "viz-delta-runter";
+  const pfeil = hoch ? "▲" : "▼";
+  const wort = hoch ? "mehr" : "weniger";
+  return `<span class="${klasse}">${pfeil} ${Math.abs(pct).toLocaleString("de-AT")} % ${wort} als im Vorjahr</span>`;
+}
+
+/* =====================================================================
+   AUFBAU
+   ===================================================================== */
+const diagramme = [];
+
+async function start() {
+  let meta, kpi, zeitreihe, ausbildung, bezirke, laender, geo, generationen;
+  try {
+    [meta, kpi, zeitreihe, ausbildung, bezirke, laender] = await Promise.all(
+      ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke", "bundeslaender"].map(hole)
+    );
+    geo = await hole("bundeslaender_geo").catch(() => null);
+    generationen = await hole("generationen").catch(() => null);
+  } catch (fehler) {
+    document.getElementById("lead").textContent =
+      "Die Daten konnten nicht geladen werden. " + fehler.message;
+    return;
+  }
+
+  document.getElementById("lead").textContent =
+    `Registrierte Arbeitslose, Stand ${monat(kpi.stand)} · zuletzt aktualisiert am ` +
+    new Date(meta.generiert_am).toLocaleDateString("de-AT");
+
+  /* --- Regionsfilter füllen ------------------------------------------ */
+  const auswahl = document.getElementById("f-bundesland");
+  laender.laender.forEach((l) => {
+    const opt = document.createElement("option");
+    opt.value = l.name; opt.textContent = l.name;
+    auswahl.appendChild(opt);
+  });
+
+  baueKpis(kpi, zeitreihe);
+  baueZeitreihe(zeitreihe);
+  baueAusbildung(ausbildung, "AT");
+  baueVerlauf(ausbildung, "absolut");
+  baueGenerationen(generationen, "AT");
+  baueKarte(laender, geo);
+
+  document.getElementById("m-verlauf").addEventListener("click", (e) => {
+    const knopf = e.target.closest("button[data-modus]");
+    if (!knopf) return;
+    for (const b of e.currentTarget.querySelectorAll("button"))
+      b.setAttribute("aria-pressed", String(b === knopf));
+    baueVerlauf(ausbildung, knopf.dataset.modus);
+  });
+  baueLaender(laender);
+  baueBezirke(bezirke, meta);
+  baueFuss(meta);
+
+  auswahl.addEventListener("change", (e) => {
+    baueAusbildung(ausbildung, e.target.value);
+    baueGenerationen(generationen, e.target.value);
+  });
+  window.addEventListener("resize", () => diagramme.forEach((d) => d.resize()));
+}
+
+/* --- 1 — KPI-Kacheln (Kennzahl + Veränderung + Sparkline) ------------ */
+function baueKpis(kpi, zeitreihe) {
+  const g = kpi.nach_geschlecht || {};
+  const gesamt = kpi.arbeitslose_gesamt || 0;
+  const anteil = (v) => (gesamt && v) ? `${pz(v / gesamt * 100)} % aller Arbeitslosen` : "";
+  const kacheln = [
+    { titel: "Arbeitslose insgesamt", wert: kpi.arbeitslose_gesamt, delta: kpi.veraenderung_pct, spark: true },
+    { titel: "Männer", wert: g.M ?? g.m, unter: anteil(g.M ?? g.m) },
+    { titel: "Frauen", wert: g.W ?? g.w, unter: anteil(g.W ?? g.w) },
+    {
+      titel: "Arbeitslosenquote EU-Definition",
+      text: kpi.quote_eu ? `${pz(kpi.quote_eu.spanne[0])} – ${pz(kpi.quote_eu.spanne[1])} %` : "–",
+      unter: kpi.quote_eu ? `Spannweite der Bundesländer, ${kpi.quote_eu.jahr}` : "",
+    },
+  ];
+
+  document.getElementById("kpis").innerHTML = kacheln.map((k, i) => `
+    <div class="viz-kpi">
+      <p class="viz-kpi-titel">${k.titel}</p>
+      <div class="viz-kpi-wert">${k.text ?? zahl(k.wert)}</div>
+      <div class="viz-kpi-delta">${k.delta !== undefined ? deltaText(k.delta) : (k.unter ?? "")}</div>
+      ${k.spark ? `<div class="viz-kpi-spark" id="spark-${i}"></div>` : ""}
+    </div>`).join("");
+
+  const feld = document.getElementById("spark-0");
+  if (!feld) return;
+  const d = echarts.init(feld, null, { renderer: "svg" });
+  const letzte = zeitreihe.gesamt.slice(-36);
+  d.setOption({
+    animation: false,
+    grid: { left: 0, right: 0, top: 3, bottom: 3 },
+    xAxis: { type: "category", show: false, data: letzte.map((_, i) => i), boundaryGap: false },
+    yAxis: { type: "value", show: false, min: "dataMin", max: "dataMax" },
+    series: [{
+      type: "line", data: letzte, showSymbol: false,
+      lineStyle: { width: 2, color: stil("--viz-series-1") },
+      areaStyle: { color: stil("--viz-series-1"), opacity: 0.10 },
+    }],
+  });
+  diagramme.push(d);
+}
+
+/* --- 2 — Zeitreihe: zwei Serien -> Legende + Endpunkt-Beschriftung --- */
+function baueZeitreihe(daten) {
+  const d = echarts.init(document.getElementById("c-zeitreihe"), null, { renderer: "svg" });
+  const beschriftung = { M: "Männer", W: "Frauen", m: "Männer", w: "Frauen" };
+  const farben = [stil("--viz-series-1"), stil("--viz-series-2")];
+
+  const serien = Object.entries(daten.nach_geschlecht).map(([schluessel, werte], i) => ({
+    name: beschriftung[schluessel] ?? schluessel,
+    type: "line",
+    data: werte,
+    smooth: false,
+    showSymbol: false,
+    symbol: "circle",
+    symbolSize: 8,
+    lineStyle: { width: 2, color: farben[i] },
+    itemStyle: { color: farben[i] },
+    emphasis: { focus: "series" },
+    endLabel: {           /* selektive Direktbeschriftung statt Zahl an jedem Punkt */
+      show: true, formatter: (p) => p.seriesName,
+      color: stil("--viz-text-2"), fontSize: 11.5, distance: 6,
+    },
+  }));
+
+  d.setOption({
+    ...basis(),
+    grid: { left: 8, right: 70, top: 34, bottom: 8, containLabel: true },
+    legend: {                       /* bei >= 2 Serien immer vorhanden */
+      top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 18,
+      textStyle: { color: stil("--viz-text-2"), fontSize: 12 },
+    },
+    tooltip: {
+      ...basis().tooltip,
+      trigger: "axis",
+      axisPointer: { type: "line", lineStyle: { color: stil("--viz-axis"), width: 1 } },
+      formatter: (p) => `<strong>${monat(daten.monate[p[0].dataIndex])}</strong><br>` +
+        p.map((r) => `${r.marker} ${r.seriesName}&nbsp;&nbsp;<strong>${zahl(r.value)}</strong>`).join("<br>"),
+    },
+    xAxis: {
+      ...achse(), type: "category", boundaryGap: false,
+      data: daten.monate,
+      splitLine: { show: false },
+      axisLabel: {
+        color: stil("--viz-muted"), fontSize: 11,
+        formatter: (v) => new Date(v).getMonth() === 0 ? new Date(v).getFullYear() : "",
+        interval: 0,
+      },
+    },
+    yAxis: {
+      ...achse(), type: "value",
+      axisLine: { show: false },
+      axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) },
+    },
+    series: serien,
+  });
+  diagramme.push(d);
+
+  document.getElementById("t-zeitreihe").innerHTML = tabelle(
+    [{ titel: "Monat", wert: (z) => monat(z.m) },
+     { titel: "Gesamt", num: true, wert: (z) => zahl(z.g) }],
+    daten.monate.map((m, i) => ({ m, g: daten.gesamt[i] })).reverse().slice(0, 24)
+  );
+}
+
+/* --- 3 — Ausbildungsstand: eine Farbe, Länge trägt die Größe ---------
+   Das Diagramm zeigt 7 Gruppen; die 18 Einzelstufen des AMS stehen in
+   der Tabellenansicht. Mehr als etwa sieben Balken kann man nicht mehr
+   sinnvoll vergleichen. */
+function baueAusbildung(daten, region) {
+  const d = echarts.getInstanceByDom(document.getElementById("c-ausbildung"))
+         || echarts.init(document.getElementById("c-ausbildung"), null, { renderer: "svg" });
+  if (!diagramme.includes(d)) diagramme.push(d);
+
+  const jeGruppe = daten.gruppen_je_bundesland || {};
+  const werte = daten.gruppen.map((g) =>
+    region === "AT" ? g.bestand : (jeGruppe[region]?.[g.schluessel] ?? 0)
+  );
+  const namen = daten.gruppen.map((g) => g.name);
+  const summe = werte.reduce((a, b) => a + b, 0);
+
+  document.getElementById("u-ausbildung").textContent =
+    `${region === "AT" ? "Österreich gesamt" : region} · Stand ${monat(daten.stand)}`;
+
+  d.setOption({
+    ...basis(),
+    /* Feste linke Spalte für die Bezeichnungen: containLabel schneidet bei
+       langen Namen das erste Zeichen an. */
+    grid: { left: 172, right: 72, top: 10, bottom: 34 },
+    tooltip: {
+      ...basis().tooltip, trigger: "item",
+      formatter: (p) => `<strong>${p.name}</strong><br>${zahl(p.value)} Personen` +
+        (summe ? `<br><span style="color:${stil("--viz-muted")}">${pz(p.value / summe * 100)} % aller Arbeitslosen</span>` : ""),
+    },
+    xAxis: { ...achse(), type: "value", axisLine: { show: false },
+             axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) } },
+    yAxis: { ...achse(), type: "category", data: namen, inverse: true,
+             splitLine: { show: false },
+             axisLabel: { color: stil("--viz-text-2"), fontSize: 12,
+                          width: 158, overflow: "break", margin: 12 } },
+    series: [{
+      type: "bar",
+      data: werte,
+      barWidth: "58%",
+      itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
+      label: { show: true, position: "right", distance: 8,
+               color: stil("--viz-text-2"), fontSize: 11.5,
+               formatter: (p) => zahl(p.value) },
+    }],
+  }, { replaceMerge: ["series", "yAxis"] });
+
+  // Tabelle zeigt die volle Auflösung: alle 18 AMS-Stufen
+  const jeStufe = daten.je_bundesland || {};
+  const stufenWerte = daten.stufen.map((s) =>
+    region === "AT" ? s.bestand : (jeStufe[region]?.[s.code] ?? 0)
+  );
+  const stufenSumme = stufenWerte.reduce((a, b) => a + b, 0);
+
+  document.getElementById("t-ausbildung").innerHTML = tabelle(
+    [{ titel: "Ausbildung", wert: (z) => z.name },
+     { titel: "Code", wert: (z) => z.code },
+     { titel: "Personen", num: true, wert: (z) => zahl(z.wert) },
+     { titel: "Anteil", num: true,
+       wert: (z) => stufenSumme ? pz(z.wert / stufenSumme * 100) + " %" : "–" }],
+    daten.stufen.map((s, i) => ({ name: s.name, code: s.code, wert: stufenWerte[i] }))
+  );
+}
+
+/* --- 3a — Verlauf der größten Ausbildungsgruppen ---------------------
+   Vier Linien, feste Farbzuordnung je Ausbildungsstufe (die Farbe folgt
+   der Sache, nicht dem Rang — sonst würde ein Wechsel der Reihenfolge die
+   Farben vertauschen). Zwei Ansichten:
+     Absolut — zeigt die tatsächlichen Größenverhältnisse
+     Index   — zeigt die Entwicklung, unabhängig vom Ausgangsniveau
+   Welche vier Stufen gezeigt werden, steht hier: */
+const VERLAUF_STUFEN = ["PS", "LE", "HA", "PO"];
+
+function baueVerlauf(daten, modus = "absolut") {
+  if (!daten?.zeitreihe?.serien) return;
+  const monate = daten.zeitreihe.monate;
+  const namen = Object.fromEntries(daten.stufen.map((s) => [s.code, s.name]));
+
+  const vorhanden = VERLAUF_STUFEN.filter((c) => daten.zeitreihe.serien[c]);
+  if (!vorhanden.length) return;
+  document.getElementById("s-verlauf").style.display = "";
+
+  const feld = document.getElementById("c-verlauf");
+  const d = echarts.getInstanceByDom(feld) || echarts.init(feld, null, { renderer: "svg" });
+  if (!diagramme.includes(d)) diagramme.push(d);
+
+  const farben = [stil("--viz-series-1"), stil("--viz-series-2"),
+                  stil("--viz-series-3"), stil("--viz-series-4")];
+  const istIndex = modus === "index";
+
+  document.getElementById("u-verlauf").textContent = istIndex
+    ? "Entwicklung seit Januar 2019, Ausgangswert = 100 · Österreich gesamt"
+    : "Bestand am Monatsende, Österreich gesamt · seit Januar 2019";
+
+  const serien = vorhanden.map((code, i) => {
+    const roh = daten.zeitreihe.serien[code];
+    const start = roh.find((v) => v > 0) || 1;
+    const werte = istIndex ? roh.map((v) => Math.round(v / start * 1000) / 10) : roh;
+    return {
+      name: namen[code] ?? code,
+      type: "line", data: werte, showSymbol: false,
+      symbol: "circle", symbolSize: 8,
+      lineStyle: { width: 2, color: farben[i] },
+      itemStyle: { color: farben[i] },
+      emphasis: { focus: "series" },
+      endLabel: {           /* Direktbeschriftung — bei vier Serien Pflicht */
+        show: true, formatter: (p) => p.seriesName,
+        color: stil("--viz-text-2"), fontSize: 11, distance: 6,
+      },
+      labelLayout: { moveOverlap: "shiftY" },
+    };
+  });
+
+  d.setOption({
+    ...basis(),
+    grid: { left: 8, right: 190, top: 34, bottom: 8, containLabel: true },
+    legend: { top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 16,
+              textStyle: { color: stil("--viz-text-2"), fontSize: 12 } },
+    tooltip: {
+      ...basis().tooltip, trigger: "axis",
+      axisPointer: { type: "line", lineStyle: { color: stil("--viz-axis"), width: 1 } },
+      formatter: (p) => `<strong>${monat(monate[p[0].dataIndex])}</strong><br>` +
+        p.map((r) => `${r.marker} ${r.seriesName}&nbsp;&nbsp;<strong>` +
+          `${istIndex ? pz(r.value) : zahl(r.value)}</strong>`).join("<br>"),
+    },
+    xAxis: {
+      ...achse(), type: "category", boundaryGap: false, data: monate,
+      splitLine: { show: false },
+      axisLabel: { color: stil("--viz-muted"), fontSize: 11, interval: 0,
+        formatter: (v) => new Date(v).getMonth() === 0 ? new Date(v).getFullYear() : "" },
+    },
+    yAxis: {
+      ...achse(), type: "value", axisLine: { show: false },
+      axisLabel: { color: stil("--viz-muted"), fontSize: 11,
+                   formatter: (v) => istIndex ? v : zahl(v) },
+    },
+    series: serien,
+  }, { replaceMerge: ["series"] });
+
+  // Tabelle: Jahresendwerte, damit sie lesbar bleibt
+  const jahresenden = monate
+    .map((m, i) => ({ m, i }))
+    .filter(({ m }, k) => new Date(m).getMonth() === 11 || k === monate.length - 1);
+  document.getElementById("t-verlauf").innerHTML = tabelle(
+    [{ titel: "Stand", wert: (z) => monat(z.m) },
+     ...vorhanden.map((code) => ({
+       titel: namen[code] ?? code, num: true,
+       wert: (z) => zahl(daten.zeitreihe.serien[code][z.i]),
+     }))],
+    jahresenden.reverse()
+  );
+}
+
+/* --- 3b — Generationen: eine Farbe, Geburtsjahre als Zweitzeile ------
+   Die Zuordnung Altersgruppe → Generation ist eine Näherung; der Hinweis
+   dazu steht unter dem Diagramm, die exakten Altersgruppen in der Tabelle. */
+function baueGenerationen(daten, region) {
+  if (!daten || !daten.generationen?.length) return;
+  document.getElementById("s-generationen").style.display = "";
+
+  const feld = document.getElementById("c-generationen");
+  const d = echarts.getInstanceByDom(feld) || echarts.init(feld, null, { renderer: "svg" });
+  if (!diagramme.includes(d)) diagramme.push(d);
+
+  const je = daten.je_bundesland || {};
+  const werte = daten.generationen.map((g) =>
+    region === "AT" ? g.bestand : (je[region]?.[g.schluessel] ?? 0)
+  );
+  const namen = daten.generationen.map((g) => `${g.name}\n${g.geburtsjahre}`);
+  const summe = werte.reduce((a, b) => a + b, 0);
+
+  document.getElementById("u-generationen").textContent =
+    `${region === "AT" ? "Österreich gesamt" : region} · Stand ${monat(daten.stand)}`;
+  document.getElementById("h-generationen").textContent = daten.hinweis ?? "";
+
+  d.setOption({
+    ...basis(),
+    grid: { left: 172, right: 72, top: 10, bottom: 34 },
+    tooltip: {
+      ...basis().tooltip, trigger: "item",
+      formatter: (p) => {
+        const g = daten.generationen[p.dataIndex];
+        return `<strong>${g.name}</strong><br>` +
+          `<span style="color:${stil("--viz-muted")}">geboren ${g.geburtsjahre} · ` +
+          `heute ${g.alter_von}–${g.alter_bis} Jahre</span><br>` +
+          `${zahl(p.value)} Personen` +
+          (summe ? `<br><span style="color:${stil("--viz-muted")}">` +
+            `${pz(p.value / summe * 100)} % aller Arbeitslosen</span>` : "") +
+          (g.altersgruppen?.length ? `<br><span style="color:${stil("--viz-muted")}">` +
+            `Altersgruppen: ${g.altersgruppen.join(", ")}</span>` : "");
+      },
+    },
+    xAxis: { ...achse(), type: "value", axisLine: { show: false },
+             axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) } },
+    yAxis: { ...achse(), type: "category", data: namen, inverse: true,
+             splitLine: { show: false },
+             axisLabel: { color: stil("--viz-text-2"), fontSize: 12, lineHeight: 15,
+                          width: 158, overflow: "break", margin: 12 } },
+    series: [{
+      type: "bar", data: werte, barWidth: "58%",
+      itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
+      label: { show: true, position: "right", distance: 8,
+               color: stil("--viz-text-2"), fontSize: 11.5,
+               formatter: (p) => zahl(p.value) },
+    }],
+  }, { replaceMerge: ["series", "yAxis"] });
+
+  // Tabelle zeigt die unverfälschte Ebene: die AMS-Altersgruppen selbst
+  const nachSchluessel = Object.fromEntries(daten.generationen.map((g) => [g.schluessel, g.name]));
+  document.getElementById("t-generationen").innerHTML = tabelle(
+    [{ titel: "Altersgruppe", wert: (z) => z.beschriftung },
+     { titel: "Zugeordnete Generation", wert: (z) => nachSchluessel[z.generation] ?? z.generation },
+     { titel: "Personen", num: true, wert: (z) => zahl(z.bestand) }],
+    daten.altersgruppen ?? []
+  );
+}
+
+/* --- 4 — Karte: Bundesländer, sequenzielle Skala hell → dunkel -------
+   Bewusst Bundesland statt Bezirk: Die AMS-Geschäftsstellenbezirke sind
+   ein anderes Nummernsystem als die politischen Bezirke (RGS 102 =
+   Mattersburg, Bezirkskennziffer 102 = Rust). Ein Join über die Nummer
+   ergäbe eine Karte, die falsche Zahlen an richtigen Orten zeigt.
+   Die Tabelle direkt darunter ist die Tabellenansicht zu dieser Karte. */
+function baueKarte(laender, geo) {
+  const feld = document.getElementById("c-karte");
+  document.getElementById("u-karte").textContent =
+    `Registrierte Arbeitslose am ${monat(laender.stand)} · Werte in der Tabelle darunter`;
+
+  if (!geo) {
+    feld.innerHTML = `<p class="viz-unterzeile" style="padding:20px 0">
+      Die Bundeslandgrenzen konnten nicht geladen werden — alle Werte stehen
+      in der Tabelle darunter.</p>`;
+    return;
+  }
+
+  echarts.registerMap("at-bundeslaender", geo);
+  const d = echarts.init(feld, null, { renderer: "canvas" });
+  const nachCode = Object.fromEntries(laender.laender.map((l) => [l.nuts2, l]));
+  const werte = laender.laender.map((l) => ({ name: l.nuts2, value: l.bestand }));
+  const max = Math.max(...laender.laender.map((l) => l.bestand));
+
+  d.setOption({
+    ...basis(),
+    tooltip: {
+      ...basis().tooltip, trigger: "item",
+      formatter: (p) => {
+        const l = nachCode[p.name];
+        if (!l) return `${p.name}<br><span style="color:${stil("--viz-muted")}">keine Daten</span>`;
+        const v = l.veraenderung_pct;
+        return `<strong>${l.name}</strong><br>${zahl(l.bestand)} Arbeitslose` +
+          (v === null || v === undefined ? "" :
+            `<br><span style="color:${v > 0 ? stil("--viz-kritisch") : stil("--viz-gut")}">` +
+            `${v > 0 ? "▲" : "▼"} ${pz(Math.abs(v))} % ggü. Vorjahr</span>`) +
+          (l.quote_eu === null || l.quote_eu === undefined ? "" :
+            `<br><span style="color:${stil("--viz-muted")}">Quote EU-Definition ${pz(l.quote_eu)} %</span>`);
+      },
+    },
+    visualMap: {                    /* Skalenlegende ist bei stetiger Färbung Pflicht */
+      min: 0, max: max, left: 12, bottom: 14, orient: "vertical",
+      itemWidth: 12, itemHeight: 130, calculable: true,
+      formatter: (v) => zahl(Math.round(v)),
+      textStyle: { color: stil("--viz-muted"), fontSize: 11 },
+      inRange: { color: [stil("--viz-seq-1"), stil("--viz-seq-2"), stil("--viz-seq-3"),
+                         stil("--viz-seq-4"), stil("--viz-seq-5"), stil("--viz-seq-6")] },
+    },
+    series: [{
+      type: "map", map: "at-bundeslaender", data: werte,
+      roam: false, aspectScale: 0.78,
+      /* Beschriftung mit Kontur in Flächenfarbe: bleibt auf hellen wie auf
+         dunklen Feldern lesbar, ohne dass die Farbe mitwandern muss. */
+      label: { show: true, formatter: (p) => nachCode[p.name]?.name ?? "",
+               color: stil("--viz-text"), fontSize: 11.5,
+               textBorderColor: stil("--viz-surface"), textBorderWidth: 2.5 },
+      itemStyle: { areaColor: stil("--viz-grid"), borderColor: stil("--viz-surface"), borderWidth: 1.5 },
+      emphasis: { label: { color: stil("--viz-text"),
+                           textBorderColor: stil("--viz-surface"), textBorderWidth: 2.5 },
+                  itemStyle: { borderColor: stil("--viz-text"), borderWidth: 1.5 } },
+      select: { disabled: true },
+    }],
+  });
+  diagramme.push(d);
+}
+
+/* --- 6 — AMS-Bezirke: nur Tabelle, mit klarer Einordnung ------------ */
+function baueBezirke(daten, meta) {
+  document.getElementById("u-bezirke").textContent =
+    `${daten.bezirke.length} Geschäftsstellenbezirke · Stand ${monat(daten.stand)}`;
+  document.getElementById("h-bezirke").textContent = meta.hinweis_bezirke ?? "";
+
+  const zeilen = [...daten.bezirke].sort((a, b) => b.bestand - a.bestand);
+  document.getElementById("t-bezirke").innerHTML = tabelle(
+    [{ titel: "AMS-Bezirk", wert: (z) => z.name },
+     { titel: "Bundesland", wert: (z) => z.bundesland ?? "–" },
+     { titel: "Personen", num: true, wert: (z) => zahl(z.bestand) },
+     { titel: "ggü. Vorjahr", num: true,
+       wert: (z) => z.veraenderung_pct === null || z.veraenderung_pct === undefined ? "–" :
+         `${z.veraenderung_pct > 0 ? "+" : ""}${pz(z.veraenderung_pct)} %` }],
+    zeilen
+  );
+}
+
+/* --- 5 — Bundesländer: Tabelle mit Sparklines ------------------------ */
+function baueLaender(daten) {
+  document.getElementById("u-laender").textContent =
+    `Stand ${monat(daten.stand)} · Verlauf der letzten ${daten.sparkline_monate.length} Monate`;
+
+  const zeilen = daten.laender.map((l, i) => `
+    <tr>
+      <td>${l.name}</td>
+      <td class="num">${zahl(l.bestand)}</td>
+      <td class="num">${l.veraenderung_pct === null ? "–" :
+        `<span class="${l.veraenderung_pct > 0 ? "viz-delta-hoch" : "viz-delta-runter"}">` +
+        `${l.veraenderung_pct > 0 ? "▲" : "▼"} ${pz(Math.abs(l.veraenderung_pct))} %</span>`}</td>
+      <td class="num">${l.quote_eu === null || l.quote_eu === undefined ? "–" : pz(l.quote_eu) + " %"}</td>
+      <td class="viz-spark-zelle"><div id="bl-spark-${i}" style="height:30px"></div></td>
+    </tr>`).join("");
+
+  document.getElementById("t-laender").innerHTML = `
+    <table class="viz-tabelle">
+      <thead><tr>
+        <th>Bundesland</th>
+        <th class="num">Arbeitslose</th>
+        <th class="num">ggü. Vorjahr</th>
+        <th class="num">Quote EU-Def.</th>
+        <th>Verlauf</th>
+      </tr></thead>
+      <tbody>${zeilen}</tbody>
+    </table>`;
+
+  daten.laender.forEach((l, i) => {
+    const feld = document.getElementById(`bl-spark-${i}`);
+    if (!feld) return;
+    const d = echarts.init(feld, null, { renderer: "svg" });
+    d.setOption({
+      animation: false,
+      grid: { left: 1, right: 1, top: 3, bottom: 3 },
+      xAxis: { type: "category", show: false, data: l.sparkline.map((_, k) => k), boundaryGap: false },
+      yAxis: { type: "value", show: false, min: "dataMin", max: "dataMax" },
+      series: [{ type: "line", data: l.sparkline, showSymbol: false,
+                 lineStyle: { width: 2, color: stil("--viz-series-1") } }],
+    });
+    diagramme.push(d);
+  });
+}
+
+/* --- Quellenangabe (CC BY 4.0 verlangt Namensnennung) ---------------- */
+function baueFuss(meta) {
+  document.getElementById("fuss").innerHTML =
+    "Datenquellen: " +
+    meta.quellen.map((q) => `<a href="${q.url}" target="_blank" rel="noopener">${q.name}</a> (${q.lizenz})`).join(" · ") +
+    `<br>${meta.hinweis_definitionen}`;
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (window.echarts) start();
+  else document.querySelector('script[src*="echarts"]').addEventListener("load", start);
+});
+</script>
+</body>
+</html>

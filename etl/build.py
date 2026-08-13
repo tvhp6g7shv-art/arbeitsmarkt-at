@@ -997,6 +997,30 @@ def hole_eurostat_vergleich() -> dict | None:
         warnen("Eurostat-Ländervergleich hat unerwartete Struktur")
         return None
 
+    # Zweite Abfrage für die Aggregate. geoLevel=country schließt sie aus —
+    # der EU-27-Schnitt ist für Eurostat kein Land. Ohne diesen Nachschlag
+    # fehlt genau die Linie, gegen die verglichen werden soll.
+    aggregat_beschriftungen = {}
+    for code in config.EUROSTAT_AGGREGATE:
+        agg_params = dict(config.EUROSTAT_PARAMS)
+        agg_params.pop("geoLevel", None)
+        agg_params["isced11"] = "TOTAL"
+        agg_params["geo"] = code
+        try:
+            agg_roh = json.loads(
+                lade_bytes(config.EUROSTAT_URL, agg_params).decode("utf-8")
+            )
+            agg_tabelle, agg_labels = entpacke_jsonstat(agg_roh)
+        except SystemExit:
+            warnen(f"Eurostat-Aggregat {code} nicht abrufbar — Vergleichslinie fehlt")
+            continue
+        except Exception as fehler:
+            warnen(f"Eurostat-Aggregat {code}: {type(fehler).__name__} — Vergleichslinie fehlt")
+            continue
+        if "geo" in agg_tabelle.columns and not agg_tabelle.empty:
+            tabelle = pd.concat([tabelle, agg_tabelle], ignore_index=True)
+            aggregat_beschriftungen.update(agg_labels.get("geo", {}))
+
     jahre = sorted(tabelle["time"].unique())
     serien = {}
     for code in config.EUROSTAT_VERGLEICH:
@@ -1016,6 +1040,7 @@ def hole_eurostat_vergleich() -> dict | None:
         beschriftungen = entpacke_jsonstat(rohdaten)[1].get("geo", {})
     except Exception:
         pass
+    beschriftungen.update(aggregat_beschriftungen)
 
     at_jahre = [
         j for j in jahre
@@ -1025,19 +1050,21 @@ def hole_eurostat_vergleich() -> dict | None:
     rang_jahr = at_jahre[-1] if at_jahre else jahre[-1]
     aktuell = tabelle[tabelle["time"] == rang_jahr]
 
-    # Nur echte Länder in die Rangliste. Der EU-Schnitt ist kein Land — stünde
-    # er als Balken dazwischen, wäre "Platz 10 von 28" schlicht falsch. Er wird
-    # stattdessen als Referenzlinie mitgegeben.
+    # Nur die 27 Mitgliedstaaten in die Rangliste. Zwei Gründe:
+    # Der EU-Schnitt ist kein Land — stünde er als Balken dazwischen, wäre
+    # „Platz 10 von 28" falsch; er wird als Referenzlinie mitgegeben.
+    # Und Eurostat meldet auf Länderebene auch Schweiz, Norwegen, Türkei und
+    # den Westbalkan mit — „Platz 16 von 34 EU-Ländern" wäre schlicht gelogen.
     rangliste, eu_referenz = [], None
+    mitglieder = set(config.EU27_MITGLIEDER)
     for _, zeile in aktuell.iterrows():
         code = str(zeile["geo"])
         wert = round(float(zeile["wert"]), 1)
-        if code.startswith("EU") or code.startswith("EA"):
-            if code == "EU27_2020":
-                eu_referenz = wert
+        if code == "EU27_2020":
+            eu_referenz = wert
             continue
-        if len(code) != 2:
-            continue                     # sonstige Aggregate weglassen
+        if code not in mitglieder:
+            continue                     # Aggregate und Nicht-EU-Meldeländer
         rangliste.append({
             "code": code,
             "name": beschriftungen.get(code, code),
@@ -1053,7 +1080,7 @@ def hole_eurostat_vergleich() -> dict | None:
         f"Rangliste {rang_jahr}: {len(rangliste)} Länder"
         + (f", Österreich auf Platz {platz}" if platz else ""))
 
-    return {
+    ergebnis = {
         "definition": "Arbeitslosenquote nach ILO-Definition, 15–74 Jahre",
         "quelle": "Eurostat lfst_r_lfu3rt",
         "jahre": jahre,
@@ -1064,6 +1091,52 @@ def hole_eurostat_vergleich() -> dict | None:
         "eu_referenz": eu_referenz,
         "platz_oesterreich": platz,
     }
+    inflation = hole_inflation(jahre)
+    if inflation:
+        ergebnis["inflation"] = inflation
+        ergebnis["quelle_inflation"] = "Eurostat prc_hicp_aind"
+    return ergebnis
+
+
+def hole_inflation(jahre: list) -> dict | None:
+    """
+    HVPI-Jahresinflation für dieselben Gebiete und Jahre wie die
+    Arbeitslosenquote. Beides sind Prozentwerte derselben Frequenz — nur
+    deshalb dürfen sie in einer Grafik gegeneinander stehen.
+
+    Fällt die Abfrage aus, entfällt nur die Phillips-Grafik. Der EU-Vergleich
+    bleibt vollständig.
+    """
+    log("    Eurostat-Inflation (HVPI)")
+    params = dict(config.EUROSTAT_INFLATION_PARAMS)
+    werte = {}
+    for code in config.INFLATION_GEBIETE:
+        anfrage = dict(params)
+        anfrage["geo"] = code
+        try:
+            roh = json.loads(
+                lade_bytes(config.EUROSTAT_INFLATION_URL, anfrage).decode("utf-8")
+            )
+            tabelle, _ = entpacke_jsonstat(roh)
+        except SystemExit:
+            warnen(f"Inflationsdaten für {code} nicht abrufbar")
+            continue
+        except Exception as fehler:
+            warnen(f"Inflationsdaten {code}: {type(fehler).__name__}")
+            continue
+        if tabelle.empty or "time" not in tabelle.columns:
+            continue
+        je_jahr = tabelle.set_index("time")["wert"].to_dict()
+        werte[code] = [
+            round(float(je_jahr[j]), 1) if j in je_jahr and pd.notna(je_jahr[j]) else None
+            for j in jahre
+        ]
+
+    if not werte:
+        warnen("Keine Inflationsdaten — Phillips-Grafik entfällt")
+        return None
+    log(f"        {len(werte)} Gebiete, {jahre[0]}–{jahre[-1]}")
+    return werte
 
 
 def baue_stellen(daten: pd.DataFrame, mapping: dict) -> dict | None:
@@ -1159,14 +1232,34 @@ def baue_branche() -> dict | None:
     jetzt = tabelle[tabelle["datum"] == letzter].groupby(spalte_name)["bestand"].sum()
     alt = tabelle[tabelle["datum"] == vorjahr].groupby(spalte_name)["bestand"].sum()
 
-    eintraege = [
-        {
-            "name": str(name),
+    def zerlegen(roh: str) -> tuple[str, str]:
+        """
+        Die AMS-Bezeichnung lautet „O78200 - Überlassung von Arbeitskräften".
+        Der ÖNACE-Schlüssel gehört nicht in die Achsenbeschriftung — er kostet
+        Platz und sagt Lesenden nichts. Er bleibt als eigenes Feld erhalten,
+        damit sich jede Zeile gegen die AMS-Quelle nachprüfen lässt.
+        """
+        text = str(roh).strip()
+        code = ""
+        if " - " in text:
+            moeglich, rest = text.split(" - ", 1)
+            moeglich = moeglich.strip()
+            # Nur abtrennen, wenn es wirklich ein Schlüssel ist
+            if len(moeglich) <= 8 and any(z.isdigit() for z in moeglich):
+                code, text = moeglich, rest.strip()
+        if text.upper() in ("K.A.", "KA", "K. A.", "UNBEKANNT", ""):
+            text = "Ohne Angabe"
+        return text, code
+
+    eintraege = []
+    for name, wert in jetzt.sort_values(ascending=False).items():
+        klartext, code = zerlegen(name)
+        eintraege.append({
+            "name": klartext,
+            "code": code,
             "bestand": int(wert),
             "veraenderung_pct": prozent(float(wert), float(alt.get(name, 0))),
-        }
-        for name, wert in jetzt.sort_values(ascending=False).items()
-    ]
+        })
     log(f"    {len(eintraege)} Wirtschaftszweige")
 
     return {

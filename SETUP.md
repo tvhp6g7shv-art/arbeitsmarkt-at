@@ -119,3 +119,26 @@ kaputt, es wird nur nicht aktueller. Schick mir die Mail, dann sehe ich nach.
 | Seite sagt „Daten konnten nicht geladen werden" | Erster Datenlauf fehlt | Schritt 5 ausführen |
 | `.github`-Ordner fehlt nach dem Upload | macOS blendet ihn aus | `Cmd + Shift + .` im Finder |
 | Actions-Tab zeigt nichts an | Actions deaktiviert | Settings → Actions → Allow all actions |
+| Änderungen sind nach dem Upload nicht sichtbar | Browser hält `charts.js` im Cache | In `docs/index.html` und `docs/embed.html` die Ziffer in `charts.js?v=15` hochzählen |
+
+---
+
+## Nach jedem Upload: zwei Handgriffe
+
+**1. Die Versionsziffer hochzählen.** In `docs/index.html` und `docs/embed.html`
+steht am Ende:
+
+```html
+<script src="charts.js?v=15" defer></script>
+```
+
+GitHub Pages liefert JavaScript mit `Cache-Control: max-age=600` aus. Ohne eine
+neue Ziffer sieht ein Besucher nach dem Upload bis zu zehn Minuten die alte
+Datei — und wer die Seite schon einmal offen hatte, unter Umständen deutlich
+länger. Ein Hard-Reload hilft dir, aber nicht deinen Besuchern.
+
+Also: bei jedem Upload `v=14` → `v=15` → `v=16` …
+
+**2. Nur wenn sich im Ordner `etl/` etwas geändert hat:**
+Actions → „Daten aktualisieren" → **Run workflow**. Alles unter `docs/data/`
+entsteht erst bei einem Lauf; ein Upload allein ändert daran nichts.

@@ -66,6 +66,20 @@ EUROSTAT_VERGLEICH_NAMEN = {
     "AT": "Österreich", "EU27_2020": "EU-27", "DE": "Deutschland",
 }
 
+# Aggregate wie der EU-27-Schnitt sind für Eurostat KEIN „country" — sie fallen
+# aus der Abfrage mit geoLevel=country heraus. Sie müssen einzeln nachgeholt
+# werden, sonst fehlt ausgerechnet die Vergleichslinie.
+EUROSTAT_AGGREGATE = ["EU27_2020"]
+
+# Die Länderabfrage liefert auch Nicht-EU-Meldeländer (Schweiz, Norwegen,
+# Türkei, Westbalkan …). Für „Platz X von Y EU-Ländern" zählen nur die 27
+# Mitgliedstaaten — sonst ist die Aussage schlicht falsch.
+EU27_MITGLIEDER = [
+    "BE", "BG", "CZ", "DK", "DE", "EE", "IE", "EL", "ES", "FR", "HR", "IT",
+    "CY", "LV", "LT", "LU", "HU", "MT", "NL", "AT", "PL", "PT", "RO", "SI",
+    "SK", "FI", "SE",
+]
+
 EUROSTAT_PARAMS = {
     "format": "JSON",
     "lang": "DE",
@@ -75,6 +89,25 @@ EUROSTAT_PARAMS = {
     "unit": "PC",        # Prozent
     "sinceTimePeriod": "2019",
 }
+
+# ---------------------------------------------------------------------------
+# Inflation: harmonisierter Verbraucherpreisindex (HVPI), Jahresdurchschnitt.
+# Gleiche Quelle, gleiche Frequenz wie die EU-Arbeitslosenquote — damit lassen
+# sich beide Werte auf EINER Prozentachse gegeneinander auftragen.
+# ---------------------------------------------------------------------------
+EUROSTAT_INFLATION_URL = (
+    "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
+    "prc_hicp_aind"
+)
+EUROSTAT_INFLATION_PARAMS = {
+    "format": "JSON",
+    "lang": "DE",
+    "coicop": "CP00",      # Gesamtindex, alle Waren und Dienstleistungen
+    "unit": "RCH_A_AVG",   # Veränderung zum Vorjahr, Jahresdurchschnitt
+    "sinceTimePeriod": "2019",
+}
+# Dieselben drei Gebiete wie im EU-Zeitvergleich, damit die Punkte zusammenpassen.
+INFLATION_GEBIETE = ["AT", "DE", "EU27_2020"]
 
 # Geodaten für die Karte: politische Bezirke.
 # Der Layer enthält 117 Flächen: 94 politische Bezirke/Statutarstädte

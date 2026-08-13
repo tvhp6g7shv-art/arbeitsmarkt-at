@@ -87,7 +87,7 @@ In Oxygen: Seite auswählen → **Page Settings → Custom CSS/JS → JavaScript
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
-<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/charts.js" defer></script>
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/charts.js?v=15" defer></script>
 ```
 
 ### b) Pro Diagramm ein Code Block

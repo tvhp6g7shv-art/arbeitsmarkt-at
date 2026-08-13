@@ -188,12 +188,6 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
     und liegen systematisch niedriger.
   </div>
 
-  <!-- FILTER: eine Zeile über allem, was sie steuert -->
-  <div class="viz-filter">
-    <label for="f-bundesland">Region</label>
-    <select id="f-bundesland"><option value="AT">Ganz Österreich</option></select>
-  </div>
-
   <!-- 1 — KPI-ZEILE -->
   <div class="viz-kpis" id="kpis"></div>
 
@@ -411,6 +405,23 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
     <p class="viz-unterzeile" style="margin-top:12px" id="h-eu"></p>
   </section>
 
+  <!-- 15 — PHILLIPS-KURVE: Inflation gegen Arbeitslosigkeit -->
+  <section class="viz-karte" id="s-phillips" data-chart="phillips" style="display:none">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Inflation im Verhältnis zur Arbeitslosigkeit</h2>
+        <p class="viz-unterzeile" id="u-phillips"></p>
+      </div>
+      <div class="viz-knopfreihe">
+        <button class="viz-tabelle-schalter" data-ziel="t-phillips">Tabelle</button>
+        <button class="viz-einbetten" data-chart="phillips">Einbetten</button>
+      </div>
+    </header>
+    <div class="viz-chart viz-chart-hoch" id="c-phillips"></div>
+    <div class="viz-verborgen" id="t-phillips"></div>
+    <p class="viz-unterzeile" style="margin-top:12px" id="h-phillips"></p>
+  </section>
+
   <p class="viz-fuss" id="fuss"></p>
 
   <dialog class="viz-dialog" id="einbett-dialog">
@@ -428,7 +439,12 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
   </dialog>
 </div>
 
-<script src="charts.js" defer></script>
+<!-- ?v=15 bricht den Browser-Cache. GitHub Pages liefert JS mit
+     Cache-Control: max-age=600 aus — ohne diese Ziffer sieht ein
+     Besucher nach einem Upload bis zu 10 Minuten die alte Datei,
+     und wer die Seite schon einmal offen hatte, unter Umstaenden
+     deutlich laenger. BEI JEDEM UPLOAD HOCHZAEHLEN. -->
+<script src="charts.js?v=15" defer></script>
 
 <script>
 /* Startet das Dashboard, sobald ECharts und charts.js geladen sind. */

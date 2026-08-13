@@ -183,20 +183,18 @@ table.viz-tabelle td.num, table.viz-tabelle th.num { text-align: right; }
     <div class="viz-verborgen" id="t-ausbildung"></div>
   </section>
 
-  <!-- 4 — BEZIRKSKARTE -->
+  <!-- 4 — KARTE (Bundesländer) -->
   <section class="viz-karte">
     <header class="viz-kopfzeile">
       <div>
-        <h2>Verteilung nach Bezirken</h2>
+        <h2>Verteilung nach Bundesländern</h2>
         <p class="viz-unterzeile" id="u-karte"></p>
       </div>
-      <button class="viz-tabelle-schalter" data-ziel="t-karte">Tabelle</button>
     </header>
     <div class="viz-chart viz-chart-karte" id="c-karte"></div>
-    <div class="viz-verborgen" id="t-karte"></div>
   </section>
 
-  <!-- 5 — BUNDESLÄNDER-TABELLE -->
+  <!-- 5 — BUNDESLÄNDER-TABELLE (zugleich die Tabellenansicht zur Karte) -->
   <section class="viz-karte">
     <header class="viz-kopfzeile">
       <div>
@@ -205,6 +203,19 @@ table.viz-tabelle td.num, table.viz-tabelle th.num { text-align: right; }
       </div>
     </header>
     <div id="t-laender"></div>
+  </section>
+
+  <!-- 6 — BEZIRKE -->
+  <section class="viz-karte">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>AMS-Bezirke</h2>
+        <p class="viz-unterzeile" id="u-bezirke"></p>
+      </div>
+      <button class="viz-tabelle-schalter" data-ziel="t-bezirke">Einblenden</button>
+    </header>
+    <p class="viz-unterzeile" style="margin-top:10px" id="h-bezirke"></p>
+    <div class="viz-verborgen" id="t-bezirke"></div>
   </section>
 
   <p class="viz-fuss" id="fuss"></p>
@@ -292,7 +303,7 @@ async function start() {
     [meta, kpi, zeitreihe, ausbildung, bezirke, laender] = await Promise.all(
       ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke", "bundeslaender"].map(hole)
     );
-    geo = await hole("bezirke_geo").catch(() => null);
+    geo = await hole("bundeslaender_geo").catch(() => null);
   } catch (fehler) {
     document.getElementById("lead").textContent =
       "Die Daten konnten nicht geladen werden. " + fehler.message;
@@ -314,8 +325,9 @@ async function start() {
   baueKpis(kpi, zeitreihe);
   baueZeitreihe(zeitreihe);
   baueAusbildung(ausbildung, "AT");
-  baueKarte(bezirke, geo);
+  baueKarte(laender, geo);
   baueLaender(laender);
+  baueBezirke(bezirke, meta);
   baueFuss(meta);
 
   auswahl.addEventListener("change", (e) => baueAusbildung(ausbildung, e.target.value));
@@ -427,17 +439,20 @@ function baueZeitreihe(daten) {
   );
 }
 
-/* --- 3 — Ausbildungsstand: eine Farbe, Länge trägt die Größe --------- */
+/* --- 3 — Ausbildungsstand: eine Farbe, Länge trägt die Größe ---------
+   Das Diagramm zeigt 7 Gruppen; die 18 Einzelstufen des AMS stehen in
+   der Tabellenansicht. Mehr als etwa sieben Balken kann man nicht mehr
+   sinnvoll vergleichen. */
 function baueAusbildung(daten, region) {
   const d = echarts.getInstanceByDom(document.getElementById("c-ausbildung"))
          || echarts.init(document.getElementById("c-ausbildung"), null, { renderer: "svg" });
   if (!diagramme.includes(d)) diagramme.push(d);
 
-  const je = daten.je_bundesland || {};
-  const werte = daten.stufen.map((s) =>
-    region === "AT" ? s.bestand : (je[region]?.[s.code] ?? 0)
+  const jeGruppe = daten.gruppen_je_bundesland || {};
+  const werte = daten.gruppen.map((g) =>
+    region === "AT" ? g.bestand : (jeGruppe[region]?.[g.schluessel] ?? 0)
   );
-  const namen = daten.stufen.map((s) => s.name);
+  const namen = daten.gruppen.map((g) => g.name);
   const summe = werte.reduce((a, b) => a + b, 0);
 
   document.getElementById("u-ausbildung").textContent =
@@ -470,56 +485,61 @@ function baueAusbildung(daten, region) {
     }],
   }, { replaceMerge: ["series", "yAxis"] });
 
+  // Tabelle zeigt die volle Auflösung: alle 18 AMS-Stufen
+  const jeStufe = daten.je_bundesland || {};
+  const stufenWerte = daten.stufen.map((s) =>
+    region === "AT" ? s.bestand : (jeStufe[region]?.[s.code] ?? 0)
+  );
+  const stufenSumme = stufenWerte.reduce((a, b) => a + b, 0);
+
   document.getElementById("t-ausbildung").innerHTML = tabelle(
     [{ titel: "Ausbildung", wert: (z) => z.name },
+     { titel: "Code", wert: (z) => z.code },
      { titel: "Personen", num: true, wert: (z) => zahl(z.wert) },
-     { titel: "Anteil", num: true, wert: (z) => summe ? pz(z.wert / summe * 100) + " %" : "–" }],
-    daten.stufen.map((s, i) => ({ name: s.name, wert: werte[i] }))
+     { titel: "Anteil", num: true,
+       wert: (z) => stufenSumme ? pz(z.wert / stufenSumme * 100) + " %" : "–" }],
+    daten.stufen.map((s, i) => ({ name: s.name, code: s.code, wert: stufenWerte[i] }))
   );
 }
 
-/* --- 4 — Bezirkskarte: sequenzielle Skala, eine Farbe hell → dunkel -- */
-function baueKarte(daten, geo) {
+/* --- 4 — Karte: Bundesländer, sequenzielle Skala hell → dunkel -------
+   Bewusst Bundesland statt Bezirk: Die AMS-Geschäftsstellenbezirke sind
+   ein anderes Nummernsystem als die politischen Bezirke (RGS 102 =
+   Mattersburg, Bezirkskennziffer 102 = Rust). Ein Join über die Nummer
+   ergäbe eine Karte, die falsche Zahlen an richtigen Orten zeigt.
+   Die Tabelle direkt darunter ist die Tabellenansicht zu dieser Karte. */
+function baueKarte(laender, geo) {
   const feld = document.getElementById("c-karte");
   document.getElementById("u-karte").textContent =
-    `Bestand am ${monat(daten.stand)} · ${daten.bezirke.length} AMS-Bezirke`;
-
-  const zeilen = [...daten.bezirke].sort((a, b) => b.bestand - a.bestand);
-  document.getElementById("t-karte").innerHTML = tabelle(
-    [{ titel: "Bezirk", wert: (z) => z.name },
-     { titel: "Bundesland", wert: (z) => z.bundesland ?? "–" },
-     { titel: "Personen", num: true, wert: (z) => zahl(z.bestand) },
-     { titel: "ggü. Vorjahr", num: true,
-       wert: (z) => z.veraenderung_pct === null ? "–" :
-         `${z.veraenderung_pct > 0 ? "+" : ""}${pz(z.veraenderung_pct)} %` }],
-    zeilen
-  );
+    `Registrierte Arbeitslose am ${monat(laender.stand)} · Werte in der Tabelle darunter`;
 
   if (!geo) {
     feld.innerHTML = `<p class="viz-unterzeile" style="padding:20px 0">
-      Die Bezirksgrenzen konnten nicht geladen werden — die Tabellenansicht enthält alle Werte.</p>`;
-    document.getElementById("t-karte").classList.remove("viz-verborgen");
+      Die Bundeslandgrenzen konnten nicht geladen werden — alle Werte stehen
+      in der Tabelle darunter.</p>`;
     return;
   }
 
-  echarts.registerMap("at-bezirke", geo);
+  echarts.registerMap("at-bundeslaender", geo);
   const d = echarts.init(feld, null, { renderer: "canvas" });
-  const namen = Object.fromEntries(daten.bezirke.map((b) => [b.code, b]));
-  const werte = daten.bezirke.map((b) => ({ name: b.code, value: b.bestand }));
-  const max = Math.max(...daten.bezirke.map((b) => b.bestand));
+  const nachCode = Object.fromEntries(laender.laender.map((l) => [l.nuts2, l]));
+  const werte = laender.laender.map((l) => ({ name: l.nuts2, value: l.bestand }));
+  const max = Math.max(...laender.laender.map((l) => l.bestand));
 
   d.setOption({
     ...basis(),
     tooltip: {
       ...basis().tooltip, trigger: "item",
       formatter: (p) => {
-        const b = namen[p.name];
-        if (!b) return `${p.name}<br><span style="color:${stil("--viz-muted")}">keine AMS-Daten</span>`;
-        const v = b.veraenderung_pct;
-        return `<strong>${b.name}</strong><br>${b.bundesland ?? ""}<br>` +
-          `${zahl(b.bestand)} Arbeitslose` +
-          (v === null ? "" : `<br><span style="color:${v > 0 ? stil("--viz-kritisch") : stil("--viz-gut")}">` +
-            `${v > 0 ? "▲" : "▼"} ${pz(Math.abs(v))} % ggü. Vorjahr</span>`);
+        const l = nachCode[p.name];
+        if (!l) return `${p.name}<br><span style="color:${stil("--viz-muted")}">keine Daten</span>`;
+        const v = l.veraenderung_pct;
+        return `<strong>${l.name}</strong><br>${zahl(l.bestand)} Arbeitslose` +
+          (v === null || v === undefined ? "" :
+            `<br><span style="color:${v > 0 ? stil("--viz-kritisch") : stil("--viz-gut")}">` +
+            `${v > 0 ? "▲" : "▼"} ${pz(Math.abs(v))} % ggü. Vorjahr</span>`) +
+          (l.quote_eu === null || l.quote_eu === undefined ? "" :
+            `<br><span style="color:${stil("--viz-muted")}">Quote EU-Definition ${pz(l.quote_eu)} %</span>`);
       },
     },
     visualMap: {                    /* Skalenlegende ist bei stetiger Färbung Pflicht */
@@ -531,14 +551,39 @@ function baueKarte(daten, geo) {
                          stil("--viz-seq-4"), stil("--viz-seq-5"), stil("--viz-seq-6")] },
     },
     series: [{
-      type: "map", map: "at-bezirke", data: werte,
+      type: "map", map: "at-bundeslaender", data: werte,
       roam: false, aspectScale: 0.78,
-      itemStyle: { areaColor: stil("--viz-grid"), borderColor: stil("--viz-surface"), borderWidth: 1 },
-      emphasis: { label: { show: false }, itemStyle: { borderColor: stil("--viz-text"), borderWidth: 1.5 } },
+      /* Beschriftung mit Kontur in Flächenfarbe: bleibt auf hellen wie auf
+         dunklen Feldern lesbar, ohne dass die Farbe mitwandern muss. */
+      label: { show: true, formatter: (p) => nachCode[p.name]?.name ?? "",
+               color: stil("--viz-text"), fontSize: 11.5,
+               textBorderColor: stil("--viz-surface"), textBorderWidth: 2.5 },
+      itemStyle: { areaColor: stil("--viz-grid"), borderColor: stil("--viz-surface"), borderWidth: 1.5 },
+      emphasis: { label: { color: stil("--viz-text"),
+                           textBorderColor: stil("--viz-surface"), textBorderWidth: 2.5 },
+                  itemStyle: { borderColor: stil("--viz-text"), borderWidth: 1.5 } },
       select: { disabled: true },
     }],
   });
   diagramme.push(d);
+}
+
+/* --- 6 — AMS-Bezirke: nur Tabelle, mit klarer Einordnung ------------ */
+function baueBezirke(daten, meta) {
+  document.getElementById("u-bezirke").textContent =
+    `${daten.bezirke.length} Geschäftsstellenbezirke · Stand ${monat(daten.stand)}`;
+  document.getElementById("h-bezirke").textContent = meta.hinweis_bezirke ?? "";
+
+  const zeilen = [...daten.bezirke].sort((a, b) => b.bestand - a.bestand);
+  document.getElementById("t-bezirke").innerHTML = tabelle(
+    [{ titel: "AMS-Bezirk", wert: (z) => z.name },
+     { titel: "Bundesland", wert: (z) => z.bundesland ?? "–" },
+     { titel: "Personen", num: true, wert: (z) => zahl(z.bestand) },
+     { titel: "ggü. Vorjahr", num: true,
+       wert: (z) => z.veraenderung_pct === null || z.veraenderung_pct === undefined ? "–" :
+         `${z.veraenderung_pct > 0 ? "+" : ""}${pz(z.veraenderung_pct)} %` }],
+    zeilen
+  );
 }
 
 /* --- 5 — Bundesländer: Tabelle mit Sparklines ------------------------ */

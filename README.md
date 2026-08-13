@@ -45,8 +45,8 @@ Kein Server, keine Datenbank, keine laufenden Kosten.
 | `kpi.json` | Kernzahlen: Bestand, Vorjahresvergleich, Geschlechterverteilung |
 | `zeitreihe.json` | Monatsverlauf Österreich seit Januar 2019 |
 | `ausbildung.json` | Nach höchster abgeschlossener Ausbildung, gesamt und je Bundesland |
-| `bezirke.json` | Je AMS-Bezirk: Bestand und Vorjahresveränderung |
-| `bezirke_geo.json` | Bezirksgrenzen als GeoJSON für die Karte |
+| `bezirke.json` | Je AMS-Bezirk: Bestand und Vorjahresveränderung (Tabelle) |
+| `bundeslaender_geo.json` | Bundeslandgrenzen als GeoJSON für die Karte |
 | `bundeslaender.json` | Je Bundesland: Bestand, Veränderung, Quote, 36-Monats-Verlauf |
 | `quoten.json` | Arbeitslosenquoten nach Bildungsstand (EU-Definition) |
 | `meta.json` | Stand, Quellen, Lizenzen und Warnhinweise des letzten Laufs |
@@ -79,10 +79,16 @@ sichtbar sein, die diese Daten zeigt.
 - **Stadt/Land fehlt noch.** Die Gemeindedatei des AMS enthält nur Geschlecht,
   keinen Ausbildungsstand. Die Verknüpfung mit der Urban-Rural-Typologie der
   Statistik Austria ist als nächster Schritt geplant.
-- **AMS-Bezirke sind nicht exakt politische Bezirke.** Rund 100
-  AMS-Geschäftsstellenbezirke stehen 94 politischen Bezirken gegenüber; Wien
-  weicht am stärksten ab. Das Skript meldet im Protokoll, welche Codes sich
-  nicht zuordnen ließen — diese Flächen bleiben auf der Karte grau.
+- **Die Karte zeigt Bundesländer, nicht Bezirke.** AMS-Geschäftsstellenbezirke
+  (RGSCode) und politische Bezirke (Bezirkskennziffer) sind zwei verschiedene
+  Nummernsysteme: RGSCode 102 ist Mattersburg, Bezirkskennziffer 102 ist Rust.
+  Ein Join über die Nummer sieht wie ein Treffer aus, ordnet die Zahlen aber
+  dem falschen Bezirk zu. Wien hat beim AMS rund 15 Geschäftsstellen statt
+  einer Fläche. Eine Bezirkskarte braucht daher eine handgeprüfte
+  Zuordnungstabelle — bis dahin: Karte auf Bundeslandebene, Bezirkswerte in
+  der Tabelle.
+- **Das Diagramm fasst die 18 AMS-Ausbildungsstufen zu 7 Gruppen zusammen.**
+  Alle 18 Einzelstufen stehen in der Tabellenansicht.
 - **Die Quoten sind jährlich**, die AMS-Zahlen monatlich. Das ist keine
   Ungenauigkeit, sondern der Unterschied der beiden Erhebungen.
 

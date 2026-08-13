@@ -157,8 +157,9 @@ Diagramme fertig ausgearbeitet. Kopier dir den passenden Block heraus:
 | KPI-Kacheln | `baueKpis()` | `kpi.json`, `zeitreihe.json` |
 | Zeitreihe | `baueZeitreihe()` | `zeitreihe.json` |
 | Ausbildungsstand | `baueAusbildung()` | `ausbildung.json` |
-| Bezirkskarte | `baueKarte()` | `bezirke.json`, `bezirke_geo.json` |
+| Karte (Bundesländer) | `baueKarte()` | `bundeslaender.json`, `bundeslaender_geo.json` |
 | Bundesländer-Tabelle | `baueLaender()` | `bundeslaender.json` |
+| Bezirks-Tabelle | `baueBezirke()` | `bezirke.json`, `meta.json` |
 
 Die Hilfsfunktionen `stil()`, `zahl()`, `pz()`, `basis()` und `achse()` stehen
 im selben Dokument und werden von allen gebraucht — die legst du am besten

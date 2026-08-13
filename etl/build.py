@@ -445,8 +445,43 @@ def baue_ausgaben(daten: pd.DataFrame, mapping: dict, quoten: dict) -> dict[str,
         summen = teil.groupby("ausbcode")["bestand"].sum()
         je_bundesland[str(land)] = {c: int(summen.get(c, 0)) for c in codes}
 
+    # Zusammenfassung auf 7 Gruppen fürs Diagramm (18 Stufen sind zu viele,
+    # um sie als Balken noch unterscheiden zu können)
+    zugeordnet = {c for _, _, codes in config.AUSBILDUNG_GRUPPEN for c in codes}
+    nicht_zugeordnet = set(codes) - zugeordnet
+    if nicht_zugeordnet:
+        warnen(
+            f"Ausbildungscodes ohne Gruppenzuordnung: {sorted(nicht_zugeordnet)} — "
+            f"in config.AUSBILDUNG_GRUPPEN ergänzen, sonst fehlen sie im Diagramm"
+        )
+
+    gruppen = []
+    for schluessel, bezeichnung, mitglieder in config.AUSBILDUNG_GRUPPEN:
+        wert = float(sum(jetzt_ausb.get(c, 0) for c in mitglieder))
+        alt = (
+            float(sum(vorjahr_ausb.get(c, 0) for c in mitglieder))
+            if vorjahr_ausb is not None else 0.0
+        )
+        gruppen.append({
+            "schluessel": schluessel,
+            "name": bezeichnung,
+            "codes": mitglieder,
+            "bestand": int(wert),
+            "veraenderung_pct": prozent(wert, alt) if vorjahr is not None else None,
+            "anteil_pct": round(wert / gesamt_jetzt * 100, 1) if gesamt_jetzt else 0,
+        })
+
+    gruppen_je_bundesland: dict[str, dict[str, int]] = {}
+    for land, werte_land in je_bundesland.items():
+        gruppen_je_bundesland[land] = {
+            schluessel: int(sum(werte_land.get(c, 0) for c in mitglieder))
+            for schluessel, _, mitglieder in config.AUSBILDUNG_GRUPPEN
+        }
+
     ausgaben["ausbildung"] = {
         "stand": m(aktueller_monat),
+        "gruppen": gruppen,
+        "gruppen_je_bundesland": gruppen_je_bundesland,
         "stufen": stufen,
         "je_bundesland": je_bundesland,
         "zeitreihe": {
@@ -528,12 +563,37 @@ def baue_ausgaben(daten: pd.DataFrame, mapping: dict, quoten: dict) -> dict[str,
 # Schritt 5: Geodaten und Schreiben
 # ---------------------------------------------------------------------------
 
-def hole_geodaten(bezirkscodes: set[str]) -> dict | None:
-    log("\n[5/5] Bezirksgrenzen laden")
+def code_aus_merkmal(merkmal: dict) -> str:
+    """
+    Regionalcode eines WFS-Features bestimmen.
+
+    Der Statistik-Austria-WFS liefert den Code je nach Layer entweder als
+    Attribut `g_id` oder nur in der Feature-ID
+    (z.B. "STATISTIK_AUSTRIA_NUTS2_20250101.AT11"). Beides abdecken.
+    """
+    eigenschaften = merkmal.get("properties") or {}
+    for schluessel in ("g_id", "id", "NUTS_ID", "nuts_id"):
+        wert = str(eigenschaften.get(schluessel, "")).strip()
+        if wert:
+            return wert
+    kennung = str(merkmal.get("id", ""))
+    return kennung.rsplit(".", 1)[-1].strip() if "." in kennung else ""
+
+
+def hole_geodaten() -> dict | None:
+    """
+    Bundeslandgrenzen (NUTS-2) laden und für ECharts vorbereiten.
+
+    Bewusst Bundesland statt Bezirk: RGSCode und Bezirkskennziffer sind
+    verschiedene Nummernsysteme (siehe Kommentar in config.py). Auf
+    Bundeslandebene ist die Zuordnung eindeutig und nachprüfbar.
+    """
+    log("\n[5/5] Bundeslandgrenzen laden")
     try:
         geo = json.loads(lade_bytes(config.GEO_URL).decode("utf-8"))
     except SystemExit:
-        warnen("Bezirksgrenzen nicht abrufbar — Karte bleibt vorerst leer")
+        warnen("Bundeslandgrenzen nicht abrufbar — Karte bleibt leer, "
+               "die Tabelle enthält alle Werte")
         return None
 
     merkmale = geo.get("features", [])
@@ -541,26 +601,26 @@ def hole_geodaten(bezirkscodes: set[str]) -> dict | None:
         warnen("Geodaten enthalten keine Features")
         return None
 
-    geo_codes = {
-        str(mm.get("properties", {}).get("g_id", "")).strip() for mm in merkmale
+    erkannt = 0
+    for merkmal in merkmale:
+        code = code_aus_merkmal(merkmal)
+        eigenschaften = merkmal.setdefault("properties", {})
+        # ECharts ordnet Daten über properties.name zu
+        eigenschaften["name"] = code
+        eigenschaften["bundesland"] = config.NUTS2_BUNDESLAND.get(code, code)
+        if code in config.NUTS2_BUNDESLAND:
+            erkannt += 1
+
+    fehlend = set(config.NUTS2_BUNDESLAND) - {
+        code_aus_merkmal(mm) for mm in merkmale
     }
-    fehlend = bezirkscodes - geo_codes
-    ueberzaehlig = geo_codes - bezirkscodes
     if fehlend:
         warnen(
-            f"{len(fehlend)} AMS-Bezirkscodes ohne Geometrie: "
-            f"{sorted(fehlend)[:20]} — diese Bezirke bleiben auf der Karte grau"
+            f"Bundesländer ohne Geometrie: {sorted(fehlend)} — "
+            f"diese Flächen bleiben auf der Karte grau"
         )
-    if ueberzaehlig:
-        warnen(f"{len(ueberzaehlig)} Geometrien ohne AMS-Daten: {sorted(ueberzaehlig)[:20]}")
 
-    # ECharts erwartet den Anzeigenamen in properties.name
-    for merkmal in merkmale:
-        eigenschaften = merkmal.setdefault("properties", {})
-        eigenschaften["name"] = str(eigenschaften.get("g_id", "")).strip()
-        eigenschaften["bezirk"] = eigenschaften.get("g_name", "")
-
-    log(f"    {len(merkmale)} Bezirksgeometrien")
+    log(f"    {len(merkmale)} Geometrien, davon {erkannt} als Bundesland erkannt")
     return geo
 
 
@@ -586,13 +646,13 @@ def main() -> None:
     daten = lade_ausbildungsdaten(mapping)
     quoten = hole_eurostat()
     ausgaben = baue_ausgaben(daten, mapping, quoten)
-    geo = hole_geodaten(set(daten["rgscode"].unique()))
+    geo = hole_geodaten()
 
     log("\nSchreiben")
     for name, inhalt in ausgaben.items():
         schreibe(name, inhalt)
     if geo:
-        schreibe("bezirke_geo", geo)
+        schreibe("bundeslaender_geo", geo)
 
     schreibe("meta", {
         "generiert_am": start.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -609,16 +669,24 @@ def main() -> None:
                 "lizenz": "Eurostat-Nutzungsbedingungen",
             },
             {
-                "name": "STATISTIK AUSTRIA — Bezirksgrenzen",
-                "url": "https://data.statistik.gv.at/web/meta.jsp?dataset=OGDEXT_POLBEZ_1",
+                "name": "STATISTIK AUSTRIA — Bundeslandgrenzen",
+                "url": "https://data.statistik.gv.at/web/catalog.jsp",
                 "lizenz": "CC BY 4.0",
             },
         ],
         "hinweis_definitionen": (
             "AMS-Zahlen sind beim AMS registrierte Arbeitslose (nationale "
-            "Definition, monatlich). Die Quoten stammen aus der EU-weiten "
-            "Arbeitskräfteerhebung (ILO-Definition, jährlich) und sind mit den "
-            "AMS-Absolutzahlen nicht direkt verrechenbar."
+            "Definition, monatlich, ohne Schulungsteilnehmer:innen). Die Quoten "
+            "stammen aus der EU-weiten Arbeitskräfteerhebung (ILO-Definition, "
+            "jährlich) und sind mit den AMS-Absolutzahlen nicht direkt "
+            "verrechenbar."
+        ),
+        "hinweis_bezirke": (
+            "Die Bezirksangaben sind AMS-Geschäftsstellenbezirke (RGS), nicht "
+            "politische Bezirke. Die beiden Nummernsysteme unterscheiden sich: "
+            "RGSCode 102 ist Mattersburg, Bezirkskennziffer 102 ist Rust. Wien "
+            "ist beim AMS in rund 15 Geschäftsstellen aufgeteilt. Die Karte "
+            "zeigt daher Bundesländer; Bezirkswerte stehen in der Tabelle."
         ),
         "schema": SCHEMA_REPORT,
         "warnungen": WARNUNGEN,

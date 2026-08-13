@@ -40,13 +40,22 @@ EUROSTAT_PARAMS = {
     "sinceTimePeriod": "2019",
 }
 
-# Geodaten der politischen Bezirke (für die Choropleth-Karte).
-# Statistik Austria WFS, direkt in WGS84 — CC BY 4.0.
-# Attribut g_id = dreistellige Bezirkskennziffer, g_name = Bezirksname.
+# Geodaten für die Karte: BUNDESLÄNDER (NUTS-2), nicht Bezirke.
+#
+# Warum nicht Bezirke: Die AMS-Geschäftsstellenbezirke (RGSCode) und die
+# politischen Bezirke (Bezirkskennziffer) sind ZWEI VERSCHIEDENE
+# Nummernsysteme. Beispiel: RGSCode 102 = Mattersburg, Bezirkskennziffer
+# 102 = Rust(Stadt). Ein Join über die Nummer sieht aus wie ein Treffer,
+# ordnet die Zahlen aber dem falschen Bezirk zu. Wien hat beim AMS
+# ~15 Geschäftsstellen (958–977) statt einer Fläche.
+# Eine Bezirkskarte braucht daher eine handgeprüfte Zuordnungstabelle
+# RGSCode -> politische Bezirke. Bis die existiert: Karte auf
+# Bundeslandebene (dort ist die Zuordnung eindeutig), Bezirksdetails
+# stehen in der Tabelle.
 GEO_URL = (
     "https://www.statistik.at/gs-open/GEODATA/ows"
     "?service=WFS&version=1.1.0&request=GetFeature"
-    "&typeName=GEODATA:STATISTIK_AUSTRIA_POLBEZ_20250101"
+    "&typeName=GEODATA:STATISTIK_AUSTRIA_NUTS2_20250101"
     "&outputFormat=application/json&srsName=EPSG:4326"
 )
 
@@ -75,21 +84,47 @@ BUNDESLAND_REIHENFOLGE = [
 ]
 
 # ---------------------------------------------------------------------------
-# Ausbildungsstufen: Sortierung von niedrig nach hoch.
-# Codes, die hier nicht vorkommen, landen automatisch am Ende und werden
-# im Schema-Report gemeldet — dann diese Liste ergänzen.
+# Ausbildungsstufen
+#
+# Das AMS unterscheidet 18 Stufen (Stand 08/2026, aus den Daten verifiziert).
+# Für die Tabelle bleiben alle 18 erhalten; fürs Diagramm werden sie zu
+# 7 Gruppen zusammengefasst — mehr als etwa sieben Kategorien kann ein
+# Balkendiagramm nicht mehr sinnvoll unterscheidbar zeigen.
+#
+# Codes, die hier fehlen, landen automatisch am Ende und werden im
+# Schema-Report gemeldet.
 # ---------------------------------------------------------------------------
 
 AUSBILDUNG_REIHENFOLGE = [
+    "PO",   # Keine abgeschl. Pflichtschule
     "PS",   # Pflichtschule
+    "LT",   # Teilintegrierte Lehre
     "LE",   # Lehre
-    "MB",   # Mittlere Ausbildung / BMS
-    "HA",   # Höhere Ausbildung / AHS/BHS
+    "LM",   # Lehre u. Meisterprüfung
+    "MS",   # Sonstige mittlere Schule
+    "MK",   # Mittlere kaufm. Schule
+    "MT",   # Mittlere techn.-gewerbl. Schule
+    "HA",   # Allg. höhere Schule
+    "HK",   # Höhere kaufm. Schule
+    "HT",   # Höhere techn.-gewerbl. Schule
+    "HS",   # Höhere sonstige Schule
     "AK",   # Akademie
     "FB",   # Fachhochschule Bakkalaureat
+    "UB",   # Bakkalaureatstudium
     "FH",   # Fachhochschule
-    "UB",   # Universität Bakkalaureat
-    "UN",   # Universität
+    "UV",   # Universität
+    "XX",   # Ungeklärt
+]
+
+# Zusammenfassung fürs Diagramm. Reihenfolge = Anzeigereihenfolge.
+AUSBILDUNG_GRUPPEN = [
+    ("pflicht",  "Pflichtschule oder weniger", ["PO", "PS"]),
+    ("lehre",    "Lehre",                      ["LT", "LE", "LM"]),
+    ("mittel",   "Mittlere Schule",            ["MS", "MK", "MT"]),
+    ("matura",   "Höhere Schule (Matura)",     ["HA", "HK", "HT", "HS"]),
+    ("akademie", "Akademie oder Bachelor",     ["AK", "FB", "UB"]),
+    ("hoch",     "Fachhochschule, Universität", ["FH", "UV"]),
+    ("unklar",   "Ungeklärt",                  ["XX"]),
 ]
 
 # ---------------------------------------------------------------------------

@@ -328,12 +328,18 @@ FLUSS_MONATE = 24
 # Einbettung für Redaktionen
 #
 # Diese Zeile erscheint in jeder eingebetteten Grafik und erfüllt die
-# CC-BY-Namensnennungspflicht. NAME und URL vor dem Launch anpassen.
+# CC-BY-Namensnennungspflicht.
+#
+# Achtung: arbeitsmarktdashboard.at löst derzeit noch nicht auf (Stand
+# 2026-08-13). Bis die Domain steht, gehen alle Links in eingebetteten
+# Grafiken ins Leere. Wer das vermeiden will, trägt vorübergehend die
+# GitHub-Pages-Adresse als "url" ein und tauscht sie später:
+#   "url": "https://tvhp6g7shv-art.github.io/arbeitsmarkt-at/",
 # ---------------------------------------------------------------------------
 
 EINBETTUNG = {
-    "grafik_von": "Identity Lab",
-    "url": "https://tvhp6g7shv-art.github.io/arbeitsmarkt-at/",
+    "grafik_von": "arbeitsmarktdashboard.at",
+    "url": "https://arbeitsmarktdashboard.at",
     "lizenz_grafik": "CC BY 4.0",
 }
 

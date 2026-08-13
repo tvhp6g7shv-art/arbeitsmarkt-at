@@ -504,6 +504,34 @@ function baueGenerationen(daten, region) {
    AMS-Zahlen exakt auf die Geometrie passen. Wo AMS-Region und Bezirk sich
    nicht decken (Wien, Graz, Linz), bildet die Karte die zusammengefasste
    Einheit ab — lieber gröber und richtig als fein und falsch. */
+/* ECharts kennt nur Polygon und MultiPolygon. Die Geometriereparatur im ETL
+   liefert bei kaputten Rändern aber eine GeometryCollection — Flächen plus
+   die Linienreste, die beim Reparieren anfallen. ECharts sucht darin
+   `coordinates`, findet nichts und wirft „Invalid geoJson format".
+   Hier werden solche Sammlungen auf ihre Flächen reduziert. Das ETL macht
+   dasselbe seit v12; diese Zeile hält auch ältere Datenstände am Leben. */
+function flaechenNormalisieren(geo) {
+  if (!geo?.features) return geo;
+  const raus = (g) => {
+    if (!g) return null;
+    if (g.type === "Polygon" || g.type === "MultiPolygon") return g;
+    if (g.type === "GeometryCollection") {
+      const teile = (g.geometries ?? []).map(raus).filter(Boolean);
+      if (!teile.length) return null;
+      const ringe = teile.flatMap((t) =>
+        t.type === "Polygon" ? [t.coordinates] : t.coordinates);
+      return { type: "MultiPolygon", coordinates: ringe };
+    }
+    return null;
+  };
+  return {
+    ...geo,
+    features: geo.features
+      .map((f) => ({ ...f, geometry: raus(f.geometry) }))
+      .filter((f) => f.geometry),
+  };
+}
+
 function baueKarte(karte, geo) {
   const feld = document.getElementById("c-karte");
   if (!karte || !geo) {
@@ -521,7 +549,7 @@ function baueKarte(karte, geo) {
   document.getElementById("u-karte").textContent =
     `Registrierte Arbeitslose am ${monat(karte.stand)} · ${karte.regionen.length} Regionen`;
 
-  echarts.registerMap("at-bezirke", geo);
+  echarts.registerMap("at-bezirke", flaechenNormalisieren(geo));
   const d = echarts.init(feld, null, { renderer: "canvas" });
   const nachName = Object.fromEntries(karte.regionen.map((r) => [r.name, r]));
   const werte = karte.regionen.map((r) => ({ name: r.name, value: r.bestand }));
@@ -1051,18 +1079,18 @@ const EINBETT_HOEHEN = {
   stellen: 440, branche: 560, eu: 460, eurang: 440,
 };
 const EINBETT_TITEL = {
-  zeitreihe: "Arbeitslose in Österreich, Monatsverlauf",
-  ausbildung: "Arbeitslose nach höchster abgeschlossener Ausbildung",
-  verlauf: "Arbeitslose nach Ausbildungsgruppen im Zeitverlauf",
-  generationen: "Arbeitslose nach Generationen",
-  karte: "Arbeitslose nach Bezirken",
-  fluss: "Zugänge und Abgänge am österreichischen Arbeitsmarkt",
-  dauer: "Dauer der Arbeitslosigkeit in Österreich",
-  schulung: "Personen in AMS-Schulungen",
-  stellen: "Offene Stellen und Stellenandrang",
-  branche: "Arbeitslose nach Wirtschaftszweig",
-  eu: "Arbeitslosenquote: Österreich im EU-Vergleich",
-  eurang: "Arbeitslosenquote im EU-Ländervergleich",
+  zeitreihe: "Arbeitslosigkeit in Österreich, Monatsverlauf",
+  ausbildung: "Arbeitslosigkeit nach höchster abgeschlossener Ausbildung",
+  verlauf: "Verlauf der Arbeitslosigkeit in den größten Ausbildungsgruppen",
+  generationen: "Darstellung der Arbeitslosigkeit nach Generationen",
+  karte: "Verteilung der Arbeitslosigkeit nach Bezirken",
+  fluss: "Zugänge und Abgänge in die Arbeitslosigkeit",
+  dauer: "Dauer der bestehenden Arbeitslosigkeit",
+  schulung: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",
+  stellen: "Offene Stellen und Arbeitslose je offener Stelle",
+  branche: "Arbeitslosigkeit nach Wirtschaftszweig",
+  eu: "Arbeitslosenquote im Vergleich mit EU-27 und Deutschland",
+  eurang: "Arbeitslosenquote: Wo Österreich in der EU steht",
 };
 
 function einbettBasis() {

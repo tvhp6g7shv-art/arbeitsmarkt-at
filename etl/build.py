@@ -1245,6 +1245,26 @@ def baue_kartenregionen(jetzt_je_rgs, vorjahr_je_rgs, mapping: dict,
             repariert = geometrie.buffer(0)
         return repariert
 
+    def nur_flaechen(geometrie):
+        """
+        make_valid() gibt bei kaputten Rändern eine GeometryCollection zurück:
+        die reparierten Flächen PLUS die Linien und Punkte, die beim Reparieren
+        übrig bleiben. ECharts kann damit nichts anfangen — es kennt nur
+        Polygon und MultiPolygon und bricht mit „Invalid geoJson format" ab.
+        Deshalb hier alles Nicht-Flächige wegwerfen und wieder zu einer
+        einzigen Fläche zusammensetzen.
+        """
+        art = geometrie.geom_type
+        if art in ("Polygon", "MultiPolygon"):
+            return geometrie
+        if art == "GeometryCollection" or art.startswith("Multi"):
+            teile = [t for t in geometrie.geoms
+                     if t.geom_type in ("Polygon", "MultiPolygon") and not t.is_empty]
+            if not teile:
+                return None
+            return unary_union(teile)
+        return None
+
     merkmale, werte = [], []
     fehlende_geo, fehlende_daten, kaputte = [], [], []
 
@@ -1259,6 +1279,10 @@ def baue_kartenregionen(jetzt_je_rgs, vorjahr_je_rgs, mapping: dict,
             flaeche = unary_union([bereinigen(g) for g in teile])
             flaeche = flaeche.simplify(0.0015, preserve_topology=True)
             flaeche = bereinigen(flaeche)
+            flaeche = nur_flaechen(flaeche)
+            if flaeche is None or flaeche.is_empty:
+                kaputte.append(f"{name} (keine Fläche übrig)")
+                continue
         except Exception as fehler:
             kaputte.append(f"{name} ({type(fehler).__name__})")
             continue

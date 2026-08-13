@@ -77,18 +77,18 @@ h2 { font-size: 1rem; margin: 0 0 2px; font-weight: 600; }
    Aufruf:  embed.html?chart=<name>
    =========================================================================== */
 const CHARTS = {
-  zeitreihe:    { titel: "Arbeitslose in Österreich",              dateien: ["zeitreihe"],                bau: (A, d) => A.baueZeitreihe(d.zeitreihe) },
-  ausbildung:   { titel: "Nach höchster abgeschlossener Ausbildung", dateien: ["ausbildung"],             bau: (A, d) => A.baueAusbildung(d.ausbildung, "AT") },
-  verlauf:      { titel: "Verlauf der Ausbildungsgruppen",         dateien: ["ausbildung"],               bau: (A, d) => A.baueVerlauf(d.ausbildung, "absolut"), hoch: true },
-  generationen: { titel: "Arbeitslose nach Generationen",          dateien: ["generationen"],             bau: (A, d) => A.baueGenerationen(d.generationen, "AT") },
-  karte:        { titel: "Arbeitslose nach Bezirken",              dateien: ["karte", "karte_geo"],       bau: (A, d) => A.baueKarte(d.karte, d.karte_geo), karte: true },
-  fluss:        { titel: "Zugänge und Abgänge",                    dateien: ["fluss"],                    bau: (A, d) => A.baueFluss(d.fluss) },
-  dauer:        { titel: "Dauer der Vormerkung",                   dateien: ["dauer"],                    bau: (A, d) => A.baueDauer(d.dauer) },
-  schulung:     { titel: "Personen in Schulung",                   dateien: ["schulung"],                 bau: (A, d) => A.baueSchulung(d.schulung) },
-  stellen:      { titel: "Offene Stellen und Stellenandrang",      dateien: ["stellen"],                  bau: (A, d) => A.baueStellen(d.stellen) },
-  branche:      { titel: "Arbeitslose nach Wirtschaftszweig",      dateien: ["branche"],                  bau: (A, d) => A.baueBranche(d.branche), hoch: true },
-  eu:           { titel: "Österreich im EU-Vergleich",             dateien: ["eu"],                       bau: (A, d) => A.baueEu(d.eu) },
-  eurang:       { titel: "Wo Österreich in der EU steht",          dateien: ["eu"],                       bau: (A, d) => A.baueEuRang(d.eu) },
+  zeitreihe:    { titel: "Arbeitslosigkeit in Österreich, Monatsverlauf",              dateien: ["zeitreihe"],                bau: (A, d) => A.baueZeitreihe(d.zeitreihe) },
+  ausbildung:   { titel: "Arbeitslosigkeit nach höchster abgeschlossener Ausbildung", dateien: ["ausbildung"],             bau: (A, d) => A.baueAusbildung(d.ausbildung, "AT") },
+  verlauf:      { titel: "Verlauf der Arbeitslosigkeit in den größten Ausbildungsgruppen",         dateien: ["ausbildung"],               bau: (A, d) => A.baueVerlauf(d.ausbildung, "absolut"), hoch: true },
+  generationen: { titel: "Darstellung der Arbeitslosigkeit nach Generationen",          dateien: ["generationen"],             bau: (A, d) => A.baueGenerationen(d.generationen, "AT") },
+  karte:        { titel: "Verteilung der Arbeitslosigkeit nach Bezirken",              dateien: ["karte", "karte_geo"],       bau: (A, d) => A.baueKarte(d.karte, d.karte_geo), karte: true },
+  fluss:        { titel: "Zugänge und Abgänge in die Arbeitslosigkeit",                    dateien: ["fluss"],                    bau: (A, d) => A.baueFluss(d.fluss) },
+  dauer:        { titel: "Dauer der bestehenden Arbeitslosigkeit",                   dateien: ["dauer"],                    bau: (A, d) => A.baueDauer(d.dauer) },
+  schulung:     { titel: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",                   dateien: ["schulung"],                 bau: (A, d) => A.baueSchulung(d.schulung) },
+  stellen:      { titel: "Offene Stellen und Arbeitslose je offener Stelle",      dateien: ["stellen"],                  bau: (A, d) => A.baueStellen(d.stellen) },
+  branche:      { titel: "Arbeitslosigkeit nach Wirtschaftszweig",      dateien: ["branche"],                  bau: (A, d) => A.baueBranche(d.branche), hoch: true },
+  eu:           { titel: "Arbeitslosenquote im Vergleich mit EU-27 und Deutschland",             dateien: ["eu"],                       bau: (A, d) => A.baueEu(d.eu) },
+  eurang:       { titel: "Arbeitslosenquote: Wo Österreich in der EU steht",          dateien: ["eu"],                       bau: (A, d) => A.baueEuRang(d.eu) },
 };
 
 /* Die Chart-Funktionen sprechen feste Element-Kennungen an. Die legen wir

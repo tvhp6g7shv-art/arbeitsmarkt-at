@@ -1,0 +1,44 @@
+name: Daten aktualisieren
+
+on:
+  schedule:
+    - cron: "0 5 6 * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - "etl/**"
+      - ".github/workflows/daten-aktualisieren.yml"
+
+jobs:
+  aktualisieren:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Repository holen
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Abhängigkeiten installieren
+        run: pip install -r etl/requirements.txt
+
+      - name: Daten bauen
+        run: python etl/build.py
+
+      - name: Ergebnis übernehmen
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data
+          if git diff --staged --quiet; then
+            echo "Keine Änderungen — die Quelle hat noch keine neuen Daten."
+          else
+            git commit -m "Daten aktualisiert ($(date -u '+%Y-%m-%d'))"
+            git push
+          fi

@@ -36,6 +36,8 @@ import config
 
 WARNUNGEN: list[str] = []
 SCHEMA_REPORT: dict = {}
+VORMERKDAUER: dict = {}
+LZBL: dict = {}
 
 # Das Repo-Wurzelverzeichnis (eine Ebene über etl/)
 WURZEL = Path(__file__).resolve().parent.parent
@@ -116,6 +118,18 @@ def lade_ams_csv(schluessel: str) -> pd.DataFrame:
     return tabelle
 
 
+def lade_optional(schluessel: str) -> pd.DataFrame | None:
+    """Wie lade_ams_csv, bricht aber nicht ab — für Zusatzquellen."""
+    try:
+        return lade_ams_csv(schluessel)
+    except SystemExit:
+        warnen(
+            f"{config.AMS_DATEIEN[schluessel]} nicht abrufbar — "
+            f"der zugehörige Abschnitt bleibt ausgeblendet"
+        )
+        return None
+
+
 def pruefe_spalten(tabelle: pd.DataFrame, erwartet: list[str], quelle: str) -> None:
     fehlend = [s for s in erwartet if s not in tabelle.columns]
     if fehlend:
@@ -174,6 +188,7 @@ def baue_bezirks_mapping() -> dict[str, dict]:
     if unbekannte:
         warnen(f"Unbekannte Bundesland-Bezeichnungen: {sorted(unbekannte)}")
 
+    LZBL["tabelle"] = tabelle
     log(f"    {len(mapping)} Bezirke zugeordnet")
     return mapping
 
@@ -198,6 +213,9 @@ def lade_ausbildungsdaten(mapping: dict[str, dict]) -> pd.DataFrame:
         tabelle = tabelle.dropna(subset=["datum"])
 
     tabelle["bestand"] = zu_zahl(tabelle["bestand"])
+    for fluss in ("zugang", "abgang"):          # für die Flussrechnung
+        if fluss in tabelle.columns:
+            tabelle[fluss] = zu_zahl(tabelle[fluss])
     tabelle["rgscode"] = tabelle["rgscode"].astype(str).str.strip()
     tabelle["ausbcode"] = tabelle["ausbcode"].astype(str).str.strip()
 
@@ -245,26 +263,37 @@ def alter_grenzen(text: str) -> tuple[int, int] | None:
     Die exakte Schreibweise des AMS ist nicht dokumentiert, deshalb erkennt
     diese Funktion die gängigen Varianten:
         "15-19", "15 bis 19", "15 bis 19 Jahre"  -> (15, 19)
-        "unter 15", "u15", "<15"                 -> (0, 14)
-        "bis 24"                                 -> (0, 24)
-        "60+", "ab 60", "60 und mehr", "über 60" -> (60, ALTER_OBERGRENZE)
+        "unter 20", "u20", "<20"                 -> (15, 19)
+        "bis 24"                                 -> (15, 24)
+        "60+", "ab 60", "60 und mehr", "über 60" -> (60, 74)
+    Offene Ränder werden auf das erwerbsfähige Alter geklammert
+    (ALTER_UNTERGRENZE bis ALTER_OBERGRENZE) — sonst spannt "unter 20"
+    bis Geburtsjahrgang heute und fällt der falschen Generation zu.
     Gibt None zurück, wenn nichts Verwertbares drinsteht.
     """
+    def klammern(von: int, bis: int) -> tuple[int, int]:
+        von = max(von, config.ALTER_UNTERGRENZE)
+        bis = min(bis, config.ALTER_OBERGRENZE)
+        return (von, max(von, bis))
+
     t = str(text).strip().lower()
+    # "25 bis unter 30" meint 25–29, nicht 25–30
+    exklusiv = "bis unter" in t or "bis  unter" in t
     zahlen = [int(z) for z in re.findall(r"\d+", t)]
     if not zahlen:
         return None
     if len(zahlen) >= 2:
-        return (min(zahlen[0], zahlen[1]), max(zahlen[0], zahlen[1]))
+        klein, gross = min(zahlen[0], zahlen[1]), max(zahlen[0], zahlen[1])
+        return klammern(klein, gross - 1 if exklusiv else gross)
 
     z = zahlen[0]
     if t.startswith("u") or "unter" in t or "<" in t:
-        return (0, max(0, z - 1))
-    if t.startswith("bis") or "bis unter" in t:
-        return (0, z)
+        return klammern(0, z - 1)
+    if t.startswith("bis"):
+        return klammern(0, z)
     if any(w in t for w in ("+", "über", "ueber", "älter", "aelter", "mehr", "ab ", ">")):
-        return (z, config.ALTER_OBERGRENZE)
-    return (z, z)
+        return klammern(z, config.ALTER_OBERGRENZE)
+    return klammern(z, z)
 
 
 def generation_fuer(grenzen: tuple[int, int], jahr: int) -> str | None:
@@ -317,8 +346,20 @@ def lade_altersdaten(mapping: dict[str, dict]) -> pd.DataFrame | None:
     tabelle["rgscode"] = tabelle["rgscode"].astype(str).str.strip()
     tabelle["altersgruppe"] = tabelle[spalte_alter].astype(str).str.strip()
 
-    # Die Datei enthält zusätzlich die Dimension Vormerkdauer — die summieren
-    # wir weg, sonst zählen wir jede Person mehrfach.
+    # Die Datei enthält zusätzlich die Dimension Vormerkdauer. Für die
+    # Altersauswertung summieren wir sie weg (sonst Mehrfachzählung), vorher
+    # sichern wir sie aber als eigene Auswertung.
+    spalte_vmd = spalte_finden(tabelle, "vormerk") or spalte_finden(tabelle, "dauer")
+    if spalte_vmd and spalte_vmd != "ds_vmd":
+        VORMERKDAUER["tabelle"] = (
+            tabelle.groupby(["datum", spalte_vmd], as_index=False)["bestand"].sum()
+            .rename(columns={spalte_vmd: "dauer"})
+        )
+        log(f"    Vormerkdauergruppen: "
+            f"{', '.join(sorted(tabelle[spalte_vmd].unique())[:8])}")
+    else:
+        warnen("Keine Vormerkdauer-Spalte gefunden — Verweildauer-Auswertung entfällt")
+
     schluesselspalten = ["datum", "rgscode", "altersgruppe"]
     if "geschlecht" in tabelle.columns:
         schluesselspalten.append("geschlecht")
@@ -694,9 +735,24 @@ def baue_ausgaben(daten: pd.DataFrame, mapping: dict, quoten: dict,
             for schluessel, _, mitglieder in config.AUSBILDUNG_GRUPPEN
         }
 
+    # Zeitreihe je Gruppe — Grundlage des Verlaufsdiagramms
+    letzte_monate = reihe_ausb.tail(config.VERLAUF_MONATE)
+    zeitreihe_gruppen = {}
+    for schluessel, _, mitglieder in config.AUSBILDUNG_GRUPPEN:
+        spalten = [c for c in mitglieder if c in letzte_monate.columns]
+        summe = letzte_monate[spalten].sum(axis=1) if spalten else None
+        zeitreihe_gruppen[schluessel] = (
+            [int(v) for v in summe.values] if summe is not None
+            else [0] * len(letzte_monate)
+        )
+
     ausgaben["ausbildung"] = {
         "stand": m(aktueller_monat),
         "gruppen": gruppen,
+        "zeitreihe_gruppen": {
+            "monate": [m(d) for d in letzte_monate.index],
+            "serien": zeitreihe_gruppen,
+        },
         "gruppen_je_bundesland": gruppen_je_bundesland,
         "stufen": stufen,
         "je_bundesland": je_bundesland,
@@ -791,19 +847,305 @@ def baue_ausgaben(daten: pd.DataFrame, mapping: dict, quoten: dict,
 
 
 # ---------------------------------------------------------------------------
+# Zusatzauswertungen
+# ---------------------------------------------------------------------------
+
+def baue_fluss(daten: pd.DataFrame) -> dict | None:
+    """
+    Zugänge und Abgänge je Monat.
+
+    Die Spalten stecken schon in der Ausbildungsdatei. Der Bestand allein
+    verschweigt die Bewegung: Ein gleichbleibender Bestand kann heißen, dass
+    nichts passiert — oder dass jeden Monat Zehntausende zu- und abgehen.
+    """
+    if not {"zugang", "abgang"} <= set(daten.columns):
+        warnen("Spalten ZUGANG/ABGANG fehlen — Flussrechnung entfällt")
+        return None
+
+    reihe = daten.groupby("datum")[["zugang", "abgang"]].sum().sort_index()
+    letzte = reihe.tail(config.FLUSS_MONATE)
+    saldo = (letzte["zugang"] - letzte["abgang"]).astype(int)
+
+    return {
+        "stand": pd.Timestamp(letzte.index[-1]).strftime("%Y-%m-%d"),
+        "hinweis": (
+            "Zugang = im Monat neu als arbeitslos vorgemerkt. "
+            "Abgang = Vormerkung im Monat beendet, aus welchem Grund auch immer "
+            "— Aufnahme einer Arbeit, Schulung, Pension, Abmeldung."
+        ),
+        "monate": [pd.Timestamp(d).strftime("%Y-%m-%d") for d in letzte.index],
+        "zugang": [int(v) for v in letzte["zugang"].values],
+        "abgang": [int(v) for v in letzte["abgang"].values],
+        "saldo": [int(v) for v in saldo.values],
+    }
+
+
+def baue_dauer(lzbl: pd.DataFrame | None) -> dict | None:
+    """Vormerkdauer-Verteilung und Langzeitbeschäftigungslosigkeit."""
+    ergebnis: dict = {}
+
+    tabelle = VORMERKDAUER.get("tabelle")
+    if tabelle is not None and not tabelle.empty:
+        letzter = tabelle["datum"].max()
+        jetzt = tabelle[tabelle["datum"] == letzter]
+
+        def sortierung(bezeichnung: str) -> int:
+            zahlen = [int(z) for z in re.findall(r"\d+", str(bezeichnung))]
+            return zahlen[0] if zahlen else 999
+
+        gruppen = jetzt.groupby("dauer")["bestand"].sum()
+        summe = float(gruppen.sum())
+        ergebnis["vormerkdauer"] = {
+            "stand": pd.Timestamp(letzter).strftime("%Y-%m-%d"),
+            "gruppen": [
+                {
+                    "name": str(name),
+                    "bestand": int(wert),
+                    "anteil_pct": round(wert / summe * 100, 1) if summe else 0,
+                }
+                for name, wert in sorted(gruppen.items(), key=lambda p: sortierung(p[0]))
+            ],
+        }
+
+    if lzbl is not None and "status" in lzbl.columns:
+        lzbl = lzbl.copy()
+        lzbl["datum"] = pd.to_datetime(lzbl["datum"], errors="coerce")
+        lzbl["bestand"] = zu_zahl(lzbl["bestand"])
+        lzbl = lzbl.dropna(subset=["datum"])
+
+        zustaende = sorted(lzbl["status"].unique())
+        SCHEMA_REPORT["lzbl_status"] = zustaende
+        log(f"    Status-Ausprägungen der LZBL-Datei: {', '.join(zustaende)}")
+
+        reihe = (
+            lzbl.groupby(["datum", "status"])["bestand"].sum()
+            .unstack(fill_value=0).sort_index().tail(config.SPARKLINE_MONATE)
+        )
+        ergebnis["langzeit"] = {
+            "hinweis": (
+                "Langzeitbeschäftigungslos ist, wer durchgehend länger als "
+                "zwölf Monate beim AMS vorgemerkt ist — Unterbrechungen durch "
+                "Schulungen oder kurze Beschäftigung zählen dabei mit."
+            ),
+            "monate": [pd.Timestamp(d).strftime("%Y-%m-%d") for d in reihe.index],
+            "serien": {
+                str(spalte): [int(v) for v in reihe[spalte].values]
+                for spalte in reihe.columns
+            },
+        }
+
+    return ergebnis or None
+
+
+def baue_schulung(mapping: dict) -> dict | None:
+    """
+    Personen in Schulung. Ohne diese Zeile ist der Arbeitslosenbestand über
+    die Zeit nicht vergleichbar: Werden Schulungsplätze ausgeweitet, sinkt die
+    Arbeitslosenzahl, ohne dass sich am Arbeitsmarkt etwas geändert hat.
+    """
+    tabelle = lade_optional("schulung")
+    if tabelle is None:
+        return None
+    if "datum" not in tabelle.columns or "bestand" not in tabelle.columns:
+        warnen(
+            f"Schulungsdatei hat unerwartete Spalten "
+            f"({', '.join(tabelle.columns)}) — Abschnitt entfällt"
+        )
+        return None
+
+    tabelle["datum"] = pd.to_datetime(tabelle["datum"], errors="coerce")
+    tabelle["bestand"] = zu_zahl(tabelle["bestand"])
+    tabelle = tabelle.dropna(subset=["datum"])
+
+    # Die Datei ist mehrdimensional (Alter, Berufswunsch) — alles wegsummieren
+    reihe = tabelle.groupby("datum")["bestand"].sum().sort_index()
+    letzte = reihe.tail(config.SPARKLINE_MONATE)
+    aktuell = float(letzte.iloc[-1])
+    vorjahr_index = letzte.index[-1] - pd.DateOffset(years=1)
+    alt = float(reihe.get(vorjahr_index, 0))
+
+    return {
+        "stand": pd.Timestamp(letzte.index[-1]).strftime("%Y-%m-%d"),
+        "hinweis": (
+            "Schulungsteilnehmer:innen gelten nicht als arbeitslos, sind aber "
+            "beim AMS vorgemerkt. Arbeitslose plus Schulungen ergibt die Zahl, "
+            "die in Medienberichten meist als „vorgemerkte Personen“ steht."
+        ),
+        "bestand": int(aktuell),
+        "veraenderung_pct": prozent(aktuell, alt) if alt else None,
+        "monate": [pd.Timestamp(d).strftime("%Y-%m-%d") for d in letzte.index],
+        "werte": [int(v) for v in letzte.values],
+    }
+
+
+def hole_eurostat_vergleich() -> dict | None:
+    """Österreich gegen EU-27 und Deutschland — gleiche Quelle, gleiche Definition."""
+    log("\n    Eurostat-Ländervergleich")
+    params = dict(config.EUROSTAT_PARAMS)
+    params.pop("geoLevel", None)
+    params["geo"] = config.EUROSTAT_VERGLEICH
+    params["isced11"] = "TOTAL"
+    try:
+        rohdaten = json.loads(
+            lade_bytes(config.EUROSTAT_URL, params).decode("utf-8")
+        )
+    except SystemExit:
+        warnen("Eurostat-Ländervergleich nicht abrufbar")
+        return None
+
+    tabelle, _ = entpacke_jsonstat(rohdaten)
+    if "geo" not in tabelle.columns:
+        warnen("Eurostat-Ländervergleich hat unerwartete Struktur")
+        return None
+
+    jahre = sorted(tabelle["time"].unique())
+    serien = {}
+    for code in config.EUROSTAT_VERGLEICH:
+        teil = tabelle[tabelle["geo"] == code].set_index("time")["wert"].to_dict()
+        if teil:
+            serien[code] = [
+                round(float(teil[j]), 1) if j in teil else None for j in jahre
+            ]
+    if not serien:
+        warnen("Eurostat lieferte keine Vergleichswerte")
+        return None
+
+    log(f"        {len(serien)} Reihen, {jahre[0]}–{jahre[-1]}")
+    return {
+        "definition": "Arbeitslosenquote nach ILO-Definition, 15–74 Jahre",
+        "quelle": "Eurostat lfst_r_lfu3rt",
+        "jahre": jahre,
+        "namen": config.EUROSTAT_VERGLEICH_NAMEN,
+        "serien": serien,
+    }
+
+
+def baue_stellen(daten: pd.DataFrame, mapping: dict) -> dict | None:
+    """
+    Offene Stellen und Stellenandrangziffer: Wie viele Arbeitslose kommen auf
+    eine offene Stelle? Je Bundesland und je Ausbildungsstufe.
+    """
+    tabelle = lade_optional("stellen")
+    if tabelle is None:
+        return None
+    if not {"datum", "rgscode", "bestand"} <= set(tabelle.columns):
+        warnen(
+            f"Stellendatei hat unerwartete Spalten "
+            f"({', '.join(tabelle.columns)}) — Abschnitt entfällt"
+        )
+        return None
+
+    tabelle["datum"] = pd.to_datetime(tabelle["datum"], errors="coerce")
+    tabelle["bestand"] = zu_zahl(tabelle["bestand"])
+    tabelle["rgscode"] = tabelle["rgscode"].astype(str).str.strip()
+    tabelle = tabelle.dropna(subset=["datum"])
+    tabelle["bundesland"] = tabelle["rgscode"].map(
+        lambda c: mapping.get(c, {}).get("bundesland")
+    )
+    tabelle = tabelle.dropna(subset=["bundesland"])
+
+    letzter = tabelle["datum"].max()
+    jetzt_os = tabelle[tabelle["datum"] == letzter]
+    jetzt_al = daten[daten["datum"] == daten["datum"].max()]
+
+    os_land = jetzt_os.groupby("bundesland")["bestand"].sum()
+    al_land = jetzt_al.groupby("bundesland")["bestand"].sum()
+
+    laender = []
+    for land in config.BUNDESLAND_REIHENFOLGE:
+        stellen = float(os_land.get(land, 0))
+        arbeitslose = float(al_land.get(land, 0))
+        laender.append({
+            "name": land,
+            "stellen": int(stellen),
+            "arbeitslose": int(arbeitslose),
+            "andrang": round(arbeitslose / stellen, 1) if stellen else None,
+        })
+
+    reihe = tabelle.groupby("datum")["bestand"].sum().sort_index().tail(config.SPARKLINE_MONATE)
+    gesamt_os = float(os_land.sum())
+    gesamt_al = float(al_land.sum())
+
+    return {
+        "stand": pd.Timestamp(letzter).strftime("%Y-%m-%d"),
+        "hinweis": (
+            "Stellenandrang = gemeldete Arbeitslose je beim AMS gemeldeter "
+            "offener Stelle. Nicht jede offene Stelle wird dem AMS gemeldet, "
+            "die tatsächliche Zahl offener Stellen liegt höher."
+        ),
+        "stellen_gesamt": int(gesamt_os),
+        "andrang_gesamt": round(gesamt_al / gesamt_os, 1) if gesamt_os else None,
+        "laender": laender,
+        "monate": [pd.Timestamp(d).strftime("%Y-%m-%d") for d in reihe.index],
+        "werte": [int(v) for v in reihe.values],
+    }
+
+
+def baue_branche() -> dict | None:
+    """Arbeitslose nach Wirtschaftszweig — Bau und Leiharbeit laufen vor."""
+    tabelle = lade_optional("branche")
+    if tabelle is None:
+        return None
+
+    spalte_name = (
+        spalte_finden(tabelle, "nace") or spalte_finden(tabelle, "wirtschaft")
+        or spalte_finden(tabelle, "branche")
+    )
+    if spalte_name is None or "datum" not in tabelle.columns:
+        warnen(
+            f"Branchendatei hat unerwartete Spalten "
+            f"({', '.join(tabelle.columns)}) — Abschnitt entfällt"
+        )
+        return None
+    # Wenn es Code- und Klartextspalte gibt, die längere (den Klartext) nehmen
+    kandidaten = [s for s in tabelle.columns if "nace" in s or "wirtschaft" in s]
+    if len(kandidaten) > 1:
+        spalte_name = max(
+            kandidaten, key=lambda s: tabelle[s].astype(str).str.len().mean()
+        )
+
+    tabelle["datum"] = pd.to_datetime(tabelle["datum"], errors="coerce")
+    tabelle["bestand"] = zu_zahl(tabelle["bestand"])
+    tabelle = tabelle.dropna(subset=["datum"])
+
+    letzter = tabelle["datum"].max()
+    vorjahr = letzter - pd.DateOffset(years=1)
+    jetzt = tabelle[tabelle["datum"] == letzter].groupby(spalte_name)["bestand"].sum()
+    alt = tabelle[tabelle["datum"] == vorjahr].groupby(spalte_name)["bestand"].sum()
+
+    eintraege = [
+        {
+            "name": str(name),
+            "bestand": int(wert),
+            "veraenderung_pct": prozent(float(wert), float(alt.get(name, 0))),
+        }
+        for name, wert in jetzt.sort_values(ascending=False).items()
+    ]
+    log(f"    {len(eintraege)} Wirtschaftszweige")
+
+    return {
+        "stand": pd.Timestamp(letzter).strftime("%Y-%m-%d"),
+        "hinweis": (
+            "Zugeordnet wird die Branche der zuletzt ausgeübten Tätigkeit. "
+            "Bau und Arbeitskräfteüberlassung reagieren erfahrungsgemäß früher "
+            "als der Gesamtbestand."
+        ),
+        "branchen": eintraege[:15],
+    }
+
+
+# ---------------------------------------------------------------------------
 # Schritt 5: Geodaten und Schreiben
 # ---------------------------------------------------------------------------
 
 def code_aus_merkmal(merkmal: dict) -> str:
     """
-    Regionalcode eines WFS-Features bestimmen.
-
-    Der Statistik-Austria-WFS liefert den Code je nach Layer entweder als
-    Attribut `g_id` oder nur in der Feature-ID
-    (z.B. "STATISTIK_AUSTRIA_NUTS2_20250101.AT11"). Beides abdecken.
+    Bezirkskennziffer eines WFS-Features bestimmen. Der Statistik-Austria-WFS
+    liefert sie als Attribut `g_id`, ersatzweise steckt sie in der Feature-ID
+    ("STATISTIK_AUSTRIA_POLBEZ_20250101.101").
     """
     eigenschaften = merkmal.get("properties") or {}
-    for schluessel in ("g_id", "id", "NUTS_ID", "nuts_id"):
+    for schluessel in ("g_id", "id"):
         wert = str(eigenschaften.get(schluessel, "")).strip()
         if wert:
             return wert
@@ -811,48 +1153,90 @@ def code_aus_merkmal(merkmal: dict) -> str:
     return kennung.rsplit(".", 1)[-1].strip() if "." in kennung else ""
 
 
-def hole_geodaten() -> dict | None:
+def baue_kartenregionen(jetzt_je_rgs, vorjahr_je_rgs, mapping: dict,
+                        stand: str) -> tuple[dict | None, dict]:
     """
-    Bundeslandgrenzen (NUTS-2) laden und für ECharts vorbereiten.
+    Bezirksgeometrien laden und zu Kartenregionen verschmelzen.
 
-    Bewusst Bundesland statt Bezirk: RGSCode und Bezirkskennziffer sind
-    verschiedene Nummernsysteme (siehe Kommentar in config.py). Auf
-    Bundeslandebene ist die Zuordnung eindeutig und nachprüfbar.
+    Warum verschmelzen: AMS-Geschäftsstellenbezirke und politische Bezirke
+    decken sich nicht. Die Tabelle KARTENREGIONEN fasst beide Seiten zu
+    Flächen zusammen, die aus ganzen Bezirken bestehen und deren AMS-Zahlen
+    sich sauber addieren lassen.
     """
-    log("\n[6/6] Bundeslandgrenzen laden")
+    log("\n[6/6] Bezirksgeometrien laden und verschmelzen")
+    try:
+        from shapely.geometry import shape, mapping as geo_mapping
+        from shapely.ops import unary_union
+    except ImportError:
+        warnen("shapely fehlt — Karte entfällt, die Tabellen enthalten alle Werte")
+        return None, {}
+
     try:
         geo = json.loads(lade_bytes(config.GEO_URL).decode("utf-8"))
     except SystemExit:
-        warnen("Bundeslandgrenzen nicht abrufbar — Karte bleibt leer, "
-               "die Tabelle enthält alle Werte")
-        return None
+        warnen("Bezirksgrenzen nicht abrufbar — Karte entfällt")
+        return None, {}
 
-    merkmale = geo.get("features", [])
-    if not merkmale:
-        warnen("Geodaten enthalten keine Features")
-        return None
-
-    erkannt = 0
-    for merkmal in merkmale:
+    formen = {}
+    for merkmal in geo.get("features", []):
         code = code_aus_merkmal(merkmal)
-        eigenschaften = merkmal.setdefault("properties", {})
-        # ECharts ordnet Daten über properties.name zu
-        eigenschaften["name"] = code
-        eigenschaften["bundesland"] = config.NUTS2_BUNDESLAND.get(code, code)
-        if code in config.NUTS2_BUNDESLAND:
-            erkannt += 1
+        if code and merkmal.get("geometry"):
+            formen[code] = shape(merkmal["geometry"])
+    log(f"    {len(formen)} Flächen im Dienst (94 Bezirke + 23 Wiener Gemeindebezirke)")
 
-    fehlend = set(config.NUTS2_BUNDESLAND) - {
-        code_aus_merkmal(mm) for mm in merkmale
-    }
-    if fehlend:
+    merkmale, werte = [], []
+    fehlende_geo, fehlende_daten = [], []
+
+    for name, rgs_codes, bkz_codes in config.KARTENREGIONEN:
+        teile = [formen[b] for b in bkz_codes if b in formen]
+        if len(teile) != len(bkz_codes):
+            fehlende_geo.extend(b for b in bkz_codes if b not in formen)
+            continue
+
+        flaeche = unary_union(teile).simplify(0.0015, preserve_topology=True)
+        bestand = float(sum(jetzt_je_rgs.get(c, 0) for c in rgs_codes))
+        hat_vorjahr = vorjahr_je_rgs is not None
+        alt = (float(sum(vorjahr_je_rgs.get(c, 0) for c in rgs_codes))
+               if hat_vorjahr else 0.0)
+        if not any(c in jetzt_je_rgs for c in rgs_codes):
+            fehlende_daten.append(name)
+
+        land = next(
+            (mapping[c]["bundesland"] for c in rgs_codes if c in mapping), None
+        )
+        merkmale.append({
+            "type": "Feature",
+            "properties": {"name": name, "bundesland": land},
+            "geometry": geo_mapping(flaeche),
+        })
+        werte.append({
+            "name": name,
+            "bundesland": land,
+            "ams_bezirke": [mapping.get(c, {}).get("name", c) for c in rgs_codes],
+            "bestand": int(bestand),
+            "veraenderung_pct": prozent(bestand, alt) if hat_vorjahr else None,
+        })
+
+    if fehlende_geo:
+        warnen(f"Bezirkskennziffern ohne Geometrie: {sorted(set(fehlende_geo))}")
+    if fehlende_daten:
+        warnen(f"Kartenregionen ohne AMS-Daten: {fehlende_daten}")
+
+    # Gegenprobe: Deckt die Karte alle AMS-Bezirke ab?
+    zugeordnet = {c for _, rl, _ in config.KARTENREGIONEN for c in rl}
+    unzugeordnet = set(jetzt_je_rgs.index) - zugeordnet
+    if unzugeordnet:
         warnen(
-            f"Bundesländer ohne Geometrie: {sorted(fehlend)} — "
-            f"diese Flächen bleiben auf der Karte grau"
+            f"{len(unzugeordnet)} AMS-Bezirke fehlen in KARTENREGIONEN: "
+            f"{sorted(unzugeordnet)} — ihre Zahlen erscheinen nicht auf der Karte"
         )
 
-    log(f"    {len(merkmale)} Geometrien, davon {erkannt} als Bundesland erkannt")
-    return geo
+    summe_karte = sum(w["bestand"] for w in werte)
+    log(f"    {len(merkmale)} Kartenregionen · Summe {summe_karte:,}")
+    return (
+        {"type": "FeatureCollection", "features": merkmale},
+        {"stand": stand, "regionen": werte},
+    )
 
 
 def schreibe(name: str, inhalt) -> None:
@@ -878,13 +1262,44 @@ def main() -> None:
     alter = lade_altersdaten(mapping)
     quoten = hole_eurostat()
     ausgaben = baue_ausgaben(daten, mapping, quoten, alter)
-    geo = hole_geodaten()
+
+    log("\n[5b/6] Zusatzauswertungen")
+    for name, wert in [
+        ("fluss",     baue_fluss(daten)),
+        ("dauer",     baue_dauer(LZBL.get("tabelle"))),
+        ("schulung",  baue_schulung(mapping)),
+        ("eu",        hole_eurostat_vergleich()),
+        ("stellen",   baue_stellen(daten, mapping)),
+        ("branche",   baue_branche()),
+    ]:
+        if wert:
+            ausgaben[name] = wert
+            log(f"    ✓ {name}.json")
+
+    # Gegenprobe: Arbeitslose + Schulungen = vorgemerkte Personen
+    if "schulung" in ausgaben:
+        vorgemerkt = ausgaben["kpi"]["arbeitslose_gesamt"] + ausgaben["schulung"]["bestand"]
+        ausgaben["kpi"]["schulung"] = ausgaben["schulung"]["bestand"]
+        ausgaben["kpi"]["vorgemerkt_gesamt"] = vorgemerkt
+        log(f"    Vorgemerkte Personen gesamt: {vorgemerkt:,}")
+
+    monate = sorted(daten["datum"].unique())
+    letzter, vorjahr = monate[-1], monate[-1] - pd.DateOffset(years=1)
+    jetzt_rgs = daten[daten["datum"] == letzter].groupby("rgscode")["bestand"].sum()
+    vorjahr_rgs = (
+        daten[daten["datum"] == vorjahr].groupby("rgscode")["bestand"].sum()
+        if vorjahr in monate else None
+    )
+    geo, karte = baue_kartenregionen(
+        jetzt_rgs, vorjahr_rgs, mapping, pd.Timestamp(letzter).strftime("%Y-%m-%d")
+    )
 
     log("\nSchreiben")
     for name, inhalt in ausgaben.items():
         schreibe(name, inhalt)
     if geo:
-        schreibe("bundeslaender_geo", geo)
+        schreibe("karte_geo", geo)
+        schreibe("karte", karte)
 
     schreibe("meta", {
         "generiert_am": start.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -901,7 +1316,7 @@ def main() -> None:
                 "lizenz": "Eurostat-Nutzungsbedingungen",
             },
             {
-                "name": "STATISTIK AUSTRIA — Bundeslandgrenzen",
+                "name": "STATISTIK AUSTRIA — Bezirksgrenzen",
                 "url": "https://data.statistik.gv.at/web/catalog.jsp",
                 "lizenz": "CC BY 4.0",
             },
@@ -920,6 +1335,7 @@ def main() -> None:
             "ist beim AMS in rund 15 Geschäftsstellen aufgeteilt. Die Karte "
             "zeigt daher Bundesländer; Bezirkswerte stehen in der Tabelle."
         ),
+        "einbettung": config.EINBETTUNG,
         "schema": SCHEMA_REPORT,
         "warnungen": WARNUNGEN,
     })

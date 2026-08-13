@@ -34,6 +34,8 @@ Kein Server, keine Datenbank, keine laufenden Kosten.
 | `etl/build.py` | Die Datenpipeline. Lädt, prüft, aggregiert, schreibt. |
 | `etl/config.py` | Alle Einstellungen an einem Ort — Quell-URLs, Sortierungen, Zuordnungen. |
 | `.github/workflows/` | Der Zeitplan, nach dem GitHub das Skript startet. |
+| `docs/charts.js` | Alle Diagramme, gemeinsam genutzt von Dashboard und Einbettung. |
+| `docs/embed.html` | Einbettseite: `embed.html?chart=<name>` zeigt genau eine Grafik mit Quellenzeile. |
 | `docs/index.html` | Vorschauseite und Referenz für alle Diagramme. Welche vier Ausbildungsstufen im Verlaufsdiagramm erscheinen, steht dort in `VERLAUF_STUFEN`. |
 | `docs/data/` | Die erzeugten JSON-Dateien. Wird automatisch befüllt. |
 | `oxygen/` | Anleitung für den Einbau in Oxygen 6. |
@@ -47,9 +49,16 @@ Kein Server, keine Datenbank, keine laufenden Kosten.
 | `ausbildung.json` | Nach höchster abgeschlossener Ausbildung, gesamt und je Bundesland |
 | `generationen.json` | Nach Generationen (Gen Z, Millennials, Gen X, Boomer) plus Altersgruppen |
 | `bezirke.json` | Je AMS-Bezirk: Bestand und Vorjahresveränderung (Tabelle) |
-| `bundeslaender_geo.json` | Bundeslandgrenzen als GeoJSON für die Karte |
+| `karte.json` | Werte je Kartenregion (80 Regionen aus ganzen Bezirken) |
+| `karte_geo.json` | Verschmolzene Bezirksgrenzen als GeoJSON |
 | `bundeslaender.json` | Je Bundesland: Bestand, Veränderung, Quote, 36-Monats-Verlauf |
 | `quoten.json` | Arbeitslosenquoten nach Bildungsstand (EU-Definition) |
+| `fluss.json` | Zugänge und Abgänge je Monat |
+| `dauer.json` | Vormerkdauer-Verteilung und Langzeitbeschäftigungslosigkeit |
+| `schulung.json` | Personen in Schulung |
+| `stellen.json` | Offene Stellen und Stellenandrangziffer je Bundesland |
+| `branche.json` | Arbeitslose nach Wirtschaftszweig |
+| `eu.json` | Arbeitslosenquote Österreich, EU-27, Deutschland |
 | `meta.json` | Stand, Quellen, Lizenzen und Warnhinweise des letzten Laufs |
 
 ## Zwei Messgrößen, die man nicht vermischen darf
@@ -80,14 +89,15 @@ sichtbar sein, die diese Daten zeigt.
 - **Stadt/Land fehlt noch.** Die Gemeindedatei des AMS enthält nur Geschlecht,
   keinen Ausbildungsstand. Die Verknüpfung mit der Urban-Rural-Typologie der
   Statistik Austria ist als nächster Schritt geplant.
-- **Die Karte zeigt Bundesländer, nicht Bezirke.** AMS-Geschäftsstellenbezirke
-  (RGSCode) und politische Bezirke (Bezirkskennziffer) sind zwei verschiedene
-  Nummernsysteme: RGSCode 102 ist Mattersburg, Bezirkskennziffer 102 ist Rust.
-  Ein Join über die Nummer sieht wie ein Treffer aus, ordnet die Zahlen aber
-  dem falschen Bezirk zu. Wien hat beim AMS rund 15 Geschäftsstellen statt
-  einer Fläche. Eine Bezirkskarte braucht daher eine handgeprüfte
-  Zuordnungstabelle — bis dahin: Karte auf Bundeslandebene, Bezirkswerte in
-  der Tabelle.
+- **Die Karte zeigt 80 Regionen, nicht 94 Bezirke.** AMS-Geschäftsstellenbezirke
+  (99 Stück) und politische Bezirke (94) decken sich nicht: RGSCode 102 ist
+  Mattersburg, Bezirkskennziffer 102 ist Rust. Manche AMS-Region umfasst
+  mehrere Bezirke, manchmal liegen zwei AMS-Regionen in einem Bezirk, und Wien
+  ist beim AMS in 15 Geschäftsstellen geteilt. Die Tabelle `KARTENREGIONEN` in
+  `etl/config.py` fasst beide Seiten zu 80 Flächen zusammen, die aus GANZEN
+  Bezirken bestehen. Jeder Bezirk und jede AMS-Region kommt darin genau einmal
+  vor; das Skript prüft das bei jedem Lauf und meldet jede Lücke.
+  Die ungefilterten 99 AMS-Bezirke stehen in der Tabelle „AMS-Bezirke".
 - **Das Diagramm fasst die 18 AMS-Ausbildungsstufen zu 7 Gruppen zusammen.**
   Alle 18 Einzelstufen stehen in der Tabellenansicht.
 - **Generationen sind eine Näherung.** Generationen sind Geburtsjahrgänge, das
@@ -97,6 +107,29 @@ sichtbar sein, die diese Daten zeigt.
   Zuordnung unscharf. Die exakten Altersgruppen stehen in der Tabelle.
 - **Die Quoten sind jährlich**, die AMS-Zahlen monatlich. Das ist keine
   Ungenauigkeit, sondern der Unterschied der beiden Erhebungen.
+
+## Einbettung für Redaktionen
+
+Jede Grafik ist einzeln einbettbar:
+
+```
+https://DEIN-NAME.github.io/arbeitsmarkt-at/embed.html?chart=fluss
+```
+
+Verfügbare Namen: `zeitreihe`, `ausbildung`, `verlauf`, `generationen`,
+`karte`, `fluss`, `dauer`, `schulung`, `stellen`, `branche`, `eu`.
+
+Den fertigen iframe-Code liefert der Knopf **„Einbetten"** bei jeder Grafik im
+Dashboard. Die Quellenangabe ist Teil der Grafik — wer sie einbettet,
+transportiert die Namensnennung automatisch mit und erfüllt damit die
+CC-BY-Bedingung.
+
+Die Einbettseite meldet ihre Höhe per `postMessage`; der mitgelieferte
+Schnipsel passt das iframe automatisch an. Ohne dieses Skript greift die
+angegebene Festhöhe — die Grafik bricht also nicht.
+
+**Vor dem Launch anpassen:** `EINBETTUNG` in `etl/config.py` — dort stehen
+Name und Ziel-URL für die Zeile „Grafik: …".
 
 ## Wenn ein Lauf fehlschlägt
 

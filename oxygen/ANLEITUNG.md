@@ -77,13 +77,17 @@ Farbfehlsichtigkeit. Wenn du eigene Farben einsetzt, gelten drei Regeln:
 
 Für **jedes** Diagramm brauchst du zwei Dinge auf der Seite.
 
-### a) ECharts einmal pro Seite laden
+### a) ECharts und die Diagrammbausteine einmal pro Seite laden
+
+Seit v7 stecken alle Diagramme in **einer** Datei, `charts.js`. Du musst
+also nichts mehr aus `index.html` herauskopieren — nur einbinden und aufrufen.
 
 In Oxygen: Seite auswählen → **Page Settings → Custom CSS/JS → JavaScript**
 (oder ein Code Block ganz oben in der Seite):
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/charts.js" defer></script>
 ```
 
 ### b) Pro Diagramm ein Code Block
@@ -147,12 +151,45 @@ Nur zwei Dinge anpassen: **`DEIN-GITHUB-NAME`** und die **id** des `<div>`.
 
 ---
 
-## Die fertigen Vorlagen
+## Der schnellste Weg: fertige Funktionen aufrufen
 
-Statt jedes Diagramm neu zu schreiben: In `docs/index.html` steht jedes der
-Diagramme fertig ausgearbeitet. Kopier dir den passenden Block heraus:
+`charts.js` stellt alles unter `window.AMS` bereit. Ein Code Block je Diagramm,
+HTML-Teil:
 
-| Diagramm | Funktion in `docs/index.html` | Datei |
+```html
+<div class="viz-root">
+  <div class="viz-chart" id="c-fluss" style="height:340px"></div>
+  <div id="u-fluss"></div><div id="h-fluss"></div><div id="t-fluss"></div>
+</div>
+```
+
+JavaScript-Teil:
+
+```js
+(function () {
+  const warte = () => (window.AMS && window.echarts) ? los() : setTimeout(warte, 60);
+  function los() {
+    AMS.setzeBasis("https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/data");
+    AMS.setzeWurzel(document.querySelector(".viz-root"));
+    AMS.hole("fluss").then((d) => AMS.baueFluss(d));
+  }
+  warte();
+})();
+```
+
+Die Element-Kennungen sind fix: `c-<name>` für die Zeichenfläche, `u-<name>`
+für die Unterzeile, `h-<name>` für den Hinweis, `t-<name>` für die Tabelle.
+
+## Noch schneller: einbetten statt einbauen
+
+Wenn dir das Standard-Aussehen reicht, nimm den Einbett-Code aus dem
+Dashboard (Knopf „Einbetten" bei jeder Grafik). Der bringt die Quellenangabe
+mit und braucht in Oxygen nur einen Code Block. Nachteil: die Grafik erbt
+nicht deine Oxygen-Variablen, sie bringt ihr eigenes Farbschema mit.
+
+## Alle verfügbaren Funktionen
+
+| Diagramm | Funktion | Datei |
 |---|---|---|
 | KPI-Kacheln | `baueKpis()` | `kpi.json`, `zeitreihe.json` |
 | Zeitreihe | `baueZeitreihe()` | `zeitreihe.json` |
@@ -162,10 +199,15 @@ Diagramme fertig ausgearbeitet. Kopier dir den passenden Block heraus:
 | Karte (Bundesländer) | `baueKarte()` | `bundeslaender.json`, `bundeslaender_geo.json` |
 | Bundesländer-Tabelle | `baueLaender()` | `bundeslaender.json` |
 | Bezirks-Tabelle | `baueBezirke()` | `bezirke.json`, `meta.json` |
+| Zugänge/Abgänge | `baueFluss()` | `fluss.json` |
+| Vormerkdauer | `baueDauer()` | `dauer.json` |
+| Personen in Schulung | `baueSchulung()` | `schulung.json` |
+| Offene Stellen | `baueStellen()` | `stellen.json` |
+| Wirtschaftszweige | `baueBranche()` | `branche.json` |
+| EU-Vergleich | `baueEu()` | `eu.json` |
 
-Die Hilfsfunktionen `stil()`, `zahl()`, `pz()`, `basis()` und `achse()` stehen
-im selben Dokument und werden von allen gebraucht — die legst du am besten
-einmal in einen Code Block ganz oben auf der Seite.
+Alle Hilfsfunktionen (`stil`, `zahl`, `pz`, `basis`, `achse`, `tabelle`)
+stecken ebenfalls in `charts.js` und stehen unter `AMS` bereit.
 
 ---
 

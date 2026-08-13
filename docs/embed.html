@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arbeitsmarkt Österreich — Grafik</title>
+<meta name="robots" content="noindex">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
+<script src="charts.js" defer></script>
+<style>
+/* Dieselben Variablen wie im Dashboard — hier eingebettet, damit die Grafik
+   auch auf fremden Seiten richtig aussieht, egal welches CSS dort gilt. */
+.viz-root {
+  color-scheme: light;
+  --viz-surface: #fcfcfb; --viz-plane: #f9f9f7;
+  --viz-text: #0b0b0b;    --viz-text-2: #52514e; --viz-muted: #898781;
+  --viz-grid: #e1e0d9;    --viz-axis: #c3c2b7;   --viz-border: rgba(11,11,11,0.10);
+  --viz-series-1: #2a78d6; --viz-series-2: #eb6834; --viz-series-3: #1baf7a;
+  --viz-series-4: #eda100; --viz-series-5: #e87ba4; --viz-series-6: #008300;
+  --viz-seq-1: #cde2fb; --viz-seq-2: #86b6ef; --viz-seq-3: #3987e5;
+  --viz-seq-4: #256abf; --viz-seq-5: #184f95; --viz-seq-6: #0d366b;
+  --viz-gut: #006300;   --viz-kritisch: #d03b3b;
+  --viz-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  .viz-root {
+    color-scheme: dark;
+    --viz-surface: #1a1a19; --viz-plane: #0d0d0d;
+    --viz-text: #ffffff;    --viz-text-2: #c3c2b7;
+    --viz-grid: #2c2c2a;    --viz-axis: #383835; --viz-border: rgba(255,255,255,0.10);
+    --viz-series-1: #3987e5; --viz-series-2: #d95926; --viz-series-3: #199e70;
+    --viz-series-4: #c98500; --viz-series-5: #d55181; --viz-series-6: #008300;
+    --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
+    --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
+    --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: transparent; }
+.viz-root {
+  font-family: var(--viz-font); color: var(--viz-text);
+  background: var(--viz-surface); padding: 16px 18px 12px;
+}
+h2 { font-size: 1rem; margin: 0 0 2px; font-weight: 600; }
+.viz-unterzeile { color: var(--viz-muted); font-size: .78rem; margin: 0; }
+.viz-chart { width: 100%; height: 340px; }
+.viz-chart-hoch { height: 440px; }
+.viz-chart-karte { height: 460px; }
+.viz-verborgen { display: none; }
+.viz-hinweisfeld { color: var(--viz-muted); font-size: .74rem; line-height: 1.5; margin: 10px 0 0; }
+
+/* Quellenzeile: gehört zur Grafik, nicht daneben. Wer die Grafik einbettet,
+   bettet die Namensnennung mit ein — genau das verlangt CC BY. */
+.viz-quelle {
+  margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--viz-grid);
+  color: var(--viz-muted); font-size: .72rem; line-height: 1.5;
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.viz-quelle a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="viz-root" id="dashboard">
+  <h2 id="titel">Arbeitsmarkt Österreich</h2>
+  <p class="viz-unterzeile" id="untertitel">Daten werden geladen …</p>
+  <div id="buehne"></div>
+  <p class="viz-hinweisfeld" id="hinweisfeld"></p>
+  <p class="viz-quelle">
+    <span id="quelle"></span>
+    <span id="stand"></span>
+  </p>
+</div>
+
+<script>
+/* ===========================================================================
+   Einbettseite: rendert genau eine Grafik, ohne Seitenkopf und ohne Filter.
+   Aufruf:  embed.html?chart=<name>
+   =========================================================================== */
+const CHARTS = {
+  zeitreihe:    { titel: "Arbeitslose in Österreich",              dateien: ["zeitreihe"],                bau: (A, d) => A.baueZeitreihe(d.zeitreihe) },
+  ausbildung:   { titel: "Nach höchster abgeschlossener Ausbildung", dateien: ["ausbildung"],             bau: (A, d) => A.baueAusbildung(d.ausbildung, "AT") },
+  verlauf:      { titel: "Verlauf der Ausbildungsgruppen",         dateien: ["ausbildung"],               bau: (A, d) => A.baueVerlauf(d.ausbildung, "absolut"), hoch: true },
+  generationen: { titel: "Arbeitslose nach Generationen",          dateien: ["generationen"],             bau: (A, d) => A.baueGenerationen(d.generationen, "AT") },
+  karte:        { titel: "Arbeitslose nach Bezirken",              dateien: ["karte", "karte_geo"],       bau: (A, d) => A.baueKarte(d.karte, d.karte_geo), karte: true },
+  fluss:        { titel: "Zugänge und Abgänge",                    dateien: ["fluss"],                    bau: (A, d) => A.baueFluss(d.fluss) },
+  dauer:        { titel: "Dauer der Vormerkung",                   dateien: ["dauer"],                    bau: (A, d) => A.baueDauer(d.dauer) },
+  schulung:     { titel: "Personen in Schulung",                   dateien: ["schulung"],                 bau: (A, d) => A.baueSchulung(d.schulung) },
+  stellen:      { titel: "Offene Stellen und Stellenandrang",      dateien: ["stellen"],                  bau: (A, d) => A.baueStellen(d.stellen) },
+  branche:      { titel: "Arbeitslose nach Wirtschaftszweig",      dateien: ["branche"],                  bau: (A, d) => A.baueBranche(d.branche), hoch: true },
+  eu:           { titel: "Österreich im EU-Vergleich",             dateien: ["eu"],                       bau: (A, d) => A.baueEu(d.eu) },
+};
+
+/* Die Chart-Funktionen sprechen feste Element-Kennungen an. Die legen wir
+   hier passend zum gewählten Diagramm an, statt alle Abschnitte zu haben. */
+function baueBuehne(name, art) {
+  const klasse = art.karte ? "viz-chart viz-chart-karte"
+               : art.hoch ? "viz-chart viz-chart-hoch" : "viz-chart";
+  document.getElementById("buehne").innerHTML =
+    `<div class="${klasse}" id="c-${name}"></div>
+     <div class="viz-verborgen" id="t-${name}"></div>
+     <div class="viz-verborgen" id="s-${name}"></div>
+     <div class="viz-verborgen" id="u-${name}"></div>
+     <div class="viz-verborgen" id="h-${name}"></div>`;
+}
+
+async function los() {
+  const A = window.AMS;
+  const name = new URLSearchParams(location.search).get("chart") || "zeitreihe";
+  const art = CHARTS[name];
+  if (!art) {
+    document.getElementById("untertitel").textContent =
+      `Unbekannte Grafik „${name}“. Verfügbar: ${Object.keys(CHARTS).join(", ")}`;
+    return melde();
+  }
+
+  document.getElementById("titel").textContent = art.titel;
+  baueBuehne(name, art);
+
+  let meta, daten = {};
+  try {
+    meta = await A.hole("meta");
+    for (const datei of art.dateien) daten[datei] = await A.hole(datei);
+  } catch (fehler) {
+    document.getElementById("untertitel").textContent =
+      "Die Daten konnten nicht geladen werden.";
+    return melde();
+  }
+
+  art.bau(A, daten);
+
+  /* Untertitel und Hinweis aus den versteckten Feldern nach oben holen */
+  const unter = document.getElementById(`u-${name}`)?.textContent;
+  document.getElementById("untertitel").textContent = unter || "";
+  const hinweis = document.getElementById(`h-${name}`)?.textContent;
+  document.getElementById("hinweisfeld").textContent = hinweis || "";
+
+  const angaben = meta?.einbettung ?? {};
+  document.getElementById("quelle").innerHTML =
+    `Datenquelle: AMS Österreich · STATISTIK AUSTRIA · Eurostat (CC BY 4.0)` +
+    (angaben.grafik_von
+      ? ` — Grafik: <a href="${angaben.url ?? "#"}" target="_blank" rel="noopener">${angaben.grafik_von}</a>`
+      : "");
+  document.getElementById("stand").textContent =
+    meta?.stand_daten ? "Stand: " + new Date(meta.stand_daten)
+      .toLocaleDateString("de-AT", { month: "long", year: "numeric" }) : "";
+
+  setTimeout(melde, 120);
+  new ResizeObserver(melde).observe(document.documentElement);
+}
+
+/* Höhe an die einbettende Seite melden — ein iframe kennt sie sonst nicht. */
+let letzteHoehe = 0;
+function melde() {
+  const hoehe = Math.ceil(document.documentElement.scrollHeight);
+  if (hoehe === letzteHoehe) return;
+  letzteHoehe = hoehe;
+  parent.postMessage({ typ: "ams-hoehe", hoehe }, "*");
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const warte = () => (window.AMS && window.echarts) ? los() : setTimeout(warte, 60);
+  warte();
+});
+</script>
+</body>
+</html>

@@ -1167,6 +1167,7 @@ def baue_kartenregionen(jetzt_je_rgs, vorjahr_je_rgs, mapping: dict,
     try:
         from shapely.geometry import shape, mapping as geo_mapping
         from shapely.ops import unary_union
+        from shapely.validation import make_valid
     except ImportError:
         warnen("shapely fehlt — Karte entfällt, die Tabellen enthalten alle Werte")
         return None, {}
@@ -1184,8 +1185,22 @@ def baue_kartenregionen(jetzt_je_rgs, vorjahr_je_rgs, mapping: dict,
             formen[code] = shape(merkmal["geometry"])
     log(f"    {len(formen)} Flächen im Dienst (94 Bezirke + 23 Wiener Gemeindebezirke)")
 
+    def bereinigen(geometrie):
+        """
+        Die Rohgeometrien enthalten vereinzelt ungültige Ränder
+        (selbstüberschneidend, Splitterflächen). GEOS bricht darüber beim
+        Verschmelzen ab. make_valid repariert das; buffer(0) ist der
+        Rückfall für die Fälle, die make_valid leer zurückgibt.
+        """
+        if geometrie.is_valid:
+            return geometrie
+        repariert = make_valid(geometrie)
+        if repariert.is_empty:
+            repariert = geometrie.buffer(0)
+        return repariert
+
     merkmale, werte = [], []
-    fehlende_geo, fehlende_daten = [], []
+    fehlende_geo, fehlende_daten, kaputte = [], [], []
 
     for name, rgs_codes, bkz_codes in config.KARTENREGIONEN:
         teile = [formen[b] for b in bkz_codes if b in formen]
@@ -1193,7 +1208,14 @@ def baue_kartenregionen(jetzt_je_rgs, vorjahr_je_rgs, mapping: dict,
             fehlende_geo.extend(b for b in bkz_codes if b not in formen)
             continue
 
-        flaeche = unary_union(teile).simplify(0.0015, preserve_topology=True)
+        # Eine kaputte Fläche darf den ganzen Lauf nicht mitreißen.
+        try:
+            flaeche = unary_union([bereinigen(g) for g in teile])
+            flaeche = flaeche.simplify(0.0015, preserve_topology=True)
+            flaeche = bereinigen(flaeche)
+        except Exception as fehler:
+            kaputte.append(f"{name} ({type(fehler).__name__})")
+            continue
         bestand = float(sum(jetzt_je_rgs.get(c, 0) for c in rgs_codes))
         hat_vorjahr = vorjahr_je_rgs is not None
         alt = (float(sum(vorjahr_je_rgs.get(c, 0) for c in rgs_codes))
@@ -1217,6 +1239,12 @@ def baue_kartenregionen(jetzt_je_rgs, vorjahr_je_rgs, mapping: dict,
             "veraenderung_pct": prozent(bestand, alt) if hat_vorjahr else None,
         })
 
+    if kaputte:
+        warnen(
+            f"{len(kaputte)} Kartenregionen mit unbrauchbarer Geometrie: "
+            f"{kaputte} — sie bleiben auf der Karte grau, ihre Werte stehen "
+            f"weiterhin in den Tabellen"
+        )
     if fehlende_geo:
         warnen(f"Bezirkskennziffern ohne Geometrie: {sorted(set(fehlende_geo))}")
     if fehlende_daten:
@@ -1290,9 +1318,16 @@ def main() -> None:
         daten[daten["datum"] == vorjahr].groupby("rgscode")["bestand"].sum()
         if vorjahr in monate else None
     )
-    geo, karte = baue_kartenregionen(
-        jetzt_rgs, vorjahr_rgs, mapping, pd.Timestamp(letzter).strftime("%Y-%m-%d")
-    )
+    try:
+        geo, karte = baue_kartenregionen(
+            jetzt_rgs, vorjahr_rgs, mapping, pd.Timestamp(letzter).strftime("%Y-%m-%d")
+        )
+    except Exception as fehler:
+        warnen(
+            f"Karte konnte nicht erzeugt werden ({type(fehler).__name__}: {fehler}) — "
+            f"alle Werte stehen weiterhin in den Tabellen"
+        )
+        geo, karte = None, None
 
     log("\nSchreiben")
     for name, inhalt in ausgaben.items():

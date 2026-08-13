@@ -481,8 +481,14 @@ function baueGenerationen(daten, region) {
 function baueKarte(karte, geo) {
   const feld = document.getElementById("c-karte");
   if (!karte || !geo) {
-    feld.innerHTML = `<p class="viz-unterzeile" style="padding:20px 0">
-      Die Karte konnte nicht geladen werden — alle Werte stehen in den Tabellen.</p>`;
+    /* Höhe zurücknehmen, sonst bleibt ein leerer Kasten stehen */
+    feld.className = "";
+    feld.style.height = "auto";
+    feld.innerHTML = `<p class="viz-unterzeile" style="padding:4px 0 0">
+      Die Karte ist gerade nicht verfügbar — die Werte stehen in der Tabelle
+      „AMS-Bezirke“ weiter unten.</p>`;
+    const knopf = document.querySelector('[data-ziel="t-karte"]');
+    if (knopf) knopf.style.display = "none";
     return;
   }
 

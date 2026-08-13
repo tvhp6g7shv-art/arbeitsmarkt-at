@@ -88,6 +88,7 @@ const CHARTS = {
   stellen:      { titel: "Offene Stellen und Stellenandrang",      dateien: ["stellen"],                  bau: (A, d) => A.baueStellen(d.stellen) },
   branche:      { titel: "Arbeitslose nach Wirtschaftszweig",      dateien: ["branche"],                  bau: (A, d) => A.baueBranche(d.branche), hoch: true },
   eu:           { titel: "Österreich im EU-Vergleich",             dateien: ["eu"],                       bau: (A, d) => A.baueEu(d.eu) },
+  eurang:       { titel: "Wo Österreich in der EU steht",          dateien: ["eu"],                       bau: (A, d) => A.baueEuRang(d.eu) },
 };
 
 /* Die Chart-Funktionen sprechen feste Element-Kennungen an. Die legen wir

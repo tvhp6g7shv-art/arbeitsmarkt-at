@@ -982,8 +982,7 @@ def hole_eurostat_vergleich() -> dict | None:
     """Österreich gegen EU-27 und Deutschland — gleiche Quelle, gleiche Definition."""
     log("\n    Eurostat-Ländervergleich")
     params = dict(config.EUROSTAT_PARAMS)
-    params.pop("geoLevel", None)
-    params["geo"] = config.EUROSTAT_VERGLEICH
+    params["geoLevel"] = "country"      # alle Länder statt AT-Regionen
     params["isced11"] = "TOTAL"
     try:
         rohdaten = json.loads(
@@ -1010,13 +1009,60 @@ def hole_eurostat_vergleich() -> dict | None:
         warnen("Eurostat lieferte keine Vergleichswerte")
         return None
 
-    log(f"        {len(serien)} Reihen, {jahre[0]}–{jahre[-1]}")
+    # Rangliste aller Länder für das aktuellste Jahr, in dem Österreich einen
+    # Wert hat — sonst steht Österreich in der Liste, aber ohne Balken.
+    beschriftungen = {}
+    try:
+        beschriftungen = entpacke_jsonstat(rohdaten)[1].get("geo", {})
+    except Exception:
+        pass
+
+    at_jahre = [
+        j for j in jahre
+        if not tabelle[(tabelle["geo"] == config.EUROSTAT_HERVORHEBUNG)
+                       & (tabelle["time"] == j)].empty
+    ]
+    rang_jahr = at_jahre[-1] if at_jahre else jahre[-1]
+    aktuell = tabelle[tabelle["time"] == rang_jahr]
+
+    # Nur echte Länder in die Rangliste. Der EU-Schnitt ist kein Land — stünde
+    # er als Balken dazwischen, wäre "Platz 10 von 28" schlicht falsch. Er wird
+    # stattdessen als Referenzlinie mitgegeben.
+    rangliste, eu_referenz = [], None
+    for _, zeile in aktuell.iterrows():
+        code = str(zeile["geo"])
+        wert = round(float(zeile["wert"]), 1)
+        if code.startswith("EU") or code.startswith("EA"):
+            if code == "EU27_2020":
+                eu_referenz = wert
+            continue
+        if len(code) != 2:
+            continue                     # sonstige Aggregate weglassen
+        rangliste.append({
+            "code": code,
+            "name": beschriftungen.get(code, code),
+            "wert": wert,
+            "hervorgehoben": code == config.EUROSTAT_HERVORHEBUNG,
+        })
+    rangliste.sort(key=lambda e: e["wert"])
+
+    platz = next(
+        (i + 1 for i, e in enumerate(rangliste) if e["hervorgehoben"]), None
+    )
+    log(f"        {len(serien)} Reihen {jahre[0]}–{jahre[-1]} · "
+        f"Rangliste {rang_jahr}: {len(rangliste)} Länder"
+        + (f", Österreich auf Platz {platz}" if platz else ""))
+
     return {
         "definition": "Arbeitslosenquote nach ILO-Definition, 15–74 Jahre",
         "quelle": "Eurostat lfst_r_lfu3rt",
         "jahre": jahre,
         "namen": config.EUROSTAT_VERGLEICH_NAMEN,
         "serien": serien,
+        "rang_jahr": rang_jahr,
+        "rangliste": rangliste,
+        "eu_referenz": eu_referenz,
+        "platz_oesterreich": platz,
     }
 
 

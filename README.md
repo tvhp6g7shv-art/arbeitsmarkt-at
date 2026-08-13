@@ -58,7 +58,7 @@ Kein Server, keine Datenbank, keine laufenden Kosten.
 | `schulung.json` | Personen in Schulung |
 | `stellen.json` | Offene Stellen und Stellenandrangziffer je Bundesland |
 | `branche.json` | Arbeitslose nach Wirtschaftszweig |
-| `eu.json` | Arbeitslosenquote Österreich, EU-27, Deutschland |
+| `eu.json` | Arbeitslosenquote im Zeitverlauf (AT, EU-27, DE) plus Rangliste aller 27 EU-Länder |
 | `meta.json` | Stand, Quellen, Lizenzen und Warnhinweise des letzten Laufs |
 
 ## Zwei Messgrößen, die man nicht vermischen darf
@@ -117,7 +117,7 @@ https://DEIN-NAME.github.io/arbeitsmarkt-at/embed.html?chart=fluss
 ```
 
 Verfügbare Namen: `zeitreihe`, `ausbildung`, `verlauf`, `generationen`,
-`karte`, `fluss`, `dauer`, `schulung`, `stellen`, `branche`, `eu`.
+`karte`, `fluss`, `dauer`, `schulung`, `stellen`, `branche`, `eu`, `eurang`.
 
 Den fertigen iframe-Code liefert der Knopf **„Einbetten"** bei jeder Grafik im
 Dashboard. Die Quellenangabe ist Teil der Grafik — wer sie einbettet,

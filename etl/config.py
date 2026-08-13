@@ -54,9 +54,14 @@ EUROSTAT_URL = (
     "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
     "lfst_r_lfu3rt"
 )
-# Zweite Eurostat-Abfrage: Österreich im Vergleich zu EU-27 und Deutschland.
+# Zweite Eurostat-Abfrage: Österreich im Ländervergleich.
 # Gleiche Definition, gleiche Quelle — nur ohne Regionalfilter.
+#
+# EUROSTAT_VERGLEICH sind die Linien im Zeitverlauf (wenige, sonst unlesbar).
+# Zusätzlich wird eine Rangliste ALLER Länder für das aktuellste Jahr gebaut;
+# dort ist Österreich hervorgehoben und der Rest Kontext.
 EUROSTAT_VERGLEICH = ["AT", "EU27_2020", "DE"]
+EUROSTAT_HERVORHEBUNG = "AT"
 EUROSTAT_VERGLEICH_NAMEN = {
     "AT": "Österreich", "EU27_2020": "EU-27", "DE": "Deutschland",
 }

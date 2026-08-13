@@ -25,7 +25,11 @@ const pz     = (n, stellen = 1) => (n === null || n === undefined) ? "–"
 const monat  = (s) => new Date(s).toLocaleDateString("de-AT", { month: "long", year: "numeric" });
 
 async function hole(name) {
-  const antwort = await fetch(`${DATEN_BASIS}/${name}.json`);
+  /* cache: "no-cache" erzwingt eine Rückfrage beim Server. Ohne das zeigt
+     der Browser nach der Monatsaktualisierung wochenlang alte Zahlen — und
+     einmal als fehlend gemerkte Dateien bleiben fehlend. Die Antwort ist
+     bei unveränderten Daten ein 304, kostet also fast nichts. */
+  const antwort = await fetch(`${DATEN_BASIS}/${name}.json`, { cache: "no-cache" });
   if (!antwort.ok) throw new Error(`${name}.json konnte nicht geladen werden (HTTP ${antwort.status})`);
   return antwort.json();
 }
@@ -98,43 +102,51 @@ function deltaText(pct) {
 const diagramme = [];
 
 async function start() {
-  let meta, kpi, zeitreihe, ausbildung, bezirke, laender, geo, generationen, karte;
-  let fluss, dauer, schulung, eu, stellen, branche;
-  try {
-    [meta, kpi, zeitreihe, ausbildung, bezirke, laender] = await Promise.all(
-      ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke", "bundeslaender"].map(hole)
-    );
-    geo = await hole("karte_geo").catch(() => null);
-    karte = await hole("karte").catch(() => null);
-    generationen = await hole("generationen").catch(() => null);
-    [fluss, dauer, schulung, eu, stellen, branche] = await Promise.all(
-      ["fluss", "dauer", "schulung", "eu", "stellen", "branche"]
-        .map((n) => hole(n).catch(() => null))
-    );
-  } catch (fehler) {
+  /* Jede Datei einzeln laden. Fällt eine aus, fehlt nur ihr Abschnitt —
+     nicht die halbe Seite. Zwingend sind allein meta und kpi. */
+  const DATEIEN = ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke",
+                   "bundeslaender", "karte", "karte_geo", "generationen",
+                   "fluss", "dauer", "schulung", "eu", "stellen", "branche"];
+  const geladen = {};
+  await Promise.all(DATEIEN.map(async (name) => {
+    geladen[name] = await hole(name).catch(() => null);
+    if (!geladen[name]) FEHLENDE.push(name);
+  }));
+
+  const meta = geladen.meta, kpi = geladen.kpi;
+  const zeitreihe = geladen.zeitreihe, ausbildung = geladen.ausbildung;
+  const bezirke = geladen.bezirke, laender = geladen.bundeslaender;
+  const karte = geladen.karte, geo = geladen.karte_geo;
+  const generationen = geladen.generationen, fluss = geladen.fluss;
+  const dauer = geladen.dauer, schulung = geladen.schulung;
+  const eu = geladen.eu, stellen = geladen.stellen, branche = geladen.branche;
+
+  if (!meta || !kpi) {
     document.getElementById("lead").textContent =
-      "Die Daten konnten nicht geladen werden. " + fehler.message;
+      "Die Grunddaten konnten nicht geladen werden. Bitte die Seite neu laden.";
     return;
   }
 
   document.getElementById("lead").textContent =
-    `Registrierte Arbeitslose, Stand ${monat(kpi.stand)} · zuletzt aktualisiert am ` +
-    new Date(meta.generiert_am).toLocaleDateString("de-AT");
+    `Registrierte Arbeitslose, Stand ${monat(kpi.stand)}` +
+    (meta?.generiert_am
+      ? ` · zuletzt aktualisiert am ${new Date(meta.generiert_am).toLocaleDateString("de-AT")}`
+      : "");
 
   /* --- Regionsfilter füllen ------------------------------------------ */
   const auswahl = document.getElementById("f-bundesland");
-  laender.laender.forEach((l) => {
+  (laender?.laender ?? []).forEach((l) => {
     const opt = document.createElement("option");
     opt.value = l.name; opt.textContent = l.name;
     auswahl.appendChild(opt);
   });
 
-  baueKpis(kpi, zeitreihe);
-  baueZeitreihe(zeitreihe);
-  baueAusbildung(ausbildung, "AT");
-  baueVerlauf(ausbildung, "absolut");
-  baueGenerationen(generationen, "AT");
-  baueKarte(karte, geo);
+  sicher("KPI-Zeile", () => baueKpis(kpi, zeitreihe));
+  sicher("Zeitreihe", () => baueZeitreihe(zeitreihe));
+  sicher("Ausbildung", () => baueAusbildung(ausbildung, "AT"));
+  sicher("Verlauf", () => baueVerlauf(ausbildung, "absolut"));
+  sicher("Generationen", () => baueGenerationen(generationen, "AT"));
+  sicher("Karte", () => baueKarte(karte, geo));
 
   document.getElementById("m-verlauf").addEventListener("click", (e) => {
     const knopf = e.target.closest("button[data-modus]");
@@ -143,15 +155,26 @@ async function start() {
       b.setAttribute("aria-pressed", String(b === knopf));
     baueVerlauf(ausbildung, knopf.dataset.modus);
   });
-  baueLaender(laender);
-  baueBezirke(bezirke, meta);
-  baueFluss(fluss);
-  baueDauer(dauer);
-  baueSchulung(schulung);
-  baueEu(eu);
-  baueStellen(stellen);
-  baueBranche(branche);
-  baueFuss(meta);
+  sicher("Bundesländer", () => baueLaender(laender));
+  sicher("AMS-Bezirke", () => baueBezirke(bezirke, meta));
+  sicher("Zu-/Abgänge", () => baueFluss(fluss));
+  sicher("Vormerkdauer", () => baueDauer(dauer));
+  sicher("Schulungen", () => baueSchulung(schulung));
+  sicher("EU-Verlauf", () => baueEu(eu));
+  sicher("EU-Rangliste", () => baueEuRang(eu));
+  sicher("Offene Stellen", () => baueStellen(stellen));
+  sicher("Branchen", () => baueBranche(branche));
+  sicher("Quellenangabe", () => baueFuss(meta));
+
+  /* Ausfälle benennen statt still schlucken */
+  const ausgefallen = [...new Set([...FEHLER, ...FEHLENDE])];
+  if (ausgefallen.length) {
+    const feld = document.getElementById("fuss");
+    if (feld) feld.insertAdjacentHTML("beforeend",
+      `<br><span style="color:${stil("--viz-kritisch")}">Gerade nicht ` +
+      `verfügbar: ${ausgefallen.join(", ")}. Die übrigen Angaben sind ` +
+      `davon unberührt.</span>`);
+  }
   verdrahteEinbetten(meta);
 
   auswahl.addEventListener("change", (e) => {
@@ -163,6 +186,7 @@ async function start() {
 
 /* --- 1 — KPI-Kacheln (Kennzahl + Veränderung + Sparkline) ------------ */
 function baueKpis(kpi, zeitreihe) {
+  if (!kpi) return;
   const g = kpi.nach_geschlecht || {};
   const gesamt = kpi.arbeitslose_gesamt || 0;
   const anteil = (v) => (gesamt && v) ? `${pz(v / gesamt * 100)} % aller Arbeitslosen` : "";
@@ -205,6 +229,7 @@ function baueKpis(kpi, zeitreihe) {
 
 /* --- 2 — Zeitreihe: zwei Serien -> Legende + Endpunkt-Beschriftung --- */
 function baueZeitreihe(daten) {
+  if (!daten?.monate?.length) return;
   const d = echarts.init(document.getElementById("c-zeitreihe"), null, { renderer: "svg" });
   const beschriftung = { M: "Männer", W: "Frauen", m: "Männer", w: "Frauen" };
   const farben = [stil("--viz-series-1"), stil("--viz-series-2")];
@@ -271,6 +296,7 @@ function baueZeitreihe(daten) {
    der Tabellenansicht. Mehr als etwa sieben Balken kann man nicht mehr
    sinnvoll vergleichen. */
 function baueAusbildung(daten, region) {
+  if (!daten?.gruppen?.length) return;
   const d = echarts.getInstanceByDom(document.getElementById("c-ausbildung"))
          || echarts.init(document.getElementById("c-ausbildung"), null, { renderer: "svg" });
   if (!diagramme.includes(d)) diagramme.push(d);
@@ -549,6 +575,7 @@ function baueKarte(karte, geo) {
 
 /* --- 6 — AMS-Bezirke: nur Tabelle, mit klarer Einordnung ------------ */
 function baueBezirke(daten, meta) {
+  if (!daten?.bezirke?.length) return;
   document.getElementById("u-bezirke").textContent =
     `${daten.bezirke.length} Geschäftsstellenbezirke · Stand ${monat(daten.stand)}`;
   document.getElementById("h-bezirke").textContent = meta.hinweis_bezirke ?? "";
@@ -567,6 +594,7 @@ function baueBezirke(daten, meta) {
 
 /* --- 5 — Bundesländer: Tabelle mit Sparklines ------------------------ */
 function baueLaender(daten) {
+  if (!daten?.laender?.length) return;
   document.getElementById("u-laender").textContent =
     `Stand ${monat(daten.stand)} · Verlauf der letzten ${daten.sparkline_monate.length} Monate`;
 
@@ -821,6 +849,84 @@ function baueEu(daten) {
   ));
 }
 
+/* --- 10b — EU-Rangliste: eine Farbe für Österreich, Grau für den Rest ---
+   Die Botschaft ist "wo steht Österreich", nicht "welches Land ist welches".
+   Dafür ist Hervorhebung die richtige Form: 26 bunte Balken würden genau die
+   eine Information zudecken, um die es geht. */
+function baueEuRang(daten) {
+  if (!daten?.rangliste?.length) return;
+  const feld = document.getElementById("c-eurang");
+  if (!feld) return;
+  const abschnitt = document.getElementById("s-eurang");
+  if (abschnitt) abschnitt.style.display = "";
+
+  const d = echarts.getInstanceByDom(feld) || echarts.init(feld, null, { renderer: "svg" });
+  if (!diagramme.includes(d)) diagramme.push(d);
+
+  const liste = daten.rangliste;
+  const platz = daten.platz_oesterreich;
+  setzeText("u-eurang",
+    `${daten.definition} · ${daten.rang_jahr}` +
+    (platz ? ` · Österreich auf Platz ${platz} von ${liste.length} EU-Ländern` : ""));
+  setzeText("h-eurang",
+    "Aufsteigend sortiert: links die niedrigste Quote. Diese Werte folgen der " +
+    "EU-Definition und sind deshalb nicht mit den absoluten AMS-Zahlen weiter " +
+    "oben verrechenbar.");
+
+  d.setOption({
+    ...basis(),
+    grid: { left: 8, right: 40, top: 12, bottom: 8, containLabel: true },
+    tooltip: { ...basis().tooltip, trigger: "item",
+      formatter: (p) => {
+        const e = liste[p.dataIndex];
+        return `<strong>${e.name}</strong><br>${pz(e.wert)} % Arbeitslosenquote` +
+          (e.hervorgehoben && platz ? `<br><span style="color:${stil("--viz-muted")}">` +
+            `Platz ${platz} von ${liste.length}</span>` : "");
+      } },
+    xAxis: { ...achse(), type: "category", data: liste.map((e) => e.code),
+      splitLine: { show: false },
+      axisLabel: { color: stil("--viz-muted"), fontSize: 10.5, interval: 0,
+                   hideOverlap: false } },
+    yAxis: { ...achse(), type: "value", axisLine: { show: false },
+      axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => v + " %" } },
+    series: [{
+      type: "bar", barWidth: "62%",
+      data: liste.map((e) => ({
+        value: e.wert,
+        itemStyle: {
+          color: e.hervorgehoben ? stil("--viz-series-1") : stil("--viz-grid"),
+          borderRadius: [4, 4, 0, 0],
+        },
+      })),
+      label: {
+        show: true, position: "top", fontSize: 10.5,
+        color: stil("--viz-text-2"),
+        /* Zahl nur dort, wo sie gebraucht wird: Österreich und die Ränder */
+        formatter: (p) => {
+          const e = liste[p.dataIndex];
+          return (e.hervorgehoben || p.dataIndex === 0 || p.dataIndex === liste.length - 1)
+            ? pz(e.wert) : "";
+        },
+      },
+      /* EU-Schnitt als Linie statt als Balken — er ist kein Land */
+      markLine: daten.eu_referenz === null || daten.eu_referenz === undefined ? undefined : {
+        silent: true, symbol: "none",
+        lineStyle: { color: stil("--viz-series-2"), width: 1.5, type: "dashed" },
+        label: { formatter: `EU-27: ${pz(daten.eu_referenz)} %`,
+                 color: stil("--viz-text-2"), fontSize: 11, position: "insideEndTop" },
+        data: [{ yAxis: daten.eu_referenz }],
+      },
+    }],
+  }, { replaceMerge: ["series", "xAxis"] });
+
+  setzeHtml("t-eurang", tabelle(
+    [{ titel: "Platz", num: true, wert: (z) => z.i + 1 },
+     { titel: "Land", wert: (z) => z.name },
+     { titel: "Quote", num: true, wert: (z) => pz(z.wert) + " %" }],
+    liste.map((e, i) => ({ ...e, i }))
+  ));
+}
+
 /* --- 11 — Offene Stellen und Stellenandrang -------------------------- */
 function baueStellen(daten) {
   if (!daten?.laender?.length) return;
@@ -920,6 +1026,21 @@ function baueBranche(daten) {
   ));
 }
 
+/* --- Schutzhülle -----------------------------------------------------
+   Fällt ein Diagramm aus, darf das nicht die restliche Seite leeren.
+   Vorher hat ein einziger Fehler alle nachfolgenden Abschnitte
+   verschluckt, inklusive ihrer Tabellen. */
+const FEHLER = [];
+const FEHLENDE = [];
+function sicher(name, aufruf) {
+  try {
+    aufruf();
+  } catch (fehler) {
+    FEHLER.push(name);
+    console.error(`[Dashboard] ${name} fehlgeschlagen:`, fehler);
+  }
+}
+
 /* --- Einbetten: Schnipsel bauen und anzeigen -------------------------
    Die Quellenangabe steckt in der eingebetteten Grafik selbst. Wer sie
    weiterverbreitet, transportiert die Namensnennung damit zwangsläufig mit —
@@ -927,7 +1048,7 @@ function baueBranche(daten) {
 const EINBETT_HOEHEN = {
   zeitreihe: 460, ausbildung: 540, verlauf: 540, generationen: 460,
   karte: 590, fluss: 460, dauer: 440, schulung: 420,
-  stellen: 440, branche: 560, eu: 460,
+  stellen: 440, branche: 560, eu: 460, eurang: 440,
 };
 const EINBETT_TITEL = {
   zeitreihe: "Arbeitslose in Österreich, Monatsverlauf",
@@ -941,6 +1062,7 @@ const EINBETT_TITEL = {
   stellen: "Offene Stellen und Stellenandrang",
   branche: "Arbeitslose nach Wirtschaftszweig",
   eu: "Arbeitslosenquote: Österreich im EU-Vergleich",
+  eurang: "Arbeitslosenquote im EU-Ländervergleich",
 };
 
 function einbettBasis() {
@@ -1001,7 +1123,7 @@ global.AMS = {
   hole, basis, achse, tabelle, stil, zahl, pz, monat, deltaText, diagramme,
   baueKpis, baueZeitreihe, baueAusbildung, baueVerlauf, baueGenerationen,
   baueKarte, baueLaender, baueBezirke, baueFuss,
-  baueFluss, baueDauer, baueSchulung, baueEu, baueStellen, baueBranche,
+  baueFluss, baueDauer, baueSchulung, baueEu, baueEuRang, baueStellen, baueBranche,
   einbettCode, verdrahteEinbetten, EINBETT_TITEL,
   setzeBasis: (pfad) => { DATEN_BASIS = pfad; },
   setzeWurzel: (element) => { wurzel = element; },

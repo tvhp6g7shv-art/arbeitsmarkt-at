@@ -52,7 +52,7 @@ Kein Server, keine Datenbank, keine laufenden Kosten.
 | `zeitreihe.json` | Monatsverlauf Österreich seit Januar 2019 |
 | `ausbildung.json` | Nach höchster abgeschlossener Ausbildung, gesamt und je Bundesland |
 | `generationen.json` | Nach Generationen (Gen Z, Millennials, Gen X, Boomer) plus Altersgruppen |
-| `eu.json` | EU-Zeitvergleich, Länderrangliste der 27 Mitgliedstaaten und HVPI-Inflation für die Phillips-Grafik |
+| `eu.json` | EU-Zeitvergleich, Länderrangliste der 27 Mitgliedstaaten; enthält weiterhin die HVPI-Inflation (seit v19 von keiner Grafik genutzt) |
 | `bezirke.json` | Je AMS-Bezirk: Bestand und Vorjahresveränderung (Tabelle) |
 | `karte.json` | Werte je Kartenregion (80 Regionen aus ganzen Bezirken) |
 | `karte_geo.json` | Verschmolzene Bezirksgrenzen als GeoJSON |
@@ -122,8 +122,7 @@ https://DEIN-NAME.github.io/arbeitsmarkt-at/embed.html?chart=fluss
 ```
 
 Verfügbare Namen: `zeitreihe`, `ausbildung`, `verlauf`, `generationen`,
-`karte`, `fluss`, `dauer`, `schulung`, `stellen`, `branche`, `eu`, `eurang`,
-`phillips`.
+`karte`, `fluss`, `dauer`, `schulung`, `stellen`, `branche`, `eu`, `eurang`.
 
 Den fertigen iframe-Code liefert der Knopf **„Einbetten"** bei jeder Grafik im
 Dashboard. Die Quellenangabe ist Teil der Grafik — wer sie einbettet,

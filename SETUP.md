@@ -119,7 +119,7 @@ kaputt, es wird nur nicht aktueller. Schick mir die Mail, dann sehe ich nach.
 | Seite sagt „Daten konnten nicht geladen werden" | Erster Datenlauf fehlt | Schritt 5 ausführen |
 | `.github`-Ordner fehlt nach dem Upload | macOS blendet ihn aus | `Cmd + Shift + .` im Finder |
 | Actions-Tab zeigt nichts an | Actions deaktiviert | Settings → Actions → Allow all actions |
-| Änderungen sind nach dem Upload nicht sichtbar | Browser hält die JS-Dateien im Cache | In `docs/index.html` und `docs/embed.html` die Ziffer in `?v=18` hochzählen (steht an jedem `<script src="js/…">`) |
+| Änderungen sind nach dem Upload nicht sichtbar | Browser hält die JS-Dateien im Cache | In `docs/index.html` und `docs/embed.html` die Ziffer in `?v=19` hochzählen (steht an jedem `<script src="js/…">`) |
 
 ---
 
@@ -131,8 +131,8 @@ Themenstrang aufgeteilt — `js/kern.js` zuerst, dann die Module aus
 `js/charts/`):
 
 ```html
-<script src="js/kern.js?v=18" defer></script>
-<script src="js/charts/zeitreihe.js?v=18" defer></script>
+<script src="js/kern.js?v=19" defer></script>
+<script src="js/charts/zeitreihe.js?v=19" defer></script>
 <!-- … -->
 ```
 
@@ -141,8 +141,8 @@ neue Ziffer sieht ein Besucher nach dem Upload bis zu zehn Minuten die alte
 Datei — und wer die Seite schon einmal offen hatte, unter Umständen deutlich
 länger. Ein Hard-Reload hilft dir, aber nicht deinen Besuchern.
 
-Also: bei jedem Upload `v=18` → `v=19` → `v=20` … (in beiden HTML-Dateien,
-an allen Skript-Tags — Suchen-und-Ersetzen `?v=18` reicht).
+Also: bei jedem Upload `v=19` → `v=20` → `v=21` … (in beiden HTML-Dateien,
+an allen Skript-Tags — Suchen-und-Ersetzen `?v=19` reicht).
 
 **2. Nur wenn sich im Ordner `etl/` etwas geändert hat:**
 Actions → „Daten aktualisieren" → **Run workflow**. Alles unter `docs/data/`

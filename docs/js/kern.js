@@ -182,7 +182,6 @@ async function start() {
   sicher("Schulungen", () => AMS.baueSchulung(schulung));
   sicher("EU-Verlauf", () => AMS.baueEu(eu));
   sicher("EU-Rangliste", () => AMS.baueEuRang(eu));
-  sicher("Inflation/Arbeitslosigkeit", () => AMS.bauePhillips(eu));
   sicher("Offene Stellen", () => AMS.baueStellen(stellen));
   sicher("Branchen", () => AMS.baueBranche(branche));
   sicher("Quellenangabe", () => baueFuss(meta));

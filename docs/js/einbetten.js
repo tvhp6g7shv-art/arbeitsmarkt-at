@@ -29,7 +29,6 @@ const EINBETT_TITEL = {
   branche: "Arbeitslosigkeit nach Wirtschaftszweig",
   eu: "Arbeitslosenquote im Vergleich mit EU-27 und Deutschland",
   eurang: "Arbeitslosenquote: Wo Österreich in der EU steht",
-  phillips: "Inflation im Verhältnis zur Arbeitslosigkeit",
 };
 
 function einbettBasis() {

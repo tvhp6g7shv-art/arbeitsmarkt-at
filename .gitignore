@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+._*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Hinweis: docs/data/ NICHT ignorieren — die JSON-Dateien werden vom
+# GitHub-Actions-Workflow committet und von der Oxygen-Seite geladen.

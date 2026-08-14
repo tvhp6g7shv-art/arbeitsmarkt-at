@@ -10,20 +10,19 @@
      Diagramme. defer hält die Reihenfolge ein. Ziffer bei jedem Upload
      hochzählen (Browser-Cache). kpi und einbetten braucht die
      Einbettseite nicht. -->
-<script src="js/kern.js?v=18" defer></script>
-<script src="js/charts/zeitreihe.js?v=18" defer></script>
-<script src="js/charts/ausbildung.js?v=18" defer></script>
-<script src="js/charts/verlauf.js?v=18" defer></script>
-<script src="js/charts/generationen.js?v=18" defer></script>
-<script src="js/charts/karte.js?v=18" defer></script>
-<script src="js/charts/fluss.js?v=18" defer></script>
-<script src="js/charts/dauer.js?v=18" defer></script>
-<script src="js/charts/schulung.js?v=18" defer></script>
-<script src="js/charts/eu.js?v=18" defer></script>
-<script src="js/charts/eurang.js?v=18" defer></script>
-<script src="js/charts/phillips.js?v=18" defer></script>
-<script src="js/charts/stellen.js?v=18" defer></script>
-<script src="js/charts/branche.js?v=18" defer></script>
+<script src="js/kern.js?v=19" defer></script>
+<script src="js/charts/zeitreihe.js?v=19" defer></script>
+<script src="js/charts/ausbildung.js?v=19" defer></script>
+<script src="js/charts/verlauf.js?v=19" defer></script>
+<script src="js/charts/generationen.js?v=19" defer></script>
+<script src="js/charts/karte.js?v=19" defer></script>
+<script src="js/charts/fluss.js?v=19" defer></script>
+<script src="js/charts/dauer.js?v=19" defer></script>
+<script src="js/charts/schulung.js?v=19" defer></script>
+<script src="js/charts/eu.js?v=19" defer></script>
+<script src="js/charts/eurang.js?v=19" defer></script>
+<script src="js/charts/stellen.js?v=19" defer></script>
+<script src="js/charts/branche.js?v=19" defer></script>
 <style>
 /* Dieselben Variablen wie im Dashboard — hier eingebettet, damit die Grafik
    auch auf fremden Seiten richtig aussieht, egal welches CSS dort gilt. */
@@ -116,7 +115,6 @@ const CHARTS = {
   branche:      { titel: "Arbeitslosigkeit nach Wirtschaftszweig",      dateien: ["branche"],                  bau: (A, d) => A.baueBranche(d.branche), hoch: true },
   eu:           { titel: "Arbeitslosenquote im Vergleich mit EU-27 und Deutschland",             dateien: ["eu"],                       bau: (A, d) => A.baueEu(d.eu) },
   eurang:       { titel: "Arbeitslosenquote: Wo Österreich in der EU steht",          dateien: ["eu"],                       bau: (A, d) => A.baueEuRang(d.eu) },
-  phillips:     { titel: "Inflation im Verhältnis zur Arbeitslosigkeit",           dateien: ["eu"],                       bau: (A, d) => A.bauePhillips(d.eu), hoch: true },
 };
 
 /* Die Chart-Funktionen sprechen feste Element-Kennungen an. Die legen wir

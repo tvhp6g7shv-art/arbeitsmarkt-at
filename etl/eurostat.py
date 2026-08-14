@@ -1,8 +1,9 @@
 """
 Themenstrang: Eurostat — Quoten, EU-Vergleich, Inflation
 JSON-stat-Parser, Arbeitslosenquoten nach Bildungsstand (AT-Regionen),
-Ländervergleich mit Rangliste sowie HVPI-Inflation für die
-Phillips-Grafik.
+Ländervergleich mit Rangliste sowie HVPI-Inflation (steckt in eu.json;
+seit v19 nutzt sie keine Grafik mehr, die Reihe bleibt für spätere
+Auswertungen erhalten).
 
 
 Der Code ist unverändert aus build.py (v17) übernommen; seit v18 pro
@@ -246,8 +247,8 @@ def hole_inflation(jahre: list) -> dict | None:
     Arbeitslosenquote. Beides sind Prozentwerte derselben Frequenz — nur
     deshalb dürfen sie in einer Grafik gegeneinander stehen.
 
-    Fällt die Abfrage aus, entfällt nur die Phillips-Grafik. Der EU-Vergleich
-    bleibt vollständig.
+    Fällt die Abfrage aus, fehlt nur das Feld "inflation" in eu.json —
+    seit v19 nutzt es keine Grafik mehr. Der EU-Vergleich bleibt vollständig.
     """
     log("    Eurostat-Inflation (HVPI)")
     params = dict(config.EUROSTAT_INFLATION_PARAMS)
@@ -275,7 +276,7 @@ def hole_inflation(jahre: list) -> dict | None:
         ]
 
     if not werte:
-        warnen("Keine Inflationsdaten — Phillips-Grafik entfällt")
+        warnen("Keine Inflationsdaten — Feld 'inflation' fehlt in eu.json")
         return None
     log(f"        {len(werte)} Gebiete, {jahre[0]}–{jahre[-1]}")
     return werte

@@ -7,7 +7,8 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme, schrift } = AMS;
+        deltaText, diagramme, schrift ,
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
 
 /* --- 9 — Personen in Schulung ---------------------------------------- */
 function baueSchulung(daten) {
@@ -33,10 +34,10 @@ function baueSchulung(daten) {
         `${zahl(p[0].value)} Personen in Schulung` },
     xAxis: { ...achse(), type: "category", boundaryGap: false, data: daten.monate,
       splitLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse,
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse,
         formatter: (v) => new Date(v).toLocaleDateString("de-AT", { month: "short", year: "2-digit" }) } },
     yAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     series: [{ type: "line", data: daten.werte, showSymbol: false,
       lineStyle: { width: 2, color: stil("--viz-series-1") },
       areaStyle: { color: stil("--viz-series-1"), opacity: 0.10 } }],

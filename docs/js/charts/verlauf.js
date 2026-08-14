@@ -7,7 +7,8 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme, schrift } = AMS;
+        deltaText, diagramme, schrift ,
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
 
 /* --- 3a — Verlauf der Ausbildungsgruppen ----------------------------
    Sechs Linien über die letzten 18 Monate. Feste Farbzuordnung je Gruppe:
@@ -56,7 +57,7 @@ function baueVerlauf(daten, modus = "absolut") {
       lineStyle: { width: 2, color: farben[i] },
       itemStyle: { color: farben[i] },
       emphasis: { focus: "series" },
-      endLabel: { show: true, formatter: (p) => p.seriesName,
+      endLabel: { show: endLabelZeigen(feld), formatter: (p) => p.seriesName,
                   color: stil("--viz-text-2"), fontSize: S.achse, distance: 6 },
       labelLayout: { moveOverlap: "shiftY" },
     };
@@ -64,9 +65,12 @@ function baueVerlauf(daten, modus = "absolut") {
 
   d.setOption({
     ...basis(),
-    grid: { left: 8, right: 200, top: 34, bottom: 8, containLabel: true },
-    legend: { top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 14,
-              textStyle: { color: stil("--viz-text-2"), fontSize: S.serie } },
+    /* 200 px rechts sind fuer die sechs Endbeschriftungen. Schmal faellt
+       die Beschriftung weg, also auch der Platz dafuer. */
+    grid: { left: 8, right: endLabelZeigen(feld) ? 200 : 8, top: 34, bottom: 8,
+            containLabel: true },
+    legend: legende(feld, { top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 14,
+              textStyle: { color: stil("--viz-text-2"), fontSize: S.serie } }),
     tooltip: {
       ...basis().tooltip, trigger: "axis",
       axisPointer: { type: "line", lineStyle: { color: stil("--viz-axis"), width: 1 } },
@@ -77,13 +81,13 @@ function baueVerlauf(daten, modus = "absolut") {
     xAxis: {
       ...achse(), type: "category", boundaryGap: false, data: monate,
       splitLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse,
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse,
         formatter: (v) => new Date(v).toLocaleDateString("de-AT",
           { month: "short", year: "2-digit" }) },
     },
     yAxis: {
       ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse,
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse,
                    formatter: (v) => istIndex ? v : zahl(v) },
     },
     series: serien,

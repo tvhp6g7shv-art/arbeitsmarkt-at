@@ -87,9 +87,70 @@ function basis() {
 const achse = () => ({
   axisLine:  { lineStyle: { color: stil("--viz-axis"), width: 1 } },
   axisTick:  { show: false },
-  axisLabel: { color: stil("--viz-muted"), fontSize: schrift().achse },
+  axisLabel: { color: stil("--viz-muted"), fontSize: schrift().achse, hideOverlap: true },
   splitLine: { lineStyle: { color: stil("--viz-grid"), width: 1, type: "solid" } },
 });
+
+/* --- Schmale Fenster -------------------------------------------------
+   ECharts kennt keine Media Queries. Die Option wird EINMAL gebaut,
+   `resize()` skaliert sie danach nur noch — Gitterabstaende in Pixeln,
+   Legenden und Endbeschriftungen bleiben, wie sie beim Bau waren. Genau
+   daher kommen die zusammengeschobenen Achsenzahlen auf dem Handy.
+
+   Diese Helfer liefern breitenabhaengige Werte, und `start()` baut die
+   Diagramme neu, sobald die Schwelle ueberschritten wird.
+
+   560 px: darunter reicht die Breite fuer die Desktop-Gitter der
+   liegenden Balken nicht mehr (links allein 172 px fuer die
+   Kategorienamen, rechts 72 px fuer die Werte — bei 350 px Fenster
+   bleiben 106 px Zeichenflaeche). */
+const SCHMAL = 560;
+const istSchmal = (el) =>
+  (el?.clientWidth || document.documentElement.clientWidth) < SCHMAL;
+
+/* Gitter fuer liegende Balken. Desktop: feste Pixel, damit die
+   Kategorienamen aller Diagramme in einer Flucht stehen. Schmal:
+   containLabel rechnet den Platz selbst und die Namen werden gekuerzt,
+   statt die Zeichenflaeche zu erdruecken. */
+const balkenGitter = (el, desktop) => istSchmal(el)
+  ? { left: 4, right: 8, top: 10, bottom: 34, containLabel: true }
+  : { top: 10, bottom: 34, ...desktop };
+
+/* Kategorienamen links hart begrenzen, sonst frisst „Pflichtschule oder
+   weniger" die halbe Breite. */
+function kategorieLabel(el) {
+  if (!istSchmal(el)) return {};
+  return {
+    width: Math.max(64, Math.round((el?.clientWidth || 320) * 0.32)),
+    overflow: "truncate",
+    lineHeight: 14,
+  };
+}
+
+/* Legende schmal: scrollbar in EINER Zeile statt ueber drei Zeilen ins
+   Diagramm zu laufen. */
+const legende = (el, werte) => istSchmal(el)
+  ? { ...werte, type: "scroll", itemGap: 10 }
+  : werte;
+
+/* Endpunktbeschriftung rechts kostet Breite, die schmal nicht da ist. */
+const endLabelZeigen = (el) => !istSchmal(el);
+
+/* Ruft `neuBauen` auf, sobald die Seite die Schwelle wechselt — nicht bei
+   jedem Pixel. Entprellt, weil ein Fensterzug Dutzende Ereignisse wirft. */
+function beiBreitenwechsel(neuBauen) {
+  let warSchmal = istSchmal(document.getElementById("c-zeitreihe"));
+  let timer = null;
+  global.addEventListener("resize", () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const jetzt = istSchmal(document.getElementById("c-zeitreihe"));
+      if (jetzt === warSchmal) return;
+      warSchmal = jetzt;
+      neuBauen();
+    }, 200);
+  });
+}
 
 /* --- Neuvermessung nach dem Laden der Schrift ------------------------
    ECharts misst und zeichnet EINMAL beim Aufbau und rendert danach nie
@@ -256,29 +317,40 @@ async function start() {
       ? ` · zuletzt aktualisiert am ${new Date(meta.generiert_am).toLocaleDateString("de-AT")}`
       : "");
 
-  sicher("KPI-Zeile", () => AMS.baueKpis(kpi));
-  sicher("Zeitreihe", () => AMS.baueZeitreihe(zeitreihe));
-  sicher("Ausbildung", () => AMS.baueAusbildung(ausbildung, "AT"));
-  sicher("Verlauf", () => AMS.baueVerlauf(ausbildung, "absolut"));
-  sicher("Generationen", () => AMS.baueGenerationen(generationen, "AT"));
-  sicher("Karte", () => AMS.baueKarte(karte, geo));
+  /* Alle Diagramme in EINER Funktion, damit sie beim Wechsel der
+     Breitenschwelle vollstaendig neu gebaut werden koennen. Was nur
+     einmal passieren darf — Ereignisse anhaengen, Quellenzeile, Ausfall-
+     meldung — steht bewusst ausserhalb. */
+  let verlaufModus = "absolut";
+  function baueAlles() {
+    sicher("KPI-Zeile", () => AMS.baueKpis(kpi));
+    sicher("Zeitreihe", () => AMS.baueZeitreihe(zeitreihe));
+    sicher("Ausbildung", () => AMS.baueAusbildung(ausbildung, "AT"));
+    sicher("Verlauf", () => AMS.baueVerlauf(ausbildung, verlaufModus));
+    sicher("Generationen", () => AMS.baueGenerationen(generationen, "AT"));
+    sicher("Karte", () => AMS.baueKarte(karte, geo));
+    sicher("Bundesländer", () => AMS.baueLaender(laender));
+    sicher("AMS-Bezirke", () => AMS.baueBezirke(bezirke, meta));
+    sicher("Zu-/Abgänge", () => AMS.baueFluss(fluss));
+    sicher("Vormerkdauer", () => AMS.baueDauer(dauer));
+    sicher("Schulungen", () => AMS.baueSchulung(schulung));
+    sicher("EU-Rangliste", () => AMS.baueEuRang(eu));
+    sicher("EU-Karte", () => AMS.baueEuKarte(eukarte, eukarteGeo));
+    sicher("Offene Stellen", () => AMS.baueStellen(stellen));
+    sicher("Branchen", () => AMS.baueBranche(branche));
+  }
+  baueAlles();
+  beiBreitenwechsel(baueAlles);
 
   document.getElementById("m-verlauf").addEventListener("click", (e) => {
     const knopf = e.target.closest("button[data-modus]");
     if (!knopf) return;
     for (const b of e.currentTarget.querySelectorAll("button"))
       b.setAttribute("aria-pressed", String(b === knopf));
-    AMS.baueVerlauf(ausbildung, knopf.dataset.modus);
+    /* gemerkt, damit ein Neubau bei Breitenwechsel den Modus behaelt */
+    verlaufModus = knopf.dataset.modus;
+    AMS.baueVerlauf(ausbildung, verlaufModus);
   });
-  sicher("Bundesländer", () => AMS.baueLaender(laender));
-  sicher("AMS-Bezirke", () => AMS.baueBezirke(bezirke, meta));
-  sicher("Zu-/Abgänge", () => AMS.baueFluss(fluss));
-  sicher("Vormerkdauer", () => AMS.baueDauer(dauer));
-  sicher("Schulungen", () => AMS.baueSchulung(schulung));
-  sicher("EU-Rangliste", () => AMS.baueEuRang(eu));
-  sicher("EU-Karte", () => AMS.baueEuKarte(eukarte, eukarteGeo));
-  sicher("Offene Stellen", () => AMS.baueStellen(stellen));
-  sicher("Branchen", () => AMS.baueBranche(branche));
   sicher("Quellenangabe", () => baueFuss(meta));
 
   /* Ausfälle benennen statt still schlucken */
@@ -311,6 +383,8 @@ const AMS = {
   hole, basis, achse, tabelle, stil, zahl, pz, monat, deltaText,
   setzeText, setzeHtml, sicher, diagramme, baueFuss, kartenLayout,
   schrift, px, neuVermessen,
+  /* Breitenabhaengiges Layout — siehe „Schmale Fenster" oben */
+  istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen,
   setzeBasis: (pfad) => { DATEN_BASIS = pfad; },
   /* Fail-soft: ein null-Argument darf den Rückfall (#dashboard bzw. body)
      NICHT überschreiben. Genau das ist am 14.08. auf der WordPress-Seite

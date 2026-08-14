@@ -7,7 +7,8 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme, schrift } = AMS;
+        deltaText, diagramme, schrift ,
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
 
 /* --- 3b — Generationen: eine Farbe, Geburtsjahre als Zweitzeile ------
    Die Zuordnung Altersgruppe → Generation ist eine Näherung; der Hinweis
@@ -34,7 +35,7 @@ function baueGenerationen(daten, region) {
 
   d.setOption({
     ...basis(),
-    grid: { left: 172, right: 72, top: 10, bottom: 34 },
+    grid: balkenGitter(feld, { left: 172, right: 72 }),
     tooltip: {
       ...basis().tooltip, trigger: "item",
       formatter: (p) => {
@@ -50,10 +51,10 @@ function baueGenerationen(daten, region) {
       },
     },
     xAxis: { ...achse(), type: "value", axisLine: { show: false },
-             axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
+             axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     yAxis: { ...achse(), type: "category", data: namen, inverse: true,
              splitLine: { show: false },
-             axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, lineHeight: 15,
+             axisLabel: { ...kategorieLabel(feld), color: stil("--viz-text-2"), fontSize: S.serie, lineHeight: 15,
                           width: 158, overflow: "break", margin: 12 } },
     series: [{
       type: "bar", data: werte, barWidth: "58%",

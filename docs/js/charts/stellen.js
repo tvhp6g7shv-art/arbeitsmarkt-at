@@ -7,7 +7,8 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme, schrift } = AMS;
+        deltaText, diagramme, schrift ,
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
 
 /* --- 11 — Offene Stellen und Stellenandrang -------------------------- */
 function baueStellen(daten) {
@@ -30,7 +31,7 @@ function baueStellen(daten) {
 
   d.setOption({
     ...basis(),
-    grid: { left: 130, right: 72, top: 10, bottom: 34 },
+    grid: balkenGitter(feld, { left: 130, right: 72 }),
     tooltip: { ...basis().tooltip, trigger: "item",
       formatter: (p) => {
         const l = sortiert[p.dataIndex];
@@ -39,10 +40,10 @@ function baueStellen(daten) {
           `${zahl(l.stellen)} offene Stellen</span>`;
       } },
     xAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse } },
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse } },
     yAxis: { ...achse(), type: "category", inverse: true,
       data: sortiert.map((l) => l.name), splitLine: { show: false },
-      axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, margin: 12 } },
+      axisLabel: { ...kategorieLabel(feld), color: stil("--viz-text-2"), fontSize: S.serie, margin: 12 } },
     series: [{ type: "bar", data: sortiert.map((l) => l.andrang), barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
       label: { show: true, position: "right", distance: 8,

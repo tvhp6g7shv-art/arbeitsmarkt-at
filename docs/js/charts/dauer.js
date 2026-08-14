@@ -7,7 +7,8 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme, schrift } = AMS;
+        deltaText, diagramme, schrift ,
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
 
 /* --- 8 — Vormerkdauer und Langzeitbeschäftigungslosigkeit ------------
    Geordnete Kategorien, deshalb eine Farbe: die Balkenlänge trägt die
@@ -36,15 +37,15 @@ function baueDauer(daten) {
 
   d.setOption({
     ...basis(),
-    grid: { left: 150, right: 84, top: 10, bottom: 34 },
+    grid: balkenGitter(feld, { left: 150, right: 84 }),
     tooltip: { ...basis().tooltip, trigger: "item",
       formatter: (p) => `<strong>${p.name}</strong><br>${zahl(p.value)} Personen<br>` +
         `<span style="color:${stil("--viz-muted")}">${pz(gruppen[p.dataIndex].anteil_pct)} % aller Vorgemerkten</span>` },
     xAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     yAxis: { ...achse(), type: "category", inverse: true,
       data: gruppen.map((g) => ohneTage(g.name)), splitLine: { show: false },
-      axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, width: 136,
+      axisLabel: { ...kategorieLabel(feld), color: stil("--viz-text-2"), fontSize: S.serie, width: 136,
                    overflow: "break", margin: 12 } },
     series: [{ type: "bar", data: gruppen.map((g) => g.bestand), barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },

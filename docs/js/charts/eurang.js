@@ -7,7 +7,8 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme, schrift } = AMS;
+        deltaText, diagramme, schrift ,
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
 
 /* --- 10b — EU-Rangliste: eine Farbe für Österreich, Grau für den Rest ---
    Die Botschaft ist "wo steht Österreich", nicht "welches Land ist welches".
@@ -46,10 +47,10 @@ function baueEuRang(daten) {
       } },
     xAxis: { ...achse(), type: "category", data: liste.map((e) => e.code),
       splitLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.eng, interval: 0,
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.eng, interval: 0,
                    hideOverlap: false } },
     yAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => v + " %" } },
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => v + " %" } },
     series: [{
       type: "bar", barWidth: "62%",
       data: liste.map((e) => ({

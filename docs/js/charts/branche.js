@@ -7,7 +7,8 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme, schrift } = AMS;
+        deltaText, diagramme, schrift ,
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
 
 /* --- 12 — Nach Wirtschaftszweig -------------------------------------- */
 function baueBranche(daten) {
@@ -39,7 +40,7 @@ function baueBranche(daten) {
 
   d.setOption({
     ...basis(),
-    grid: { left: 210, right: 84, top: 10, bottom: 34 },
+    grid: balkenGitter(feld, { left: 210, right: 84 }),
     tooltip: { ...basis().tooltip, trigger: "item",
       formatter: (p) => {
         const b = top[p.dataIndex];
@@ -50,10 +51,10 @@ function baueBranche(daten) {
             `${v > 0 ? "▲" : "▼"} ${pz(Math.abs(v))} % ggü. Vorjahr</span>`);
       } },
     xAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     yAxis: { ...achse(), type: "category", inverse: true,
       data: top.map((b) => b.name), splitLine: { show: false },
-      axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, width: 196,
+      axisLabel: { ...kategorieLabel(feld), color: stil("--viz-text-2"), fontSize: S.serie, width: 196,
                    overflow: "break", margin: 12 } },
     series: [{ type: "bar", data: top.map((b) => b.bestand), barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },

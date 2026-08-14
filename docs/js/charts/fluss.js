@@ -7,7 +7,8 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme, schrift } = AMS;
+        deltaText, diagramme, schrift ,
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
 
 /* --- 7 — Zugänge und Abgänge ----------------------------------------
    Zwei Serien, deshalb Legende plus Endpunktbeschriftung. Der Bestand
@@ -43,9 +44,10 @@ function baueFluss(daten) {
 
   d.setOption({
     ...basis(),
-    grid: { left: 8, right: 100, top: 34, bottom: 8, containLabel: true },
-    legend: { top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 16,
-              textStyle: { color: stil("--viz-text-2"), fontSize: S.serie } },
+    grid: { left: 8, right: endLabelZeigen(feld) ? 100 : 8, top: 34, bottom: 8,
+            containLabel: true },
+    legend: legende(feld, { top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 16,
+              textStyle: { color: stil("--viz-text-2"), fontSize: S.serie } }),
     tooltip: {
       ...basis().tooltip, trigger: "axis",
       axisPointer: { type: "line", lineStyle: { color: stil("--viz-axis"), width: 1 } },
@@ -60,10 +62,10 @@ function baueFluss(daten) {
     },
     xAxis: { ...achse(), type: "category", boundaryGap: false, data: daten.monate,
       splitLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse,
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse,
         formatter: (v) => new Date(v).toLocaleDateString("de-AT", { month: "short", year: "2-digit" }) } },
     yAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
+      axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     series: serien,
   }, { replaceMerge: ["series"] });
 

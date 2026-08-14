@@ -54,9 +54,68 @@ Dort hinein:
   --viz-gut:      #006300;
   --viz-kritisch: #d03b3b;
 
-  --viz-font: var(--font-body, system-ui, sans-serif);
+  /* --- Typografie ---------------------------------------------------
+     ACHTUNG: Hier NICHT auf die Schrift deines Themes umbiegen.
+     Siehe den Abschnitt „Warum die Diagramme ihre eigene Schrift
+     mitbringen" weiter unten. */
+  --viz-font: "Figtree", system-ui, -apple-system, sans-serif;
+  --viz-font-display: var(--viz-font);
+
+  /* Größen der Diagrammtexte. In px, weil ECharts nur Zahlen kennt. */
+  --viz-fs-achse:   11px;    /* Achsenbeschriftung, Kartenlegende */
+  --viz-fs-label:   11.5px;  /* Werte am Balken- oder Punktende */
+  --viz-fs-serie:   12px;    /* Kategorienamen, Legende */
+  --viz-fs-tooltip: 12.5px;
+  --viz-fs-eng:     10.5px;  /* 27 Ländernamen auf einer Achse */
+
+  --viz-fw-normal:   400;
+  --viz-fw-kraeftig: 600;
+  --viz-fw-kpi:      650;
 }
 ```
+
+### Die Schrift mit einbinden
+
+Figtree liegt im Repo unter `docs/fonts/`. Damit Oxygen sie kennt, gehört
+dieser Block ins selbe Stylesheet — **vor** die Variablen:
+
+```css
+@font-face {
+  font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap;
+  src: url("https://tvhp6g7shv-art.github.io/arbeitsmarkt-at/fonts/figtree-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap;
+  src: url("https://tvhp6g7shv-art.github.io/arbeitsmarkt-at/fonts/figtree-latin-ext-wght-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+```
+
+Eine Familie, Gewichtsachse 300–900 — `font-weight: 650` ist damit ein
+echter Schnitt, kein vom Browser errechnetes Kunstfett. Figtree steht unter
+der SIL Open Font License 1.1; die Lizenzdatei liegt neben den Schriften
+unter `docs/fonts/LICENSE-Figtree.txt` und muss dort bleiben.
+
+### Warum die Diagramme ihre eigene Schrift mitbringen
+
+Es liegt nahe, `--viz-font` einfach auf `var(--font-body)` zu setzen, damit
+das Dashboard die Schrift der Website erbt. Davon raten wir ab, aus zwei
+Gründen:
+
+1. **ECharts misst, bevor es zeichnet.** Achsenbeschriftungen,
+   Textabschneidungen und die Auflösung von Überlappungen werden aus der
+   gemessenen Textbreite berechnet. Eine andere Schrift heißt ein anderes
+   Layout — ein Bezirksname, der hier passt, kann anderswo abgeschnitten
+   werden. Mit einer mitgelieferten Schrift ist die Ausgabe berechenbar.
+2. **Die Einbettung braucht es ohnehin.** `embed.html` läuft als iframe auf
+   fremden Redaktionsseiten und erbt von dort gar nichts. Dieselbe Schrift
+   auf beiden Wegen heißt: eingebettete Grafik und Dashboard sehen gleich
+   aus.
+
+Wenn du trotzdem umstellen willst, ändere `--viz-font` **und** binde die
+Schrift per `@font-face` ein — sonst greift der Rückfall auf `system-ui`,
+und die Diagramme sehen je nach Betriebssystem der Leserin anders aus.
 
 ### Worauf du beim Farbwechsel achten musst
 
@@ -89,10 +148,10 @@ In Oxygen: Seite auswählen → **Page Settings → Custom CSS/JS → JavaScript
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
-<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/kern.js?v=18" defer></script>
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/kern.js?v=22" defer></script>
 <!-- danach nur die Diagramme, die die Seite zeigt, z. B.: -->
-<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/charts/zeitreihe.js?v=18" defer></script>
-<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/charts/fluss.js?v=18" defer></script>
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/charts/zeitreihe.js?v=22" defer></script>
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/charts/fluss.js?v=22" defer></script>
 ```
 
 ### b) Pro Diagramm ein Code Block
@@ -142,6 +201,13 @@ Und in den **JavaScript**-Bereich desselben Code Blocks:
         ],
       });
       window.addEventListener("resize", () => d.resize());
+
+      /* Ohne diese Zeile bleibt der Diagrammtext in der Ersatzschrift stehen:
+         ECharts misst und zeichnet einmal beim Aufbau und rendert danach nie
+         von selbst neu. Ist Figtree zu dem Zeitpunkt noch nicht geladen, sieht
+         die Seite ringsum richtig aus und das Diagramm falsch. resize() stößt
+         eine vollständige Neuvermessung an. */
+      if (document.fonts?.ready) document.fonts.ready.then(() => d.resize());
     });
   }
   window.echarts ? los()
@@ -153,6 +219,13 @@ Nur zwei Dinge anpassen: **`DEIN-GITHUB-NAME`** und die **id** des `<div>`.
 
 > **`.viz-root` nicht vergessen.** Der Wrapper ist der Anker, an dem das Skript
 > die Variablen abliest. Ohne ihn erscheinen die Diagramme farblos.
+
+> **Diagrammtext nie per CSS formatieren.** Auch nicht beim SVG-Renderer, wo
+> der Text als `<text>` im DOM steht. ECharts berechnet Breiten, Umbrüche und
+> Überlappungen weiter über eine Canvas-Messung aus der Option — eine
+> CSS-Regel auf `font-family`, `font-weight` oder `font-variant-numeric`
+> verschiebt dann Achsenlabels und schneidet Bezirksnamen falsch ab.
+> Schrift gehört in `textStyle`, gespeist aus den `--viz-*`-Variablen.
 
 ---
 

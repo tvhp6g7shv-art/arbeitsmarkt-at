@@ -7,7 +7,7 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 1 — KPI-Kacheln (Kennzahl + Veränderung) -------------------------
    Die Sparkline in der ersten Kachel ist in v20 entfallen (User-Entscheid).

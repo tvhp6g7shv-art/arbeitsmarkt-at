@@ -7,10 +7,11 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 9 — Personen in Schulung ---------------------------------------- */
 function baueSchulung(daten) {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   if (!daten) return;
   const abschnitt = document.getElementById("s-schulung");
   if (abschnitt) abschnitt.style.display = "";
@@ -32,10 +33,10 @@ function baueSchulung(daten) {
         `${zahl(p[0].value)} Personen in Schulung` },
     xAxis: { ...achse(), type: "category", boundaryGap: false, data: daten.monate,
       splitLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 11,
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse,
         formatter: (v) => new Date(v).toLocaleDateString("de-AT", { month: "short", year: "2-digit" }) } },
     yAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) } },
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     series: [{ type: "line", data: daten.werte, showSymbol: false,
       lineStyle: { width: 2, color: stil("--viz-series-1") },
       areaStyle: { color: stil("--viz-series-1"), opacity: 0.10 } }],

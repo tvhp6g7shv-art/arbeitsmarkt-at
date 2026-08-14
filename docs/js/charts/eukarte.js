@@ -7,7 +7,7 @@
    =========================================================================== */
 (function (AMS) {
 "use strict";
-const { stil, pz, basis, tabelle, setzeText, setzeHtml, diagramme } = AMS;
+const { stil, pz, basis, tabelle, setzeText, setzeHtml, diagramme, schrift } = AMS;
 
 /* --- 10 — EU-Länderkarte: Veränderung der Quote ggü. Vorjahr ----------
    Bewusst dieselbe Bildsprache wie die Bezirkskarte — divergierend, Grün für
@@ -30,6 +30,7 @@ const { stil, pz, basis, tabelle, setzeText, setzeHtml, diagramme } = AMS;
 const RAHMEN_EU = [[-10.5, 34.0], [34.9, 70.9]];
 
 function baueEuKarte(daten, geo) {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   const feld = document.getElementById("c-eukarte");
   if (!feld) return;
 
@@ -123,7 +124,7 @@ function baueEuKarte(daten, geo) {
       itemWidth: 12, itemHeight: 150, calculable: true,
       text: ["Anstieg", "Rückgang"],
       formatter: (v) => (v > 0 ? "+" : "") + pz(v) + " %-Punkte",
-      textStyle: { color: stil("--viz-muted"), fontSize: 11 },
+      textStyle: { color: stil("--viz-muted"), fontSize: S.achse },
       inRange: { color: [
         stil("--viz-div-gut-4"), stil("--viz-div-gut-3"), stil("--viz-div-gut-2"),
         stil("--viz-div-gut-1"), stil("--viz-div-neutral"),

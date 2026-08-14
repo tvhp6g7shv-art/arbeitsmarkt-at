@@ -5,7 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Arbeitsmarkt Österreich — Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
+<link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+/* ===================================================================
+   SCHRIFT — Figtree, variabel (SIL Open Font License 1.1)
+   -------------------------------------------------------------------
+   EINE Familie, Gewichtsachse 300–900. Die Lizenzdatei liegt daneben
+   unter fonts/LICENSE-Figtree.txt und muss dort bleiben (OFL-Auflage).
+
+   Warum selbst gehostet und nicht der System-Stack: ECharts legt
+   Achsenbeschriftungen, Abschneidungen und Überlappungen anhand der
+   GEMESSENEN Textbreite fest. Mit system-ui misst jedes Betriebssystem
+   anders — dieselbe Grafik bekäme unter Windows ein anderes Layout als
+   unter macOS. Eine mitgelieferte Schrift macht die Ausgabe berechenbar.
+
+   ▲ ▼ und → sind in Figtree nicht enthalten und fallen glyphweise auf
+   die Systemschrift zurück. Das ist gewollt und war mit der vorherigen
+   Schrift genauso.
+   =================================================================== */
+@font-face {
+  font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap;
+  src: url("fonts/figtree-latin-ext-wght-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap;
+  src: url("fonts/figtree-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
 /* ===================================================================
    FARBEN UND MASSE
    In Oxygen 6 überschreibst du diese Variablen einfach im globalen
@@ -61,7 +89,24 @@
   --viz-div-schlecht-3: #cc6e58;
   --viz-div-schlecht-4: #a52a1f;
 
-  --viz-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* --- Typografie -------------------------------------------------
+     Größen in px, weil ECharts nur Zahlen kennt; kern.js liest sie mit
+     parseFloat aus. Wer in Oxygen umstellt, ändert nur diese Zeilen —
+     die 14 Diagramm-Module holen ihre Größen von hier.
+     ----------------------------------------------------------------- */
+  --viz-font: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --viz-font-display: var(--viz-font);
+
+  --viz-fs-achse:   11px;    /* Achsenbeschriftung, visualMap */
+  --viz-fs-label:   11.5px;  /* Werte am Balken- oder Punktende */
+  --viz-fs-serie:   12px;    /* Kategorienamen, Legende */
+  --viz-fs-tooltip: 12.5px;
+  --viz-fs-eng:     10.5px;  /* Sonderfall: 27 Ländernamen auf einer Achse */
+
+  --viz-fw-normal:   400;
+  --viz-fw-kraeftig: 600;
+  --viz-fw-kpi:      650;    /* echte Zwischenstufe, Figtree ist variabel */
+
   --viz-radius: 10px;
   --viz-gap: 20px;
 }
@@ -108,14 +153,16 @@
    Die Seitenfläche gehört nicht zum Dashboard, sondern zur Seite. In Oxygen
    liefert dein Theme sie; hier setzen wir sie nur für die Vorschau. */
 * { box-sizing: border-box; }
-body { margin:0; background: #f9f9f7; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+/* --viz-font ist auf .viz-root definiert und gilt hier noch nicht — die
+   Seitenfläche gehört zur Seite, nicht zum Dashboard. Darum ausgeschrieben. */
+body { margin:0; background: #f9f9f7; font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif; }
 @media (prefers-color-scheme: dark) {
   body:where(:not([data-theme="light"] body)) { background: #0d0d0d; }
 }
 :root[data-theme="dark"] body { background: #0d0d0d; }
 .viz-root { max-width: 1180px; margin: 0 auto; padding: 32px 20px 64px; color: var(--viz-text); font-family: var(--viz-font); }
-.viz-root h1 { font-size: 1.75rem; margin: 0 0 6px; letter-spacing: -0.01em; }
-.viz-root h2 { font-size: 1.0rem; margin: 0 0 2px; font-weight: 600; }
+.viz-root h1 { font-family: var(--viz-font-display); font-size: 1.75rem; font-weight: var(--viz-fw-kpi); margin: 0 0 6px; letter-spacing: -0.01em; }
+.viz-root h2 { font-family: var(--viz-font-display); font-size: 1.0rem; margin: 0 0 2px; font-weight: var(--viz-fw-kraeftig); }
 .viz-lead { color: var(--viz-text-2); margin: 0 0 28px; font-size: .9rem; }
 
 .viz-karte {
@@ -132,8 +179,8 @@ body { margin:0; background: #f9f9f7; font-family: system-ui, -apple-system, "Se
 .viz-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: var(--viz-gap); margin-bottom: var(--viz-gap); }
 .viz-kpi { background: var(--viz-surface); border: 1px solid var(--viz-border); border-radius: var(--viz-radius); padding: 18px 20px; }
 .viz-kpi-titel { font-size: .78rem; color: var(--viz-text-2); margin: 0 0 8px; font-weight: 500; }
-.viz-kpi-wert { font-size: 2.1rem; line-height: 1.05; font-weight: 650; letter-spacing: -0.02em; }
-.viz-kpi-delta { font-size: .82rem; margin-top: 7px; display: flex; align-items: center; gap: 5px; }
+.viz-kpi-wert { font-family: var(--viz-font-display); font-size: 2.1rem; line-height: 1.05; font-weight: var(--viz-fw-kpi); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.viz-kpi-delta { font-size: .82rem; margin-top: 7px; display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
 .viz-delta-hoch { color: var(--viz-kritisch); }
 .viz-delta-runter { color: var(--viz-gut); }
 
@@ -168,9 +215,9 @@ body { margin:0; background: #f9f9f7; font-family: system-ui, -apple-system, "Se
   font: inherit; font-size: .78rem; padding: 4px 10px; cursor: pointer;
   background: none; border: 0; color: var(--viz-text-2);
 }
-.viz-modus button[aria-pressed="true"] { background: var(--viz-grid); color: var(--viz-text); font-weight: 600; }
+.viz-modus button[aria-pressed="true"] { background: var(--viz-grid); color: var(--viz-text); font-weight: var(--viz-fw-kraeftig); }
 table.viz-tabelle { width: 100%; border-collapse: collapse; font-size: .84rem; font-variant-numeric: tabular-nums; }
-table.viz-tabelle th { text-align: left; font-weight: 600; color: var(--viz-text-2); padding: 9px 10px; border-bottom: 1px solid var(--viz-axis); font-size: .78rem; }
+table.viz-tabelle th { text-align: left; font-weight: var(--viz-fw-kraeftig); color: var(--viz-text-2); padding: 9px 10px; border-bottom: 1px solid var(--viz-axis); font-size: .78rem; }
 table.viz-tabelle td { padding: 9px 10px; border-bottom: 1px solid var(--viz-grid); color: var(--viz-text); }
 table.viz-tabelle td.num, table.viz-tabelle th.num { text-align: right; }
 .viz-spark-zelle { width: 130px; }
@@ -456,7 +503,7 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
   </dialog>
 </div>
 
-<!-- ?v=21 bricht den Browser-Cache. GitHub Pages liefert JS mit
+<!-- ?v=22 bricht den Browser-Cache. GitHub Pages liefert JS mit
      Cache-Control: max-age=600 aus — ohne diese Ziffer sieht ein
      Besucher nach einem Upload bis zu 10 Minuten die alte Datei,
      und wer die Seite schon einmal offen hatte, unter Umstaenden
@@ -466,23 +513,23 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
      (Helfer + Seitenaufbau) MUSS als erstes stehen, danach die
      Diagramme aus js/charts/, zuletzt js/einbetten.js. defer hält
      die Reihenfolge ein. -->
-<script src="js/kern.js?v=21" defer></script>
-<script src="js/charts/kpi.js?v=21" defer></script>
-<script src="js/charts/zeitreihe.js?v=21" defer></script>
-<script src="js/charts/ausbildung.js?v=21" defer></script>
-<script src="js/charts/verlauf.js?v=21" defer></script>
-<script src="js/charts/generationen.js?v=21" defer></script>
-<script src="js/charts/karte.js?v=21" defer></script>
-<script src="js/charts/bezirke.js?v=21" defer></script>
-<script src="js/charts/bundeslaender.js?v=21" defer></script>
-<script src="js/charts/fluss.js?v=21" defer></script>
-<script src="js/charts/dauer.js?v=21" defer></script>
-<script src="js/charts/schulung.js?v=21" defer></script>
-<script src="js/charts/eukarte.js?v=21" defer></script>
-<script src="js/charts/eurang.js?v=21" defer></script>
-<script src="js/charts/stellen.js?v=21" defer></script>
-<script src="js/charts/branche.js?v=21" defer></script>
-<script src="js/einbetten.js?v=21" defer></script>
+<script src="js/kern.js?v=22" defer></script>
+<script src="js/charts/kpi.js?v=22" defer></script>
+<script src="js/charts/zeitreihe.js?v=22" defer></script>
+<script src="js/charts/ausbildung.js?v=22" defer></script>
+<script src="js/charts/verlauf.js?v=22" defer></script>
+<script src="js/charts/generationen.js?v=22" defer></script>
+<script src="js/charts/karte.js?v=22" defer></script>
+<script src="js/charts/bezirke.js?v=22" defer></script>
+<script src="js/charts/bundeslaender.js?v=22" defer></script>
+<script src="js/charts/fluss.js?v=22" defer></script>
+<script src="js/charts/dauer.js?v=22" defer></script>
+<script src="js/charts/schulung.js?v=22" defer></script>
+<script src="js/charts/eukarte.js?v=22" defer></script>
+<script src="js/charts/eurang.js?v=22" defer></script>
+<script src="js/charts/stellen.js?v=22" defer></script>
+<script src="js/charts/branche.js?v=22" defer></script>
+<script src="js/einbetten.js?v=22" defer></script>
 
 <script>
 /* Startet das Dashboard, sobald ECharts und die js/-Module geladen sind. */

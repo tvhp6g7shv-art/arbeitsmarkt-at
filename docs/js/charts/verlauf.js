@@ -7,7 +7,7 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 3a — Verlauf der Ausbildungsgruppen ----------------------------
    Sechs Linien über die letzten 18 Monate. Feste Farbzuordnung je Gruppe:
@@ -19,6 +19,7 @@ const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
 const VERLAUF_GRUPPEN = ["pflicht", "lehre", "mittel", "matura", "hoch", "akademie"];
 
 function baueVerlauf(daten, modus = "absolut") {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   const quelle = daten?.zeitreihe_gruppen;
   if (!quelle?.serien) return;
   document.getElementById("s-verlauf").style.display = "";
@@ -56,7 +57,7 @@ function baueVerlauf(daten, modus = "absolut") {
       itemStyle: { color: farben[i] },
       emphasis: { focus: "series" },
       endLabel: { show: true, formatter: (p) => p.seriesName,
-                  color: stil("--viz-text-2"), fontSize: 11, distance: 6 },
+                  color: stil("--viz-text-2"), fontSize: S.achse, distance: 6 },
       labelLayout: { moveOverlap: "shiftY" },
     };
   });
@@ -65,7 +66,7 @@ function baueVerlauf(daten, modus = "absolut") {
     ...basis(),
     grid: { left: 8, right: 200, top: 34, bottom: 8, containLabel: true },
     legend: { top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 14,
-              textStyle: { color: stil("--viz-text-2"), fontSize: 12 } },
+              textStyle: { color: stil("--viz-text-2"), fontSize: S.serie } },
     tooltip: {
       ...basis().tooltip, trigger: "axis",
       axisPointer: { type: "line", lineStyle: { color: stil("--viz-axis"), width: 1 } },
@@ -76,13 +77,13 @@ function baueVerlauf(daten, modus = "absolut") {
     xAxis: {
       ...achse(), type: "category", boundaryGap: false, data: monate,
       splitLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 11,
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse,
         formatter: (v) => new Date(v).toLocaleDateString("de-AT",
           { month: "short", year: "2-digit" }) },
     },
     yAxis: {
       ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 11,
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse,
                    formatter: (v) => istIndex ? v : zahl(v) },
     },
     series: serien,

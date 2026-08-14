@@ -7,10 +7,11 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 11 — Offene Stellen und Stellenandrang -------------------------- */
 function baueStellen(daten) {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   if (!daten?.laender?.length) return;
   const abschnitt = document.getElementById("s-stellen");
   if (abschnitt) abschnitt.style.display = "";
@@ -38,14 +39,14 @@ function baueStellen(daten) {
           `${zahl(l.stellen)} offene Stellen</span>`;
       } },
     xAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 11 } },
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse } },
     yAxis: { ...achse(), type: "category", inverse: true,
       data: sortiert.map((l) => l.name), splitLine: { show: false },
-      axisLabel: { color: stil("--viz-text-2"), fontSize: 12, margin: 12 } },
+      axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, margin: 12 } },
     series: [{ type: "bar", data: sortiert.map((l) => l.andrang), barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
       label: { show: true, position: "right", distance: 8,
-               color: stil("--viz-text-2"), fontSize: 11.5,
+               color: stil("--viz-text-2"), fontSize: S.label,
                formatter: (p) => pz(p.value) } }],
   }, { replaceMerge: ["series", "yAxis"] });
 

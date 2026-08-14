@@ -23,6 +23,30 @@ let DATEN_BASIS = "./data";   // In Oxygen: "https://DEIN-GITHUB-NAME.github.io/
 /* --- Hilfsmittel ------------------------------------------------------ */
 let wurzel = document.getElementById("dashboard") || document.body;
 const stil   = (name) => getComputedStyle(wurzel).getPropertyValue(name).trim();
+
+/* --- Typografie ------------------------------------------------------
+   ECharts erbt NICHTS aus dem CSS: Diagrammtext wird von der Bibliothek
+   selbst gesetzt und dabei über eine Canvas-Messung ausgemessen. Darum
+   werden Schriftgrößen hier aus den CSS-Variablen geholt und in die
+   Option gegeben, statt sie per CSS zu setzen.
+
+   Wichtig: Diagrammtext NIE über CSS-Selektoren stylen — auch nicht beim
+   SVG-Renderer, wo der Text als <text> im DOM steht. ECharts misst die
+   Breiten weiter über Canvas; ein CSS-Override verschiebt Achsenlabels
+   und schneidet Bezirks- und Ländernamen falsch ab.
+
+   Der zweite Parameter ist der Rückfallwert. Fehlt ein Token — etwa weil
+   in Oxygen nur die Farben überschrieben wurden — bleibt die bisherige
+   Größe stehen, statt dass ECharts NaN bekommt. */
+const px = (name, standard) => parseFloat(stil(name)) || standard;
+const schrift = () => ({
+  familie: stil("--viz-font") || "system-ui, sans-serif",
+  achse:   px("--viz-fs-achse", 11),      // Achsenbeschriftung, visualMap
+  label:   px("--viz-fs-label", 11.5),    // Werte am Balken- oder Punktende
+  serie:   px("--viz-fs-serie", 12),      // Kategorienamen, Legende
+  tooltip: px("--viz-fs-tooltip", 12.5),
+  eng:     px("--viz-fs-eng", 10.5),      // 27 Ländernamen auf einer Achse
+});
 const zahl   = (n) => (n === null || n === undefined) ? "–" : n.toLocaleString("de-AT");
 /* Prozentwerte immer mit deutschem Dezimalkomma */
 const pz     = (n, stellen = 1) => (n === null || n === undefined) ? "–"
@@ -42,15 +66,16 @@ async function hole(name) {
 /* Gemeinsames ECharts-Grundgerüst: dünne Marken, zurückhaltendes Raster,
    Text in Textfarben statt in Serienfarben. */
 function basis() {
+  const s = schrift();
   return {
-    textStyle: { fontFamily: stil("--viz-font"), color: stil("--viz-text-2") },
+    textStyle: { fontFamily: s.familie, fontSize: s.serie, color: stil("--viz-text-2") },
     grid: { left: 8, right: 20, top: 18, bottom: 8, containLabel: true },
     tooltip: {
       backgroundColor: stil("--viz-surface"),
       borderColor: stil("--viz-border"),
       borderWidth: 1,
       padding: [9, 12],
-      textStyle: { color: stil("--viz-text"), fontSize: 12.5 },
+      textStyle: { color: stil("--viz-text"), fontSize: s.tooltip },
       extraCssText: "box-shadow:0 4px 16px rgba(0,0,0,.10);border-radius:8px;",
     },
   };
@@ -58,9 +83,33 @@ function basis() {
 const achse = () => ({
   axisLine:  { lineStyle: { color: stil("--viz-axis"), width: 1 } },
   axisTick:  { show: false },
-  axisLabel: { color: stil("--viz-muted"), fontSize: 11 },
+  axisLabel: { color: stil("--viz-muted"), fontSize: schrift().achse },
   splitLine: { lineStyle: { color: stil("--viz-grid"), width: 1, type: "solid" } },
 });
+
+/* --- Neuvermessung nach dem Laden der Schrift ------------------------
+   ECharts misst und zeichnet EINMAL beim Aufbau und rendert danach nie
+   von selbst neu. Ist Figtree zu diesem Zeitpunkt noch nicht geladen,
+   bleibt der gesamte Diagrammtext dauerhaft in der Ersatzschrift stehen —
+   während die Seite ringsum bereits richtig aussieht. Genau so sieht der
+   Fehler „die Schrift kommt nicht in die Karten" aus.
+
+   resize() stößt eine vollständige Neuvermessung an. Die Karten brauchen
+   zusätzlich __neuLayouten, weil ihr layoutSize eine aus dem Container
+   gerechnete Pixelzahl ist. Der Aufruf ist folgenlos, wenn die Schrift
+   schon da war. */
+function neuVermessen() {
+  diagramme.forEach((d) => {
+    if (!d || d.isDisposed?.()) return;
+    d.resize();
+    if (typeof d.__neuLayouten === "function") d.__neuLayouten();
+  });
+  /* Sparklines der KPI-Kacheln hängen nicht in `diagramme` */
+  document.querySelectorAll(".viz-kpi-spark").forEach((el) => {
+    const d = global.echarts?.getInstanceByDom(el);
+    if (d) d.resize();
+  });
+}
 
 
 /* Setzt Text/HTML nur, wenn das Element existiert — die Einbettseite
@@ -239,6 +288,11 @@ async function start() {
   }
   AMS.verdrahteEinbetten(meta);
 
+  /* Erst NACH dem Aufbau anhängen: Ist die Schrift schon da, löst das
+     Versprechen sofort aus und der Aufruf kostet nur ein resize. Ist sie
+     noch unterwegs, kommt die Neuvermessung, sobald sie eintrifft. */
+  if (document.fonts?.ready) document.fonts.ready.then(neuVermessen);
+
   /* Karten brauchen nach dem resize mehr als d.resize(): ihr layoutSize ist
      eine Pixelzahl und muss aus der neuen Containergröße neu gerechnet
      werden. Wer das braucht, hängt sich als __neuLayouten an. */
@@ -252,6 +306,7 @@ async function start() {
 const AMS = {
   hole, basis, achse, tabelle, stil, zahl, pz, monat, deltaText,
   setzeText, setzeHtml, sicher, diagramme, baueFuss, kartenLayout,
+  schrift, px, neuVermessen,
   setzeBasis: (pfad) => { DATEN_BASIS = pfad; },
   setzeWurzel: (element) => { wurzel = element; },
   start,

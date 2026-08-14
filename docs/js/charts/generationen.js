@@ -7,12 +7,13 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 3b — Generationen: eine Farbe, Geburtsjahre als Zweitzeile ------
    Die Zuordnung Altersgruppe → Generation ist eine Näherung; der Hinweis
    dazu steht unter dem Diagramm, die exakten Altersgruppen in der Tabelle. */
 function baueGenerationen(daten, region) {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   if (!daten || !daten.generationen?.length) return;
   document.getElementById("s-generationen").style.display = "";
 
@@ -49,16 +50,16 @@ function baueGenerationen(daten, region) {
       },
     },
     xAxis: { ...achse(), type: "value", axisLine: { show: false },
-             axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) } },
+             axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     yAxis: { ...achse(), type: "category", data: namen, inverse: true,
              splitLine: { show: false },
-             axisLabel: { color: stil("--viz-text-2"), fontSize: 12, lineHeight: 15,
+             axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, lineHeight: 15,
                           width: 158, overflow: "break", margin: 12 } },
     series: [{
       type: "bar", data: werte, barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
       label: { show: true, position: "right", distance: 8,
-               color: stil("--viz-text-2"), fontSize: 11.5,
+               color: stil("--viz-text-2"), fontSize: S.label,
                formatter: (p) => zahl(p.value) },
     }],
   }, { replaceMerge: ["series", "yAxis"] });

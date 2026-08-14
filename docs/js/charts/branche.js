@@ -7,10 +7,11 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 12 — Nach Wirtschaftszweig -------------------------------------- */
 function baueBranche(daten) {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   if (!daten?.branchen?.length) return;
   const abschnitt = document.getElementById("s-branche");
   if (abschnitt) abschnitt.style.display = "";
@@ -49,15 +50,15 @@ function baueBranche(daten) {
             `${v > 0 ? "▲" : "▼"} ${pz(Math.abs(v))} % ggü. Vorjahr</span>`);
       } },
     xAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) } },
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     yAxis: { ...achse(), type: "category", inverse: true,
       data: top.map((b) => b.name), splitLine: { show: false },
-      axisLabel: { color: stil("--viz-text-2"), fontSize: 12, width: 196,
+      axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, width: 196,
                    overflow: "break", margin: 12 } },
     series: [{ type: "bar", data: top.map((b) => b.bestand), barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
       label: { show: true, position: "right", distance: 8,
-               color: stil("--viz-text-2"), fontSize: 11.5,
+               color: stil("--viz-text-2"), fontSize: S.label,
                formatter: (p) => zahl(p.value) } }],
   }, { replaceMerge: ["series", "yAxis"] });
 

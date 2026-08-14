@@ -7,10 +7,11 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 2 — Zeitreihe: zwei Serien -> Legende + Endpunkt-Beschriftung --- */
 function baueZeitreihe(daten) {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   if (!daten?.monate?.length) return;
   const d = echarts.init(document.getElementById("c-zeitreihe"), null, { renderer: "svg" });
   const beschriftung = { M: "Männer", W: "Frauen", m: "Männer", w: "Frauen" };
@@ -29,7 +30,7 @@ function baueZeitreihe(daten) {
     emphasis: { focus: "series" },
     endLabel: {           /* selektive Direktbeschriftung statt Zahl an jedem Punkt */
       show: true, formatter: (p) => p.seriesName,
-      color: stil("--viz-text-2"), fontSize: 11.5, distance: 6,
+      color: stil("--viz-text-2"), fontSize: S.label, distance: 6,
     },
   }));
 
@@ -38,7 +39,7 @@ function baueZeitreihe(daten) {
     grid: { left: 8, right: 70, top: 34, bottom: 8, containLabel: true },
     legend: {                       /* bei >= 2 Serien immer vorhanden */
       top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 18,
-      textStyle: { color: stil("--viz-text-2"), fontSize: 12 },
+      textStyle: { color: stil("--viz-text-2"), fontSize: S.serie },
     },
     tooltip: {
       ...basis().tooltip,
@@ -52,7 +53,7 @@ function baueZeitreihe(daten) {
       data: daten.monate,
       splitLine: { show: false },
       axisLabel: {
-        color: stil("--viz-muted"), fontSize: 11,
+        color: stil("--viz-muted"), fontSize: S.achse,
         formatter: (v) => new Date(v).getMonth() === 0 ? new Date(v).getFullYear() : "",
         interval: 0,
       },
@@ -60,7 +61,7 @@ function baueZeitreihe(daten) {
     yAxis: {
       ...achse(), type: "value",
       axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) },
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) },
     },
     series: serien,
   });

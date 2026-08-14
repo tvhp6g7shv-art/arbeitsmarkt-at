@@ -7,7 +7,7 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 5 — Bundesländer: Tabelle mit Sparklines ------------------------ */
 function baueLaender(daten) {

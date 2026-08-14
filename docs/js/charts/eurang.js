@@ -7,13 +7,14 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 10b — EU-Rangliste: eine Farbe für Österreich, Grau für den Rest ---
    Die Botschaft ist "wo steht Österreich", nicht "welches Land ist welches".
    Dafür ist Hervorhebung die richtige Form: 26 bunte Balken würden genau die
    eine Information zudecken, um die es geht. */
 function baueEuRang(daten) {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   if (!daten?.rangliste?.length) return;
   const feld = document.getElementById("c-eurang");
   if (!feld) return;
@@ -45,10 +46,10 @@ function baueEuRang(daten) {
       } },
     xAxis: { ...achse(), type: "category", data: liste.map((e) => e.code),
       splitLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 10.5, interval: 0,
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.eng, interval: 0,
                    hideOverlap: false } },
     yAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => v + " %" } },
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => v + " %" } },
     series: [{
       type: "bar", barWidth: "62%",
       data: liste.map((e) => ({
@@ -59,7 +60,7 @@ function baueEuRang(daten) {
         },
       })),
       label: {
-        show: true, position: "top", fontSize: 10.5,
+        show: true, position: "top", fontSize: S.eng,
         color: stil("--viz-text-2"),
         /* Zahl nur dort, wo sie gebraucht wird: Österreich und die Ränder */
         formatter: (p) => {
@@ -73,7 +74,7 @@ function baueEuRang(daten) {
         silent: true, symbol: "none",
         lineStyle: { color: stil("--viz-series-2"), width: 1.5, type: "dashed" },
         label: { formatter: `EU-27: ${pz(daten.eu_referenz)} %`,
-                 color: stil("--viz-text-2"), fontSize: 11, position: "insideEndTop" },
+                 color: stil("--viz-text-2"), fontSize: S.achse, position: "insideEndTop" },
         data: [{ yAxis: daten.eu_referenz }],
       },
     }],

@@ -10,20 +10,42 @@
      Diagramme. defer hält die Reihenfolge ein. Ziffer bei jedem Upload
      hochzählen (Browser-Cache). kpi und einbetten braucht die
      Einbettseite nicht. -->
-<script src="js/kern.js?v=21" defer></script>
-<script src="js/charts/zeitreihe.js?v=21" defer></script>
-<script src="js/charts/ausbildung.js?v=21" defer></script>
-<script src="js/charts/verlauf.js?v=21" defer></script>
-<script src="js/charts/generationen.js?v=21" defer></script>
-<script src="js/charts/karte.js?v=21" defer></script>
-<script src="js/charts/fluss.js?v=21" defer></script>
-<script src="js/charts/dauer.js?v=21" defer></script>
-<script src="js/charts/schulung.js?v=21" defer></script>
-<script src="js/charts/eukarte.js?v=21" defer></script>
-<script src="js/charts/eurang.js?v=21" defer></script>
-<script src="js/charts/stellen.js?v=21" defer></script>
-<script src="js/charts/branche.js?v=21" defer></script>
+<script src="js/kern.js?v=22" defer></script>
+<script src="js/charts/zeitreihe.js?v=22" defer></script>
+<script src="js/charts/ausbildung.js?v=22" defer></script>
+<script src="js/charts/verlauf.js?v=22" defer></script>
+<script src="js/charts/generationen.js?v=22" defer></script>
+<script src="js/charts/karte.js?v=22" defer></script>
+<script src="js/charts/fluss.js?v=22" defer></script>
+<script src="js/charts/dauer.js?v=22" defer></script>
+<script src="js/charts/schulung.js?v=22" defer></script>
+<script src="js/charts/eukarte.js?v=22" defer></script>
+<script src="js/charts/eurang.js?v=22" defer></script>
+<script src="js/charts/stellen.js?v=22" defer></script>
+<script src="js/charts/branche.js?v=22" defer></script>
+<link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+/* ===================================================================
+   SCHRIFT — Figtree, variabel (SIL Open Font License 1.1)
+   -------------------------------------------------------------------
+   MUSS hier stehen: Der iframe ist ein eigenes Dokument und erbt von der
+   Gastgeberseite nichts. Ohne diesen Block fiele jede eingebettete Grafik
+   auf die Systemschrift zurück — und zwar auf eine ANDERE je Betriebs-
+   system. Da ECharts sein Layout aus der gemessenen Textbreite ableitet,
+   bekäme dieselbe Grafik unter Windows andere Achsen als unter macOS.
+   Die Lizenzdatei liegt unter fonts/LICENSE-Figtree.txt und muss bleiben.
+   =================================================================== */
+@font-face {
+  font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap;
+  src: url("fonts/figtree-latin-ext-wght-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap;
+  src: url("fonts/figtree-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
 /* Dieselben Variablen wie im Dashboard — hier eingebettet, damit die Grafik
    auch auf fremden Seiten richtig aussieht, egal welches CSS dort gilt. */
 .viz-root {
@@ -41,7 +63,11 @@
   --viz-div-gut-3: #6ec293; --viz-div-gut-4: #2f9e63;
   --viz-div-schlecht-1: #f8ddd6; --viz-div-schlecht-2: #e8ae9f;
   --viz-div-schlecht-3: #cc6e58; --viz-div-schlecht-4: #a52a1f;
-  --viz-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --viz-font: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --viz-font-display: var(--viz-font);
+  --viz-fs-achse: 11px; --viz-fs-label: 11.5px; --viz-fs-serie: 12px;
+  --viz-fs-tooltip: 12.5px; --viz-fs-eng: 10.5px;
+  --viz-fw-normal: 400; --viz-fw-kraeftig: 600; --viz-fw-kpi: 650;
 }
 @media (prefers-color-scheme: dark) {
   .viz-root {
@@ -67,7 +93,7 @@ html, body { margin: 0; padding: 0; background: transparent; }
   font-family: var(--viz-font); color: var(--viz-text);
   background: var(--viz-surface); padding: 16px 18px 12px;
 }
-h2 { font-size: 1rem; margin: 0 0 2px; font-weight: 600; }
+h2 { font-family: var(--viz-font-display); font-size: 1rem; margin: 0 0 2px; font-weight: var(--viz-fw-kraeftig); }
 .viz-unterzeile { color: var(--viz-muted); font-size: .78rem; margin: 0; }
 .viz-chart { width: 100%; height: 340px; }
 .viz-chart-hoch { height: 440px; }
@@ -172,6 +198,15 @@ async function los() {
   document.getElementById("stand").textContent =
     meta?.stand_daten ? "Stand: " + new Date(meta.stand_daten)
       .toLocaleDateString("de-AT", { month: "long", year: "numeric" }) : "";
+
+  /* Der iframe erbt die Schrift der Gastgeberseite nicht, lädt Figtree also
+     selbst — und ECharts hat womöglich schon mit der Ersatzschrift gemessen.
+     Darum nach dem Aufbau neu vermessen, sobald die Schrift steht. Danach
+     die Höhe erneut melden: eine andere Schrift kann die Grafik höher oder
+     niedriger machen. */
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => { A.neuVermessen(); melde(); });
+  }
 
   setTimeout(melde, 120);
   new ResizeObserver(melde).observe(document.documentElement);

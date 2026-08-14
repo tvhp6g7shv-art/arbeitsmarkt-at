@@ -7,7 +7,7 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 4 — Karte: Bezirksregionen, sequenzielle Skala hell → dunkel ----
    Die Flächen sind aus ganzen politischen Bezirken verschmolzen, damit die
@@ -48,6 +48,7 @@ function flaechenNormalisieren(geo) {
 const RAHMEN_AT = [[9.5, 46.3], [17.2, 49.1]];
 
 function baueKarte(karte, geo) {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   const feld = document.getElementById("c-karte");
   if (!karte || !geo) {
     /* Höhe zurücknehmen, sonst bleibt ein leerer Kasten stehen */
@@ -134,7 +135,7 @@ function baueKarte(karte, geo) {
          ob Grün „viel" oder „gut" heißt. */
       text: ["Anstieg", "Rückgang"],
       formatter: (v) => (v > 0 ? "+" : "") + pz(v) + " %",
-      textStyle: { color: stil("--viz-muted"), fontSize: 11 },
+      textStyle: { color: stil("--viz-muted"), fontSize: S.achse },
       inRange: { color: [
         stil("--viz-div-gut-4"), stil("--viz-div-gut-3"), stil("--viz-div-gut-2"),
         stil("--viz-div-gut-1"), stil("--viz-div-neutral"),

@@ -7,13 +7,14 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 3 — Ausbildungsstand: eine Farbe, Länge trägt die Größe ---------
    Das Diagramm zeigt 7 Gruppen; die 18 Einzelstufen des AMS stehen in
    der Tabellenansicht. Mehr als etwa sieben Balken kann man nicht mehr
    sinnvoll vergleichen. */
 function baueAusbildung(daten, region) {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   if (!daten?.gruppen?.length) return;
   const d = echarts.getInstanceByDom(document.getElementById("c-ausbildung"))
          || echarts.init(document.getElementById("c-ausbildung"), null, { renderer: "svg" });
@@ -40,10 +41,10 @@ function baueAusbildung(daten, region) {
         (summe ? `<br><span style="color:${stil("--viz-muted")}">${pz(p.value / summe * 100)} % aller Arbeitslosen</span>` : ""),
     },
     xAxis: { ...achse(), type: "value", axisLine: { show: false },
-             axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) } },
+             axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     yAxis: { ...achse(), type: "category", data: namen, inverse: true,
              splitLine: { show: false },
-             axisLabel: { color: stil("--viz-text-2"), fontSize: 12,
+             axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie,
                           width: 158, overflow: "break", margin: 12 } },
     series: [{
       type: "bar",
@@ -51,7 +52,7 @@ function baueAusbildung(daten, region) {
       barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
       label: { show: true, position: "right", distance: 8,
-               color: stil("--viz-text-2"), fontSize: 11.5,
+               color: stil("--viz-text-2"), fontSize: S.label,
                formatter: (p) => zahl(p.value) },
     }],
   }, { replaceMerge: ["series", "yAxis"] });

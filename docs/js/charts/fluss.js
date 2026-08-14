@@ -7,12 +7,13 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 7 — Zugänge und Abgänge ----------------------------------------
    Zwei Serien, deshalb Legende plus Endpunktbeschriftung. Der Bestand
    verschweigt die Bewegung dahinter — hier wird sie sichtbar. */
 function baueFluss(daten) {
+  const S = schrift();   /* Schriftgrößen aus den CSS-Variablen */
   if (!daten) return;
   const abschnitt = document.getElementById("s-fluss");
   if (abschnitt) abschnitt.style.display = "";
@@ -36,7 +37,7 @@ function baueFluss(daten) {
     itemStyle: { color: farben[i] },
     emphasis: { focus: "series" },
     endLabel: { show: true, formatter: (p) => p.seriesName,
-                color: stil("--viz-text-2"), fontSize: 11, distance: 6 },
+                color: stil("--viz-text-2"), fontSize: S.achse, distance: 6 },
     labelLayout: { moveOverlap: "shiftY" },
   }));
 
@@ -44,7 +45,7 @@ function baueFluss(daten) {
     ...basis(),
     grid: { left: 8, right: 100, top: 34, bottom: 8, containLabel: true },
     legend: { top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 16,
-              textStyle: { color: stil("--viz-text-2"), fontSize: 12 } },
+              textStyle: { color: stil("--viz-text-2"), fontSize: S.serie } },
     tooltip: {
       ...basis().tooltip, trigger: "axis",
       axisPointer: { type: "line", lineStyle: { color: stil("--viz-axis"), width: 1 } },
@@ -59,10 +60,10 @@ function baueFluss(daten) {
     },
     xAxis: { ...achse(), type: "category", boundaryGap: false, data: daten.monate,
       splitLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 11,
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse,
         formatter: (v) => new Date(v).toLocaleDateString("de-AT", { month: "short", year: "2-digit" }) } },
     yAxis: { ...achse(), type: "value", axisLine: { show: false },
-      axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) } },
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     series: serien,
   }, { replaceMerge: ["series"] });
 

@@ -7,7 +7,7 @@
 (function (AMS) {
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
-        deltaText, diagramme } = AMS;
+        deltaText, diagramme, schrift } = AMS;
 
 /* --- 6 — AMS-Bezirke: nur Tabelle, mit klarer Einordnung ------------ */
 function baueBezirke(daten, meta) {

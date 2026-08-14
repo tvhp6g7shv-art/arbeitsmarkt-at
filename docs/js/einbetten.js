@@ -31,9 +31,23 @@ const EINBETT_TITEL = {
   eurang: "Arbeitslosenquote: Wo Österreich in der EU steht",
 };
 
+/* --- Wohin der Schnipsel zeigt -------------------------------------------
+   Bis v25 wurde die Basis aus location.href abgeleitet. Auf GitHub Pages war
+   das richtig, auf der WordPress-Seite ergab es .../dashboard/embed.html —
+   eine Adresse, die es dort nicht gibt. Deshalb steht die Referenzadresse
+   ab v26 fest: der Dialog liefert überall denselben, funktionierenden Code,
+   egal auf welcher Seite er geöffnet wird. Liegt das Dashboard einmal
+   woanders, setzt AMS.setzeEinbettBasis("https://…") den Wert um — vor
+   AMS.start() aufrufen. */
+const PAGES_BASIS = "https://tvhp6g7shv-art.github.io/arbeitsmarkt-at";
+let BASIS = PAGES_BASIS;
+
+function setzeEinbettBasis(url) {
+  if (typeof url === "string" && url.trim()) BASIS = url.trim().replace(/\/$/, "");
+}
+
 function einbettBasis() {
-  const pfad = location.href.replace(/[^/]*$/, "");
-  return pfad.replace(/\/$/, "");
+  return BASIS;
 }
 
 function einbettCode(chart) {
@@ -85,6 +99,7 @@ function verdrahteEinbetten(meta) {
   });
 }
 
+AMS.setzeEinbettBasis = setzeEinbettBasis;
 AMS.EINBETT_HOEHEN = EINBETT_HOEHEN;
 AMS.EINBETT_TITEL = EINBETT_TITEL;
 AMS.einbettCode = einbettCode;

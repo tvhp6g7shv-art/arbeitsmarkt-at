@@ -362,7 +362,11 @@ async function start() {
       `verfügbar: ${ausgefallen.join(", ")}. Die übrigen Angaben sind ` +
       `davon unberührt.</span>`);
   }
-  AMS.verdrahteEinbetten(meta);
+  /* js/einbetten.js ist optional: embed.html laedt es nicht, und eine
+     Gastgeberseite kann es weglassen. Ohne diesen Guard riss der Aufruf den
+     ganzen Seitenaufbau ab. Bis v25 half sich der WordPress-Block mit einer
+     Attrappe — die ist seit v26 nicht mehr noetig. */
+  if (typeof AMS.verdrahteEinbetten === "function") AMS.verdrahteEinbetten(meta);
 
   /* Erst NACH dem Aufbau anhängen: Ist die Schrift schon da, löst das
      Versprechen sofort aus und der Aufruf kostet nur ein resize. Ist sie

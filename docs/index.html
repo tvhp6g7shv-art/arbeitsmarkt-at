@@ -278,8 +278,10 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
         <h2>Arbeitslosigkeit insgesamt, Monatsverlauf</h2>
         <p class="viz-unterzeile" id="u-zeitreihe">Bestand am Monatsende, Österreich gesamt</p>
       </div>
-      <button class="viz-tabelle-schalter" data-ziel="t-zeitreihe">Tabelle</button>
+      <div class="viz-knopfreihe">
+        <button class="viz-tabelle-schalter" data-ziel="t-zeitreihe">Tabelle</button>
         <button class="viz-einbetten" data-chart="zeitreihe">Einbetten</button>
+      </div>
     </header>
     <div class="viz-chart" id="c-zeitreihe"></div>
     <div class="viz-verborgen" id="t-zeitreihe"></div>
@@ -292,8 +294,10 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
         <h2>Arbeitslosigkeit nach höchster abgeschlossener Ausbildung</h2>
         <p class="viz-unterzeile" id="u-ausbildung"></p>
       </div>
-      <button class="viz-tabelle-schalter" data-ziel="t-ausbildung">Tabelle</button>
+      <div class="viz-knopfreihe">
+        <button class="viz-tabelle-schalter" data-ziel="t-ausbildung">Tabelle</button>
         <button class="viz-einbetten" data-chart="ausbildung">Einbetten</button>
+      </div>
     </header>
     <div class="viz-chart viz-chart-hoch" id="c-ausbildung"></div>
     <div class="viz-verborgen" id="t-ausbildung"></div>
@@ -306,7 +310,7 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
         <h2>Verlauf der Arbeitslosigkeit in den größten Ausbildungsgruppen</h2>
         <p class="viz-unterzeile" id="u-verlauf"></p>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div class="viz-knopfreihe">
         <span class="viz-modus" id="m-verlauf">
           <button data-modus="absolut" aria-pressed="true">Absolut</button>
           <button data-modus="index" aria-pressed="false">Index (Start = 100)</button>
@@ -326,8 +330,10 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
         <h2>Darstellung der Arbeitslosigkeit nach Generationen</h2>
         <p class="viz-unterzeile" id="u-generationen"></p>
       </div>
-      <button class="viz-tabelle-schalter" data-ziel="t-generationen">Tabelle</button>
+      <div class="viz-knopfreihe">
+        <button class="viz-tabelle-schalter" data-ziel="t-generationen">Tabelle</button>
         <button class="viz-einbetten" data-chart="generationen">Einbetten</button>
+      </div>
     </header>
     <div class="viz-chart" id="c-generationen"></div>
     <div class="viz-verborgen" id="t-generationen"></div>
@@ -341,8 +347,10 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
         <h2>Entwicklung der Arbeitslosigkeit nach Bezirken gegenüber dem Vorjahr</h2>
         <p class="viz-unterzeile" id="u-karte"></p>
       </div>
-      <button class="viz-tabelle-schalter" data-ziel="t-karte">Tabelle</button>
+      <div class="viz-knopfreihe">
+        <button class="viz-tabelle-schalter" data-ziel="t-karte">Tabelle</button>
         <button class="viz-einbetten" data-chart="karte">Einbetten</button>
+      </div>
     </header>
     <div class="viz-chart viz-chart-karte" id="c-karte"></div>
     <div class="viz-verborgen" id="t-karte"></div>
@@ -503,7 +511,7 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
   </dialog>
 </div>
 
-<!-- ?v=25 bricht den Browser-Cache. GitHub Pages liefert JS mit
+<!-- ?v=26 bricht den Browser-Cache. GitHub Pages liefert JS mit
      Cache-Control: max-age=600 aus — ohne diese Ziffer sieht ein
      Besucher nach einem Upload bis zu 10 Minuten die alte Datei,
      und wer die Seite schon einmal offen hatte, unter Umstaenden
@@ -513,23 +521,23 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
      (Helfer + Seitenaufbau) MUSS als erstes stehen, danach die
      Diagramme aus js/charts/, zuletzt js/einbetten.js. defer hält
      die Reihenfolge ein. -->
-<script src="js/kern.js?v=25" defer></script>
-<script src="js/charts/kpi.js?v=25" defer></script>
-<script src="js/charts/zeitreihe.js?v=25" defer></script>
-<script src="js/charts/ausbildung.js?v=25" defer></script>
-<script src="js/charts/verlauf.js?v=25" defer></script>
-<script src="js/charts/generationen.js?v=25" defer></script>
-<script src="js/charts/karte.js?v=25" defer></script>
-<script src="js/charts/bezirke.js?v=25" defer></script>
-<script src="js/charts/bundeslaender.js?v=25" defer></script>
-<script src="js/charts/fluss.js?v=25" defer></script>
-<script src="js/charts/dauer.js?v=25" defer></script>
-<script src="js/charts/schulung.js?v=25" defer></script>
-<script src="js/charts/eukarte.js?v=25" defer></script>
-<script src="js/charts/eurang.js?v=25" defer></script>
-<script src="js/charts/stellen.js?v=25" defer></script>
-<script src="js/charts/branche.js?v=25" defer></script>
-<script src="js/einbetten.js?v=25" defer></script>
+<script src="js/kern.js?v=26" defer></script>
+<script src="js/charts/kpi.js?v=26" defer></script>
+<script src="js/charts/zeitreihe.js?v=26" defer></script>
+<script src="js/charts/ausbildung.js?v=26" defer></script>
+<script src="js/charts/verlauf.js?v=26" defer></script>
+<script src="js/charts/generationen.js?v=26" defer></script>
+<script src="js/charts/karte.js?v=26" defer></script>
+<script src="js/charts/bezirke.js?v=26" defer></script>
+<script src="js/charts/bundeslaender.js?v=26" defer></script>
+<script src="js/charts/fluss.js?v=26" defer></script>
+<script src="js/charts/dauer.js?v=26" defer></script>
+<script src="js/charts/schulung.js?v=26" defer></script>
+<script src="js/charts/eukarte.js?v=26" defer></script>
+<script src="js/charts/eurang.js?v=26" defer></script>
+<script src="js/charts/stellen.js?v=26" defer></script>
+<script src="js/charts/branche.js?v=26" defer></script>
+<script src="js/einbetten.js?v=26" defer></script>
 
 <script>
 /* Startet das Dashboard, sobald ECharts und die js/-Module geladen sind. */

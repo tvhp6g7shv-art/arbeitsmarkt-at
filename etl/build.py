@@ -26,6 +26,7 @@ enthält nur noch den Ablauf. Wer an einer einzelnen Auswertung arbeitet,
     stellen.py       Offene Stellen, Andrang (stellen.json)
     branche.py       Wirtschaftszweige (branche.json)
     karte.py         Bezirksgeometrien (karte.json, karte_geo.json)
+    eukarte.py       EU-Ländergeometrien (eukarte.json, eukarte_geo.json)
 
 Die Pipeline ist absichtlich gesprächig: sie schreibt mit, was sie tut, und
 sammelt alle Auffälligkeiten in docs/data/meta.json unter "warnungen".
@@ -53,6 +54,7 @@ from schulung import baue_schulung
 from stellen import baue_stellen
 from branche import baue_branche
 from karte import baue_kartenregionen
+from eukarte import baue_eu_karte
 
 
 def main() -> None:
@@ -142,6 +144,18 @@ def main() -> None:
         )
         geo, karte = None, None
 
+    # --- EU-Länderkarte ----------------------------------------------------
+    # Braucht keine eigene Eurostat-Abfrage: die Länderwerte hat
+    # hole_eurostat_vergleich() oben schon in gemeinsam.EU_QUOTEN gelegt.
+    try:
+        eu_geo, eu_karte = baue_eu_karte()
+    except Exception as fehler:
+        warnen(
+            f"EU-Karte konnte nicht erzeugt werden ({type(fehler).__name__}: {fehler}) — "
+            f"das übrige Dashboard ist davon unberührt"
+        )
+        eu_geo, eu_karte = None, None
+
     # --- Schreiben ---------------------------------------------------------
     log("\nSchreiben")
     for name, inhalt in ausgaben.items():
@@ -149,6 +163,9 @@ def main() -> None:
     if geo:
         schreibe("karte_geo", geo)
         schreibe("karte", karte)
+    if eu_geo:
+        schreibe("eukarte_geo", eu_geo)
+        schreibe("eukarte", eu_karte)
 
     schreibe("meta", {
         "generiert_am": start.strftime("%Y-%m-%dT%H:%M:%SZ"),

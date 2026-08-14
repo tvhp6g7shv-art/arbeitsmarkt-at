@@ -417,20 +417,20 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
     <p class="viz-unterzeile" style="margin-top:12px" id="h-eurang"></p>
   </section>
 
-  <section class="viz-karte" id="s-eu" data-chart="eu" style="display:none">
+  <section class="viz-karte" id="s-eukarte" data-chart="eukarte" style="display:none">
     <header class="viz-kopfzeile">
       <div>
-        <h2>Arbeitslosenquote im Vergleich mit EU-27 und Deutschland</h2>
-        <p class="viz-unterzeile" id="u-eu"></p>
+        <h2>Entwicklung der Arbeitslosigkeit in der EU gegenüber dem Vorjahr</h2>
+        <p class="viz-unterzeile" id="u-eukarte"></p>
       </div>
       <div class="viz-knopfreihe">
-        <button class="viz-tabelle-schalter" data-ziel="t-eu">Tabelle</button>
-        <button class="viz-einbetten" data-chart="eu">Einbetten</button>
+        <button class="viz-tabelle-schalter" data-ziel="t-eukarte">Tabelle</button>
+        <button class="viz-einbetten" data-chart="eukarte">Einbetten</button>
       </div>
     </header>
-    <div class="viz-chart" id="c-eu"></div>
-    <div class="viz-verborgen" id="t-eu"></div>
-    <p class="viz-unterzeile" style="margin-top:12px" id="h-eu"></p>
+    <div class="viz-chart viz-chart-karte" id="c-eukarte"></div>
+    <div class="viz-verborgen" id="t-eukarte"></div>
+    <p class="viz-unterzeile" style="margin-top:12px" id="h-eukarte"></p>
   </section>
 
   <p class="viz-fuss" id="fuss"></p>
@@ -450,7 +450,7 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
   </dialog>
 </div>
 
-<!-- ?v=19 bricht den Browser-Cache. GitHub Pages liefert JS mit
+<!-- ?v=20 bricht den Browser-Cache. GitHub Pages liefert JS mit
      Cache-Control: max-age=600 aus — ohne diese Ziffer sieht ein
      Besucher nach einem Upload bis zu 10 Minuten die alte Datei,
      und wer die Seite schon einmal offen hatte, unter Umstaenden
@@ -460,23 +460,23 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
      (Helfer + Seitenaufbau) MUSS als erstes stehen, danach die
      Diagramme aus js/charts/, zuletzt js/einbetten.js. defer hält
      die Reihenfolge ein. -->
-<script src="js/kern.js?v=19" defer></script>
-<script src="js/charts/kpi.js?v=19" defer></script>
-<script src="js/charts/zeitreihe.js?v=19" defer></script>
-<script src="js/charts/ausbildung.js?v=19" defer></script>
-<script src="js/charts/verlauf.js?v=19" defer></script>
-<script src="js/charts/generationen.js?v=19" defer></script>
-<script src="js/charts/karte.js?v=19" defer></script>
-<script src="js/charts/bezirke.js?v=19" defer></script>
-<script src="js/charts/bundeslaender.js?v=19" defer></script>
-<script src="js/charts/fluss.js?v=19" defer></script>
-<script src="js/charts/dauer.js?v=19" defer></script>
-<script src="js/charts/schulung.js?v=19" defer></script>
-<script src="js/charts/eu.js?v=19" defer></script>
-<script src="js/charts/eurang.js?v=19" defer></script>
-<script src="js/charts/stellen.js?v=19" defer></script>
-<script src="js/charts/branche.js?v=19" defer></script>
-<script src="js/einbetten.js?v=19" defer></script>
+<script src="js/kern.js?v=20" defer></script>
+<script src="js/charts/kpi.js?v=20" defer></script>
+<script src="js/charts/zeitreihe.js?v=20" defer></script>
+<script src="js/charts/ausbildung.js?v=20" defer></script>
+<script src="js/charts/verlauf.js?v=20" defer></script>
+<script src="js/charts/generationen.js?v=20" defer></script>
+<script src="js/charts/karte.js?v=20" defer></script>
+<script src="js/charts/bezirke.js?v=20" defer></script>
+<script src="js/charts/bundeslaender.js?v=20" defer></script>
+<script src="js/charts/fluss.js?v=20" defer></script>
+<script src="js/charts/dauer.js?v=20" defer></script>
+<script src="js/charts/schulung.js?v=20" defer></script>
+<script src="js/charts/eukarte.js?v=20" defer></script>
+<script src="js/charts/eurang.js?v=20" defer></script>
+<script src="js/charts/stellen.js?v=20" defer></script>
+<script src="js/charts/branche.js?v=20" defer></script>
+<script src="js/einbetten.js?v=20" defer></script>
 
 <script>
 /* Startet das Dashboard, sobald ECharts und die js/-Module geladen sind. */

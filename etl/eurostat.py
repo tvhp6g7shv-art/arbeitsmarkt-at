@@ -17,7 +17,7 @@ import json
 import pandas as pd
 
 import config
-from gemeinsam import lade_bytes, log, warnen
+from gemeinsam import EU_QUOTEN, lade_bytes, log, warnen
 
 def entpacke_jsonstat(rohdaten: dict) -> tuple[pd.DataFrame, dict]:
     """
@@ -219,6 +219,8 @@ def hole_eurostat_vergleich() -> dict | None:
     platz = next(
         (i + 1 for i, e in enumerate(rangliste) if e["hervorgehoben"]), None
     )
+
+    sammle_eu_quoten(tabelle, beschriftungen, rang_jahr)
     log(f"        {len(serien)} Reihen {jahre[0]}–{jahre[-1]} · "
         f"Rangliste {rang_jahr}: {len(rangliste)} Länder"
         + (f", Österreich auf Platz {platz}" if platz else ""))
@@ -239,6 +241,71 @@ def hole_eurostat_vergleich() -> dict | None:
         ergebnis["inflation"] = inflation
         ergebnis["quelle_inflation"] = "Eurostat prc_hicp_aind"
     return ergebnis
+
+
+def sammle_eu_quoten(tabelle, beschriftungen: dict, jahr: str) -> None:
+    """
+    Quoten je EU-Mitgliedstaat für `jahr` und das Vorjahr in EU_QUOTEN legen.
+
+    Rechnet die Veränderung in PROZENTPUNKTEN, nicht in Prozent. Bei Quoten
+    ist das die einzig sinnvolle Differenz: 4,0 → 4,4 sind +0,4 Prozentpunkte.
+    Als „+10 Prozent" wäre derselbe Sachverhalt formal richtig, aber
+    irreführend — kleine Ausgangsquoten erzeugen große Prozentwerte, und mit
+    der Bestandsveränderung der Bezirkskarte wäre es trotz gleicher Einheit
+    nicht vergleichbar.
+
+    Füllt geteilten Zustand statt zurückzugeben, damit eukarte.py die
+    Länderabfrage nicht wiederholen muss. Schreibt nur Schlüssel, weist
+    EU_QUOTEN nie neu zu.
+    """
+    try:
+        vorjahr = str(int(jahr) - 1)
+    except (TypeError, ValueError):
+        warnen(f"Eurostat-Jahresangabe '{jahr}' nicht als Zahl lesbar — EU-Karte entfällt")
+        return
+
+    jetzt = tabelle[tabelle["time"] == jahr].set_index("geo")["wert"].to_dict()
+    davor = tabelle[tabelle["time"] == vorjahr].set_index("geo")["wert"].to_dict()
+
+    if not davor:
+        warnen(
+            f"Eurostat hat für {vorjahr} keine Länderwerte — die EU-Karte kann "
+            f"keine Veränderung zeigen und entfällt"
+        )
+        return
+
+    laender, ohne_vorjahr = [], []
+    for code in config.EU27_MITGLIEDER:
+        if code not in jetzt:
+            continue
+        quote = round(float(jetzt[code]), 1)
+        alt = round(float(davor[code]), 1) if code in davor else None
+        if alt is None:
+            ohne_vorjahr.append(code)
+        laender.append({
+            "code": code,
+            "name": beschriftungen.get(code, code),
+            "quote": quote,
+            "quote_vorjahr": alt,
+            # Erst runden, dann subtrahieren wäre schlampig; hier wird die
+            # Differenz aus den gerundeten Quoten gebildet, damit die
+            # Tabellenwerte und die Differenz zusammenpassen.
+            "veraenderung_pp": None if alt is None else round(quote - alt, 1),
+        })
+
+    if not laender:
+        warnen(f"Keine EU-Mitgliedstaaten mit Quote für {jahr} — EU-Karte entfällt")
+        return
+    if ohne_vorjahr:
+        warnen(
+            f"{len(ohne_vorjahr)} Mitgliedstaaten ohne Wert für {vorjahr} "
+            f"({sorted(ohne_vorjahr)}) — sie bleiben auf der EU-Karte grau"
+        )
+
+    EU_QUOTEN["jahr"] = jahr
+    EU_QUOTEN["vorjahr"] = vorjahr
+    EU_QUOTEN["laender"] = laender
+    log(f"        EU-Karte: {len(laender)} Mitgliedstaaten, {vorjahr} → {jahr}")
 
 
 def hole_inflation(jahre: list) -> dict | None:

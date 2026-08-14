@@ -137,9 +137,15 @@ function baueKarte(karte, geo) {
     series: [{
       type: "map", map: "at-bezirke", data: werte,
       roam: true, aspectScale: 0.78,
-      /* Ohne layoutCenter klebt Österreich am rechten Rand und lässt links
-         eine leere Fläche. Der Versatz nach rechts hält Abstand zur Legende. */
-      layoutCenter: ["56%", "52%"], layoutSize: "94%",
+      /* Kein layoutCenter/layoutSize (bis v19 ["56%","52%"] / "94%").
+         Grund: ECharts bezieht ein prozentuales layoutSize auf die KÜRZERE
+         Containerseite. Die Kartenfläche ist ~1100 px breit, per CSS aber auf
+         470 px Höhe festgelegt — 94 % ergaben also 442 px, in die Österreich
+         eingepasst wurde. Die Karte nutzte damit rund 40 % der Breite, der
+         Rest blieb leer. Mehr Höhe hätte nichts geändert, die Prozentangabe
+         bleibt an die Höhe gekettet. Ohne beide Angaben passt ECharts die
+         Fläche selbst ein, nutzt die Breite und rechnet bei resize() neu. */
+      left: 0, right: 0, top: 8, bottom: 8,
       itemStyle: { areaColor: stil("--viz-grid"), borderColor: stil("--viz-surface"), borderWidth: 0.8 },
       emphasis: { label: { show: false },
                   itemStyle: { borderColor: stil("--viz-text"), borderWidth: 1.5 } },

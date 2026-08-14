@@ -52,7 +52,9 @@ Kein Server, keine Datenbank, keine laufenden Kosten.
 | `zeitreihe.json` | Monatsverlauf Österreich seit Januar 2019 |
 | `ausbildung.json` | Nach höchster abgeschlossener Ausbildung, gesamt und je Bundesland |
 | `generationen.json` | Nach Generationen (Gen Z, Millennials, Gen X, Boomer) plus Altersgruppen |
-| `eu.json` | EU-Zeitvergleich, Länderrangliste der 27 Mitgliedstaaten; enthält weiterhin die HVPI-Inflation (seit v19 von keiner Grafik genutzt) |
+| `eu.json` | Länderrangliste der 27 Mitgliedstaaten; enthält weiterhin die Zeitreihen AT/EU-27/DE und die HVPI-Inflation (seit v20 bzw. v19 von keiner Grafik genutzt) |
+| `eukarte.json` | Quote je EU-Mitgliedstaat, aktuelles Jahr und Vorjahr, Differenz in Prozentpunkten |
+| `eukarte_geo.json` | EU-Ländergrenzen als GeoJSON (GISCO NUTS-0, auf Europa zugeschnitten) |
 | `bezirke.json` | Je AMS-Bezirk: Bestand und Vorjahresveränderung (Tabelle) |
 | `karte.json` | Werte je Kartenregion (80 Regionen aus ganzen Bezirken) |
 | `karte_geo.json` | Verschmolzene Bezirksgrenzen als GeoJSON |
@@ -63,7 +65,7 @@ Kein Server, keine Datenbank, keine laufenden Kosten.
 | `schulung.json` | Personen in Schulung |
 | `stellen.json` | Offene Stellen und Stellenandrangziffer je Bundesland |
 | `branche.json` | Arbeitslose nach Wirtschaftszweig |
-| `eu.json` | Arbeitslosenquote im Zeitverlauf (AT, EU-27, DE) plus Rangliste aller 27 EU-Länder |
+| `eu.json` | Rangliste aller 27 EU-Länder (Quote im aktuellsten Jahr) |
 | `meta.json` | Stand, Quellen, Lizenzen und Warnhinweise des letzten Laufs |
 
 ## Zwei Messgrößen, die man nicht vermischen darf
@@ -122,7 +124,7 @@ https://DEIN-NAME.github.io/arbeitsmarkt-at/embed.html?chart=fluss
 ```
 
 Verfügbare Namen: `zeitreihe`, `ausbildung`, `verlauf`, `generationen`,
-`karte`, `fluss`, `dauer`, `schulung`, `stellen`, `branche`, `eu`, `eurang`.
+`karte`, `fluss`, `dauer`, `schulung`, `stellen`, `branche`, `eukarte`, `eurang`.
 
 Den fertigen iframe-Code liefert der Knopf **„Einbetten"** bei jeder Grafik im
 Dashboard. Die Quellenangabe ist Teil der Grafik — wer sie einbettet,

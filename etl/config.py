@@ -91,6 +91,31 @@ EUROSTAT_PARAMS = {
 }
 
 # ---------------------------------------------------------------------------
+# EU-Länderkarte (seit v20): Veränderung der Arbeitslosenquote gegenüber dem
+# Vorjahr, je Mitgliedstaat.
+#
+# WICHTIG — die Kennzahl ist NICHT dieselbe wie auf der Bezirkskarte.
+# Die Bezirkskarte zeigt die Veränderung des AMS-BESTANDS in Prozent
+# (Personenzahlen). Eurostat liefert QUOTEN. Die Veränderung einer Quote
+# gehört in Prozentpunkten ausgedrückt, nicht in Prozent: von 4,0 auf 4,4
+# sind +0,4 Prozentpunkte, aber +10 Prozent. Die zweite Zahl klingt
+# dramatisch und sagt über den Arbeitsmarkt nichts Zusätzliches.
+EU_GEO_URL = (
+    "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/"
+    "NUTS_RG_20M_2021_4326_LEVL_0.geojson"
+)
+
+# Zuschnitt auf Europa. Ohne ihn ziehen Französisch-Guayana, Réunion, Mayotte,
+# die Kanaren, Madeira und die Azoren die Kartenfläche über drei Kontinente —
+# Europa selbst schrumpft dann auf Briefmarkengröße. Die Werte der betroffenen
+# Länder bleiben vollständig, nur ihre Überseegebiete werden nicht gezeichnet.
+EU_KARTE_AUSSCHNITT = (-25.0, 32.0, 45.0, 72.0)   # min_lon, min_lat, max_lon, max_lat
+
+# Vereinfachungstoleranz in Grad. Wie bei der Bezirkskarte: kleinere Zahl =
+# genauere Ränder = größere Datei. 0,02° ≈ 2 km, für eine Europakarte genug.
+EU_KARTE_TOLERANZ = 0.02
+
+# ---------------------------------------------------------------------------
 # Inflation: harmonisierter Verbraucherpreisindex (HVPI), Jahresdurchschnitt.
 # Gleiche Quelle, gleiche Frequenz wie die EU-Arbeitslosenquote — damit lassen
 # sich beide Werte auf EINER Prozentachse gegeneinander auftragen.

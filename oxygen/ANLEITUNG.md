@@ -210,7 +210,8 @@ nicht deine Oxygen-Variablen, sie bringt ihr eigenes Farbschema mit.
 | Personen in Schulung | `baueSchulung()` | `schulung.json` |
 | Offene Stellen | `baueStellen()` | `stellen.json` |
 | Wirtschaftszweige | `baueBranche()` | `branche.json` |
-| EU-Vergleich | `baueEu()` | `eu.json` |
+| EU-Rangliste | `baueEuRang()` | `eu.json` |
+| EU-Karte (Veränderung ggü. Vorjahr) | `baueEuKarte()` | `eukarte.json`, `eukarte_geo.json` |
 
 Alle Hilfsfunktionen (`stil`, `zahl`, `pz`, `basis`, `achse`, `tabelle`)
 stecken in `js/kern.js` und stehen unter `AMS` bereit. Jede Funktion aus der

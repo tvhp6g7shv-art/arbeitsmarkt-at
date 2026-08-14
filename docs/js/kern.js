@@ -134,7 +134,8 @@ async function start() {
      nicht die halbe Seite. Zwingend sind allein meta und kpi. */
   const DATEIEN = ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke",
                    "bundeslaender", "karte", "karte_geo", "generationen",
-                   "fluss", "dauer", "schulung", "eu", "stellen", "branche"];
+                   "fluss", "dauer", "schulung", "eu", "eukarte", "eukarte_geo",
+                   "stellen", "branche"];
   const geladen = {};
   await Promise.all(DATEIEN.map(async (name) => {
     geladen[name] = await hole(name).catch(() => null);
@@ -148,6 +149,7 @@ async function start() {
   const generationen = geladen.generationen, fluss = geladen.fluss;
   const dauer = geladen.dauer, schulung = geladen.schulung;
   const eu = geladen.eu, stellen = geladen.stellen, branche = geladen.branche;
+  const eukarte = geladen.eukarte, eukarteGeo = geladen.eukarte_geo;
 
   if (!meta || !kpi) {
     document.getElementById("lead").textContent =
@@ -180,8 +182,8 @@ async function start() {
   sicher("Zu-/Abgänge", () => AMS.baueFluss(fluss));
   sicher("Vormerkdauer", () => AMS.baueDauer(dauer));
   sicher("Schulungen", () => AMS.baueSchulung(schulung));
-  sicher("EU-Verlauf", () => AMS.baueEu(eu));
   sicher("EU-Rangliste", () => AMS.baueEuRang(eu));
+  sicher("EU-Karte", () => AMS.baueEuKarte(eukarte, eukarteGeo));
   sicher("Offene Stellen", () => AMS.baueStellen(stellen));
   sicher("Branchen", () => AMS.baueBranche(branche));
   sicher("Quellenangabe", () => baueFuss(meta));

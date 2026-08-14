@@ -29,6 +29,11 @@ SCHEMA_REPORT: dict = {}
 VORMERKDAUER: dict = {}
 LZBL: dict = {}
 
+# Quoten je EU-Mitgliedstaat für das aktuellste Jahr und dessen Vorjahr.
+# eurostat.py füllt, eukarte.py liest. Der Umweg über geteilten Zustand
+# vermeidet, dass die Länderabfrage ein zweites Mal laufen muss.
+EU_QUOTEN: dict = {}
+
 # Das Repo-Wurzelverzeichnis (eine Ebene über etl/)
 WURZEL = Path(__file__).resolve().parent.parent
 AUSGABE = WURZEL / config.AUSGABE_ORDNER

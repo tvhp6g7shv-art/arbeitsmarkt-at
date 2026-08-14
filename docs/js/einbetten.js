@@ -14,7 +14,7 @@
 const EINBETT_HOEHEN = {
   zeitreihe: 460, ausbildung: 540, verlauf: 540, generationen: 460,
   karte: 590, fluss: 460, dauer: 440, schulung: 420,
-  stellen: 440, branche: 560, eu: 460, eurang: 440,
+  stellen: 440, branche: 560, eukarte: 590, eurang: 440,
 };
 const EINBETT_TITEL = {
   zeitreihe: "Arbeitslosigkeit in Österreich, Monatsverlauf",
@@ -27,7 +27,7 @@ const EINBETT_TITEL = {
   schulung: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",
   stellen: "Offene Stellen und Arbeitslose je offener Stelle",
   branche: "Arbeitslosigkeit nach Wirtschaftszweig",
-  eu: "Arbeitslosenquote im Vergleich mit EU-27 und Deutschland",
+  eukarte: "Entwicklung der Arbeitslosigkeit in der EU gegenüber dem Vorjahr",
   eurang: "Arbeitslosenquote: Wo Österreich in der EU steht",
 };
 

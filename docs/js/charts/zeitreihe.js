@@ -30,18 +30,21 @@ function baueZeitreihe(daten) {
     lineStyle: { width: 2, color: farben[i] },
     itemStyle: { color: farben[i] },
     emphasis: { focus: "series" },
-    endLabel: {           /* selektive Direktbeschriftung statt Zahl an jedem Punkt.
-                             Schmal abgeschaltet: sie kostet 70 px Breite, die dann
-                             der Zeichenflaeche fehlen. Die Legende oben bleibt. */
-      show: endLabelZeigen(feld), formatter: (p) => p.seriesName,
+    /* Endbeschriftung rechts ab v27 abgeschaltet (User-Entscheid 14.08.).
+       Sie kostete 70 px Breite und wiederholte nur, was die Legende oben
+       links ohnehin sagt — bei zwei Serien ist das reine Dopplung. In der
+       zweispaltigen Karte faellt die Breite staerker ins Gewicht als
+       frueher ueber die volle Seite. */
+    endLabel: {
+      show: false, formatter: (p) => p.seriesName,
       color: stil("--viz-text-2"), fontSize: S.label, distance: 6,
     },
   }));
 
   d.setOption({
     ...basis(),
-    grid: { left: 8, right: endLabelZeigen(feld) ? 70 : 8, top: 34, bottom: 8,
-            containLabel: true },
+    /* Ohne Endbeschriftung braucht rechts niemand mehr Platz. */
+    grid: { left: 8, right: 8, top: 34, bottom: 8, containLabel: true },
     legend: legende(feld, {         /* bei >= 2 Serien immer vorhanden */
       top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 18,
       textStyle: { color: stil("--viz-text-2"), fontSize: S.serie },

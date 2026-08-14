@@ -35,7 +35,13 @@ function baueGenerationen(daten, region) {
 
   d.setOption({
     ...basis(),
-    grid: balkenGitter(feld, { left: 172, right: 72 }),
+    /* 172 px links stammten aus der Zeit, als die Karte ueber die volle
+       Seitenbreite lief. Seit dem zweispaltigen Layout sind das 21 % der
+       Zeichenflaeche, und 61 px davon blieben leer: die laengste
+       Beschriftung („Millennials (Gen Y)") misst 99 px. 118 px reichen —
+       die Namen kommen als feste Zeichenketten aus der Pipeline, der
+       Wert kippt also nicht von Monat zu Monat. */
+    grid: balkenGitter(feld, { left: 118, right: 72 }),
     tooltip: {
       ...basis().tooltip, trigger: "item",
       formatter: (p) => {
@@ -55,7 +61,7 @@ function baueGenerationen(daten, region) {
     yAxis: { ...achse(), type: "category", data: namen, inverse: true,
              splitLine: { show: false },
              axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, lineHeight: 15,
-                          width: 158, overflow: "break", margin: 12,
+                          width: 104, overflow: "break", margin: 12,
                           ...kategorieLabel(feld) } },
     series: [{
       type: "bar", data: werte, barWidth: "58%",

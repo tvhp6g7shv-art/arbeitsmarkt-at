@@ -57,7 +57,12 @@ function baueVerlauf(daten, modus = "absolut") {
       lineStyle: { width: 2, color: farben[i] },
       itemStyle: { color: farben[i] },
       emphasis: { focus: "series" },
-      endLabel: { show: endLabelZeigen(feld), formatter: (p) => p.seriesName,
+      /* Endbeschriftung rechts ab v27 abgeschaltet (User-Entscheid 14.08.).
+         Sechs Namen kosteten 200 px Breite und stapelten sich bei eng
+         beieinander liegenden Linien uebereinander — „Hoehere Schule
+         (Matura)" und „Hochschule" klebten aneinander. Die Legende oben
+         links nennt dieselben sechs Gruppen. */
+      endLabel: { show: false, formatter: (p) => p.seriesName,
                   color: stil("--viz-text-2"), fontSize: S.achse, distance: 6 },
       labelLayout: { moveOverlap: "shiftY" },
     };
@@ -65,10 +70,9 @@ function baueVerlauf(daten, modus = "absolut") {
 
   d.setOption({
     ...basis(),
-    /* 200 px rechts sind fuer die sechs Endbeschriftungen. Schmal faellt
-       die Beschriftung weg, also auch der Platz dafuer. */
-    grid: { left: 8, right: endLabelZeigen(feld) ? 200 : 8, top: 34, bottom: 8,
-            containLabel: true },
+    /* Die 200 px rechts waren fuer die sechs Endbeschriftungen. Die sind
+       ab v27 weg, der Platz damit auch. */
+    grid: { left: 8, right: 8, top: 34, bottom: 8, containLabel: true },
     legend: legende(feld, { top: 0, left: 0, itemWidth: 11, itemHeight: 11, itemGap: 14,
               textStyle: { color: stil("--viz-text-2"), fontSize: S.serie } }),
     tooltip: {

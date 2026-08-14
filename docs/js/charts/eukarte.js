@@ -18,9 +18,17 @@ const { stil, pz, basis, tabelle, setzeText, setzeHtml, diagramme } = AMS;
      diese Karte:   Differenz zweier QUOTEN in PROZENTPUNKTEN (ILO-Definition,
                     jährlich)
 
-   Deshalb steht überall „Pp" und nirgends „%" bei der Veränderung. Von 4,0
+   Deshalb steht überall „%-Punkte" und nirgends „%" bei der Veränderung. Von 4,0
    auf 4,4 sind +0,4 Prozentpunkte; als „+10 %" wäre dasselbe formal richtig,
    aber irreführend — kleine Ausgangsquoten erzeugen große Prozentwerte. */
+/* Kartenrahmen [[West, Süd], [Ost, Nord]].
+   Bewusst ENGER als der Zuschnitt im ETL (config.EU_KARTE_AUSSCHNITT geht bis
+   -25°): Madeira liegt bei -17,3° und zog den Rahmen rund acht Längengrade
+   nach Westen — Europa saß rechts der Mitte, links stand leerer Atlantik.
+   Die Fläche bleibt in der Geometrie, sie wird nur nicht ins Bild gefasst.
+   Grenzen: Portugal -9,5°, Zypern 34,6°, Kreta 34,8° Nord, Lappland 70,1°. */
+const RAHMEN_EU = [[-10.5, 34.0], [34.9, 70.9]];
+
 function baueEuKarte(daten, geo) {
   const feld = document.getElementById("c-eukarte");
   if (!feld) return;
@@ -45,7 +53,7 @@ function baueEuKarte(daten, geo) {
   const ohneWert = daten.laender.length - mitWert.length;
 
   /* Symmetrisch um null runden, sonst wirkt eine Seite stärker als sie ist.
-     Auf 0,1 Pp gerundet — bei Quoten sind die Ausschläge klein, eine
+     Auf 0,1 %-Punkte gerundet — bei Quoten sind die Ausschläge klein, eine
      Rundung auf halbe Punkte wie bei der Bezirkskarte würde die Skala
      unnötig weit aufziehen. */
   const spanne = Math.max(0.5, ...mitWert.map((l) => Math.abs(l.veraenderung_pp)));
@@ -69,7 +77,7 @@ function baueEuKarte(daten, geo) {
     (at && at.veraenderung_pp !== null && at.veraenderung_pp !== undefined
       ? `Österreich: ${vz(at.veraenderung_pp)} auf ${pz(at.quote)} %. `
       : "") +
-    "Prozentpunkte, nicht Prozent: von 4,0 auf 4,4 sind +0,4 Pp. Diese Quoten " +
+    "Prozentpunkte, nicht Prozent: von 4,0 auf 4,4 sind +0,4 %-Punkte. Diese Quoten " +
     "folgen der EU-Definition und sind nicht mit den absoluten AMS-Zahlen weiter " +
     "oben verrechenbar. Eurostat liefert die Reihe jährlich — die Karte ist " +
     "deshalb weniger aktuell als die Monatszahlen. Überseegebiete sind aus " +
@@ -101,7 +109,7 @@ function baueEuKarte(daten, geo) {
             ? `<span style="color:${stil("--viz-muted")}">keine Vergleichszahl</span><br>`
             : `<span style="color:${v > 0 ? stil("--viz-kritisch") : stil("--viz-gut")}">` +
               `${v > 0 ? "▲ Anstieg" : v < 0 ? "▼ Rückgang" : "unverändert"} ` +
-              `${pz(Math.abs(v))} Pp</span><br>`) +
+              `${pz(Math.abs(v))} %-Punkte</span><br>`) +
           `<span style="color:${stil("--viz-muted")}">` +
           `${daten.jahr}: ${pz(l.quote)} %` +
           (l.quote_vorjahr === null || l.quote_vorjahr === undefined
@@ -114,7 +122,7 @@ function baueEuKarte(daten, geo) {
       min: -grenze, max: grenze, left: 12, bottom: 14, orient: "vertical",
       itemWidth: 12, itemHeight: 150, calculable: true,
       text: ["Anstieg", "Rückgang"],
-      formatter: (v) => (v > 0 ? "+" : "") + pz(v) + " Pp",
+      formatter: (v) => (v > 0 ? "+" : "") + pz(v) + " %-Punkte",
       textStyle: { color: stil("--viz-muted"), fontSize: 11 },
       inRange: { color: [
         stil("--viz-div-gut-4"), stil("--viz-div-gut-3"), stil("--viz-div-gut-2"),
@@ -126,18 +134,20 @@ function baueEuKarte(daten, geo) {
     series: [{
       type: "map", map: "eu-laender", data: werte,
       roam: true,
-      /* Kein layoutCenter/layoutSize: ECharts bezieht ein prozentuales
-         layoutSize auf die KÜRZERE Containerseite. Bei breiter Fläche und
-         fixer Höhe schrumpft die Karte dadurch auf Höhenmaß — genau der
-         Fehler, der bis v19 in karte.js steckte. Ohne beide Angaben passt
-         ECharts selbst ein und rechnet bei resize() neu. */
-      left: 0, right: 0, top: 8, bottom: 8,
+      /* Layout und Rahmen aus AMS.kartenLayout — dort steht die Begründung. */
+      ...AMS.kartenLayout(feld, RAHMEN_EU, 0.625),
       itemStyle: { areaColor: stil("--viz-grid"), borderColor: stil("--viz-surface"), borderWidth: 0.8 },
       emphasis: { label: { show: false },
                   itemStyle: { borderColor: stil("--viz-text"), borderWidth: 1.5 } },
       select: { disabled: true },
     }],
   }, { replaceMerge: ["series"] });
+
+  /* layoutSize ist eine Pixelzahl und überlebt kein resize — Nachrechnung,
+     die kern.js beim resize aufruft. */
+  d.__neuLayouten = () => d.setOption({
+    series: [AMS.kartenLayout(feld, RAHMEN_EU, 0.625)],
+  });
 
   /* Tabelle nach Veränderung sortiert — stärkster Rückgang zuerst. Dieselbe
      Frage wie die Karte, nur in Zahlen. */
@@ -159,10 +169,14 @@ function baueEuKarte(daten, geo) {
   ));
 }
 
-/* Vorzeichenbehaftete Prozentpunkt-Angabe: „+0,4 Pp", „−0,3 Pp", „0,0 Pp". */
+/* Vorzeichenbehaftete Angabe: „+0,4 %-Punkte", „−0,3 %-Punkte", „0,0 %-Punkte".
+   Ausgeschrieben statt „Pp": die Abkuerzung ist Fachjargon und wurde als
+   Prozentzeichen missverstanden. Prozentpunkte sind NICHT Prozent —
+   Oesterreich ging von 5,2 auf 5,7 Prozent, das sind +0,5 %-Punkte, aber
+   +9,6 Prozent relativ. */
 function vz(wert) {
   if (wert === null || wert === undefined) return "–";
-  return `${wert > 0 ? "+" : ""}${pz(wert)} Pp`;
+  return `${wert > 0 ? "+" : ""}${pz(wert)} %-Punkte`;
 }
 
 AMS.baueEuKarte = baueEuKarte;

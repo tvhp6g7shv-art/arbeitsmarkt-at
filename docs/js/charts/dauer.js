@@ -12,6 +12,13 @@ const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
 /* --- 8 — Vormerkdauer und Langzeitbeschäftigungslosigkeit ------------
    Geordnete Kategorien, deshalb eine Farbe: die Balkenlänge trägt die
    Größe, der Farbton hätte nichts hinzuzufügen. */
+/* Achsenbeschriftung ohne die Tagesangabe in der Klammer (v20, User-Wunsch):
+   „2 Quartale (92 bis 183 Tage)" -> „2 Quartale". Die Klammer verdoppelte für
+   jede Kategorie dieselbe Information und zwang die Beschriftung in zwei
+   Zeilen. Sie bleibt in Tooltip und Tabelle stehen — dort ist Platz, und die
+   genaue Abgrenzung soll nachlesbar sein. */
+const ohneTage = (name) => String(name).replace(/\s*\([^)]*\)\s*$/, "").trim();
+
 function baueDauer(daten) {
   if (!daten?.vormerkdauer?.gruppen?.length) return;
   const abschnitt = document.getElementById("s-dauer");
@@ -35,7 +42,7 @@ function baueDauer(daten) {
     xAxis: { ...achse(), type: "value", axisLine: { show: false },
       axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) } },
     yAxis: { ...achse(), type: "category", inverse: true,
-      data: gruppen.map((g) => g.name), splitLine: { show: false },
+      data: gruppen.map((g) => ohneTage(g.name)), splitLine: { show: false },
       axisLabel: { color: stil("--viz-text-2"), fontSize: 12, width: 136,
                    overflow: "break", margin: 12 } },
     series: [{ type: "bar", data: gruppen.map((g) => g.bestand), barWidth: "58%",

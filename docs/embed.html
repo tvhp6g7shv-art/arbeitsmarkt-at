@@ -10,19 +10,19 @@
      Diagramme. defer hält die Reihenfolge ein. Ziffer bei jedem Upload
      hochzählen (Browser-Cache). kpi und einbetten braucht die
      Einbettseite nicht. -->
-<script src="js/kern.js?v=20" defer></script>
-<script src="js/charts/zeitreihe.js?v=20" defer></script>
-<script src="js/charts/ausbildung.js?v=20" defer></script>
-<script src="js/charts/verlauf.js?v=20" defer></script>
-<script src="js/charts/generationen.js?v=20" defer></script>
-<script src="js/charts/karte.js?v=20" defer></script>
-<script src="js/charts/fluss.js?v=20" defer></script>
-<script src="js/charts/dauer.js?v=20" defer></script>
-<script src="js/charts/schulung.js?v=20" defer></script>
-<script src="js/charts/eukarte.js?v=20" defer></script>
-<script src="js/charts/eurang.js?v=20" defer></script>
-<script src="js/charts/stellen.js?v=20" defer></script>
-<script src="js/charts/branche.js?v=20" defer></script>
+<script src="js/kern.js?v=21" defer></script>
+<script src="js/charts/zeitreihe.js?v=21" defer></script>
+<script src="js/charts/ausbildung.js?v=21" defer></script>
+<script src="js/charts/verlauf.js?v=21" defer></script>
+<script src="js/charts/generationen.js?v=21" defer></script>
+<script src="js/charts/karte.js?v=21" defer></script>
+<script src="js/charts/fluss.js?v=21" defer></script>
+<script src="js/charts/dauer.js?v=21" defer></script>
+<script src="js/charts/schulung.js?v=21" defer></script>
+<script src="js/charts/eukarte.js?v=21" defer></script>
+<script src="js/charts/eurang.js?v=21" defer></script>
+<script src="js/charts/stellen.js?v=21" defer></script>
+<script src="js/charts/branche.js?v=21" defer></script>
 <style>
 /* Dieselben Variablen wie im Dashboard — hier eingebettet, damit die Grafik
    auch auf fremden Seiten richtig aussieht, egal welches CSS dort gilt. */
@@ -71,7 +71,8 @@ h2 { font-size: 1rem; margin: 0 0 2px; font-weight: 600; }
 .viz-unterzeile { color: var(--viz-muted); font-size: .78rem; margin: 0; }
 .viz-chart { width: 100%; height: 340px; }
 .viz-chart-hoch { height: 440px; }
-.viz-chart-karte { height: 460px; }
+.viz-chart-karte { height: 560px; }
+.viz-chart-karte-eu { height: 700px; }
 .viz-verborgen { display: none; }
 .viz-hinweisfeld { color: var(--viz-muted); font-size: .74rem; line-height: 1.5; margin: 10px 0 0; }
 
@@ -113,14 +114,15 @@ const CHARTS = {
   schulung:     { titel: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",                   dateien: ["schulung"],                 bau: (A, d) => A.baueSchulung(d.schulung) },
   stellen:      { titel: "Offene Stellen und Arbeitslose je offener Stelle",      dateien: ["stellen"],                  bau: (A, d) => A.baueStellen(d.stellen) },
   branche:      { titel: "Arbeitslosigkeit nach Wirtschaftszweig",      dateien: ["branche"],                  bau: (A, d) => A.baueBranche(d.branche), hoch: true },
-  eukarte:      { titel: "Entwicklung der Arbeitslosigkeit in der EU ggü. Vorjahr",   dateien: ["eukarte", "eukarte_geo"],   bau: (A, d) => A.baueEuKarte(d.eukarte, d.eukarte_geo), karte: true },
+  eukarte:      { titel: "Entwicklung der Arbeitslosigkeit in der EU ggü. Vorjahr",   dateien: ["eukarte", "eukarte_geo"],   bau: (A, d) => A.baueEuKarte(d.eukarte, d.eukarte_geo), karteEu: true },
   eurang:       { titel: "Arbeitslosenquote: Wo Österreich in der EU steht",          dateien: ["eu"],                       bau: (A, d) => A.baueEuRang(d.eu) },
 };
 
 /* Die Chart-Funktionen sprechen feste Element-Kennungen an. Die legen wir
    hier passend zum gewählten Diagramm an, statt alle Abschnitte zu haben. */
 function baueBuehne(name, art) {
-  const klasse = art.karte ? "viz-chart viz-chart-karte"
+  const klasse = art.karteEu ? "viz-chart viz-chart-karte-eu"
+               : art.karte ? "viz-chart viz-chart-karte"
                : art.hoch ? "viz-chart viz-chart-hoch" : "viz-chart";
   document.getElementById("buehne").innerHTML =
     `<div class="${klasse}" id="c-${name}"></div>

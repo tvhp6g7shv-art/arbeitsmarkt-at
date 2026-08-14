@@ -101,6 +101,46 @@ function deltaText(pct) {
   return `<span class="${klasse}">${pfeil} ${Math.abs(pct).toLocaleString("de-AT")} % ${wort} als im Vorjahr</span>`;
 }
 
+/* --- Kartenlayout ----------------------------------------------------
+   Gemeinsam für Bezirks- und EU-Karte. Liefert die Werte, mit denen ECharts
+   eine Karte formtreu in ihren Container einpasst.
+
+   Die Falle dahinter, zweimal getreten und in v20 ausgemessen:
+
+   1. `layoutSize` in PROZENT bezieht ECharts auf die KÜRZERE Containerseite.
+      Bei 1098 x 470 px sind das 470 — eine breite, flache Fläche bleibt
+      dadurch ungenutzt. Mehr Höhe hilft nicht, die Prozentangabe bleibt an
+      die Höhe gekettet.
+   2. `left/right/top/bottom` statt `layoutCenter/layoutSize` ist keine
+      Lösung, sondern schlimmer: ECharts ZIEHT die Karte dann in das
+      Rechteck. Gemessen am 14.08.2026: Österreich 24 %, Europa 178 % zu
+      breit. Aspekterhaltend ist allein das Paar layoutCenter + layoutSize.
+
+   Deshalb hier: layoutSize als PIXELZAHL, aus dem Container gerechnet, und
+   bei jedem resize neu. `aspectScale` ist der Ausgleich für die
+   Plattkarten-Projektion und entspricht dem Kosinus der mittleren Breite —
+   0,67 für Österreich, 0,63 für Europa. Ohne ihn wäre die Karte in
+   Ost-West-Richtung gestreckt.
+
+   `rahmen` ist [[West, Süd], [Ost, Nord]]. Die 0,98 halten einen Rand frei,
+   damit die äußersten Ränder nicht an der Containerkante kleben. */
+function kartenLayout(feld, rahmen, aspectScale) {
+  const breite = feld.clientWidth || 1;
+  const hoehe = feld.clientHeight || 1;
+  const gradBreit = rahmen[1][0] - rahmen[0][0];
+  const gradHoch = rahmen[1][1] - rahmen[0][1];
+  const verhaeltnis = (gradBreit * aspectScale) / gradHoch;
+  const groesse = verhaeltnis >= 1
+    ? Math.min(breite, hoehe * verhaeltnis)     // breiter als hoch: Breite begrenzt
+    : Math.min(hoehe, breite / verhaeltnis);    // höher als breit: Höhe begrenzt
+  return {
+    aspectScale,
+    boundingCoords: rahmen,
+    layoutCenter: ["50%", "50%"],
+    layoutSize: Math.floor(groesse * 0.98),
+  };
+}
+
 /* --- Schutzhülle -----------------------------------------------------
    Fällt ein Diagramm aus, darf das nicht die restliche Seite leeren.
    Vorher hat ein einziger Fehler alle nachfolgenden Abschnitte
@@ -163,7 +203,7 @@ async function start() {
       ? ` · zuletzt aktualisiert am ${new Date(meta.generiert_am).toLocaleDateString("de-AT")}`
       : "");
 
-  sicher("KPI-Zeile", () => AMS.baueKpis(kpi, zeitreihe));
+  sicher("KPI-Zeile", () => AMS.baueKpis(kpi));
   sicher("Zeitreihe", () => AMS.baueZeitreihe(zeitreihe));
   sicher("Ausbildung", () => AMS.baueAusbildung(ausbildung, "AT"));
   sicher("Verlauf", () => AMS.baueVerlauf(ausbildung, "absolut"));
@@ -199,13 +239,19 @@ async function start() {
   }
   AMS.verdrahteEinbetten(meta);
 
-  window.addEventListener("resize", () => diagramme.forEach((d) => d.resize()));
+  /* Karten brauchen nach dem resize mehr als d.resize(): ihr layoutSize ist
+     eine Pixelzahl und muss aus der neuen Containergröße neu gerechnet
+     werden. Wer das braucht, hängt sich als __neuLayouten an. */
+  window.addEventListener("resize", () => diagramme.forEach((d) => {
+    d.resize();
+    if (typeof d.__neuLayouten === "function") d.__neuLayouten();
+  }));
 }
 
 /* --- Namensraum: die Chart-Dateien hängen sich hier an ---------------- */
 const AMS = {
   hole, basis, achse, tabelle, stil, zahl, pz, monat, deltaText,
-  setzeText, setzeHtml, sicher, diagramme, baueFuss,
+  setzeText, setzeHtml, sicher, diagramme, baueFuss, kartenLayout,
   setzeBasis: (pfad) => { DATEN_BASIS = pfad; },
   setzeWurzel: (element) => { wurzel = element; },
   start,

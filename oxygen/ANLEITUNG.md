@@ -197,7 +197,7 @@ nicht deine Oxygen-Variablen, sie bringt ihr eigenes Farbschema mit.
 
 | Diagramm | Funktion | Datei |
 |---|---|---|
-| KPI-Kacheln | `baueKpis()` | `kpi.json`, `zeitreihe.json` |
+| KPI-Kacheln | `baueKpis()` | `kpi.json` |
 | Zeitreihe | `baueZeitreihe()` | `zeitreihe.json` |
 | Ausbildungsstand | `baueAusbildung()` | `ausbildung.json` |
 | Verlauf Ausbildungsgruppen | `baueVerlauf()` | `ausbildung.json` |

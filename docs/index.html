@@ -467,15 +467,37 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
   </dialog>
 </div>
 
-<!-- ?v=16 bricht den Browser-Cache. GitHub Pages liefert JS mit
+<!-- ?v=18 bricht den Browser-Cache. GitHub Pages liefert JS mit
      Cache-Control: max-age=600 aus — ohne diese Ziffer sieht ein
      Besucher nach einem Upload bis zu 10 Minuten die alte Datei,
      und wer die Seite schon einmal offen hatte, unter Umstaenden
-     deutlich laenger. BEI JEDEM UPLOAD HOCHZAEHLEN. -->
-<script src="charts.js?v=16" defer></script>
+     deutlich laenger. BEI JEDEM UPLOAD HOCHZAEHLEN.
+
+     Seit v18 ist der Code pro Themenstrang aufgeteilt: js/kern.js
+     (Helfer + Seitenaufbau) MUSS als erstes stehen, danach die
+     Diagramme aus js/charts/, zuletzt js/einbetten.js. defer hält
+     die Reihenfolge ein. -->
+<script src="js/kern.js?v=18" defer></script>
+<script src="js/charts/kpi.js?v=18" defer></script>
+<script src="js/charts/zeitreihe.js?v=18" defer></script>
+<script src="js/charts/ausbildung.js?v=18" defer></script>
+<script src="js/charts/verlauf.js?v=18" defer></script>
+<script src="js/charts/generationen.js?v=18" defer></script>
+<script src="js/charts/karte.js?v=18" defer></script>
+<script src="js/charts/bezirke.js?v=18" defer></script>
+<script src="js/charts/bundeslaender.js?v=18" defer></script>
+<script src="js/charts/fluss.js?v=18" defer></script>
+<script src="js/charts/dauer.js?v=18" defer></script>
+<script src="js/charts/schulung.js?v=18" defer></script>
+<script src="js/charts/eu.js?v=18" defer></script>
+<script src="js/charts/eurang.js?v=18" defer></script>
+<script src="js/charts/phillips.js?v=18" defer></script>
+<script src="js/charts/stellen.js?v=18" defer></script>
+<script src="js/charts/branche.js?v=18" defer></script>
+<script src="js/einbetten.js?v=18" defer></script>
 
 <script>
-/* Startet das Dashboard, sobald ECharts und charts.js geladen sind. */
+/* Startet das Dashboard, sobald ECharts und die js/-Module geladen sind. */
 window.addEventListener("DOMContentLoaded", () => {
   const warte = () => (window.AMS && window.echarts)
     ? window.AMS.start()

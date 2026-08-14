@@ -6,7 +6,24 @@
 <title>Arbeitsmarkt Österreich — Grafik</title>
 <meta name="robots" content="noindex">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
-<script src="charts.js?v=16" defer></script>
+<!-- Seit v18 pro Themenstrang aufgeteilt: js/kern.js zuerst, dann die
+     Diagramme. defer hält die Reihenfolge ein. Ziffer bei jedem Upload
+     hochzählen (Browser-Cache). kpi und einbetten braucht die
+     Einbettseite nicht. -->
+<script src="js/kern.js?v=18" defer></script>
+<script src="js/charts/zeitreihe.js?v=18" defer></script>
+<script src="js/charts/ausbildung.js?v=18" defer></script>
+<script src="js/charts/verlauf.js?v=18" defer></script>
+<script src="js/charts/generationen.js?v=18" defer></script>
+<script src="js/charts/karte.js?v=18" defer></script>
+<script src="js/charts/fluss.js?v=18" defer></script>
+<script src="js/charts/dauer.js?v=18" defer></script>
+<script src="js/charts/schulung.js?v=18" defer></script>
+<script src="js/charts/eu.js?v=18" defer></script>
+<script src="js/charts/eurang.js?v=18" defer></script>
+<script src="js/charts/phillips.js?v=18" defer></script>
+<script src="js/charts/stellen.js?v=18" defer></script>
+<script src="js/charts/branche.js?v=18" defer></script>
 <style>
 /* Dieselben Variablen wie im Dashboard — hier eingebettet, damit die Grafik
    auch auf fremden Seiten richtig aussieht, egal welches CSS dort gilt. */

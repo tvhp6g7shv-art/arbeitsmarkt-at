@@ -31,12 +31,16 @@ Kein Server, keine Datenbank, keine laufenden Kosten.
 
 | Pfad | Zweck |
 |---|---|
-| `etl/build.py` | Die Datenpipeline. Lädt, prüft, aggregiert, schreibt. |
+| `etl/build.py` | Der Ablauf der Datenpipeline — ruft nur noch die Strang-Module auf. |
+| `etl/gemeinsam.py` | Geteiltes Fundament: Logging, Download, Prüfhelfer, Schreiben. |
+| `etl/<strang>.py` | Ein Modul je Themenstrang: `uebersicht`, `regionen`, `ausbildung`, `generationen`, `eurostat`, `fluss`, `dauer`, `schulung`, `stellen`, `branche`, `karte`. |
 | `etl/config.py` | Alle Einstellungen an einem Ort — Quell-URLs, Sortierungen, Zuordnungen. |
 | `.github/workflows/` | Der Zeitplan, nach dem GitHub das Skript startet. |
-| `docs/charts.js` | Alle Diagramme, gemeinsam genutzt von Dashboard und Einbettung. |
+| `docs/js/kern.js` | Gemeinsame Helfer, Laden der Daten, Seitenaufbau. Wird immer als erstes Skript geladen. |
+| `docs/js/charts/` | Ein Modul je Diagramm (`zeitreihe.js`, `karte.js`, …) — hier wird pro Themenstrang iteriert. Welche Ausbildungsgruppen im Verlaufsdiagramm erscheinen, steht in `verlauf.js` (`VERLAUF_GRUPPEN`). |
+| `docs/js/einbetten.js` | Einbetten-Dialog und iframe-Schnipsel. |
 | `docs/embed.html` | Einbettseite: `embed.html?chart=<name>` zeigt genau eine Grafik mit Quellenzeile. |
-| `docs/index.html` | Vorschauseite und Referenz für alle Diagramme. Welche vier Ausbildungsstufen im Verlaufsdiagramm erscheinen, steht dort in `VERLAUF_STUFEN`. |
+| `docs/index.html` | Vorschauseite und Referenz für alle Diagramme. |
 | `docs/data/` | Die erzeugten JSON-Dateien. Wird automatisch befüllt. |
 | `oxygen/` | Anleitung für den Einbau in Oxygen 6. |
 
@@ -118,7 +122,8 @@ https://DEIN-NAME.github.io/arbeitsmarkt-at/embed.html?chart=fluss
 ```
 
 Verfügbare Namen: `zeitreihe`, `ausbildung`, `verlauf`, `generationen`,
-`karte`, `fluss`, `dauer`, `schulung`, `stellen`, `branche`, `eu`, `eurang`.
+`karte`, `fluss`, `dauer`, `schulung`, `stellen`, `branche`, `eu`, `eurang`,
+`phillips`.
 
 Den fertigen iframe-Code liefert der Knopf **„Einbetten"** bei jeder Grafik im
 Dashboard. Die Quellenangabe ist Teil der Grafik — wer sie einbettet,

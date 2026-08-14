@@ -79,15 +79,20 @@ Für **jedes** Diagramm brauchst du zwei Dinge auf der Seite.
 
 ### a) ECharts und die Diagrammbausteine einmal pro Seite laden
 
-Seit v7 stecken alle Diagramme in **einer** Datei, `charts.js`. Du musst
-also nichts mehr aus `index.html` herauskopieren — nur einbinden und aufrufen.
+Seit v18 ist der Code pro Themenstrang aufgeteilt: `js/kern.js` (Helfer und
+Laden) plus ein Modul je Diagramm unter `js/charts/`. Du bindest den Kern und
+die Diagramme ein, die die Seite braucht — `js/kern.js` muss dabei **vor** den
+Diagramm-Modulen stehen (`defer` hält die Reihenfolge ein).
 
 In Oxygen: Seite auswählen → **Page Settings → Custom CSS/JS → JavaScript**
 (oder ein Code Block ganz oben in der Seite):
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
-<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/charts.js?v=16" defer></script>
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/kern.js?v=18" defer></script>
+<!-- danach nur die Diagramme, die die Seite zeigt, z. B.: -->
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/charts/zeitreihe.js?v=18" defer></script>
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/charts/fluss.js?v=18" defer></script>
 ```
 
 ### b) Pro Diagramm ein Code Block
@@ -153,7 +158,8 @@ Nur zwei Dinge anpassen: **`DEIN-GITHUB-NAME`** und die **id** des `<div>`.
 
 ## Der schnellste Weg: fertige Funktionen aufrufen
 
-`charts.js` stellt alles unter `window.AMS` bereit. Ein Code Block je Diagramm,
+`js/kern.js` und die Chart-Module stellen alles unter `window.AMS` bereit.
+Ein Code Block je Diagramm,
 HTML-Teil:
 
 ```html
@@ -207,7 +213,9 @@ nicht deine Oxygen-Variablen, sie bringt ihr eigenes Farbschema mit.
 | EU-Vergleich | `baueEu()` | `eu.json` |
 
 Alle Hilfsfunktionen (`stil`, `zahl`, `pz`, `basis`, `achse`, `tabelle`)
-stecken ebenfalls in `charts.js` und stehen unter `AMS` bereit.
+stecken in `js/kern.js` und stehen unter `AMS` bereit. Jede Funktion aus der
+Tabelle liegt im gleichnamigen Modul unter `js/charts/` — wer nur eine Grafik
+einbaut, lädt auch nur deren Datei (plus `js/kern.js`).
 
 ---
 

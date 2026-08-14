@@ -1,0 +1,77 @@
+/* ===========================================================================
+   Arbeitsmarkt-Dashboard Österreich — Themenstrang: ausbildung
+   ---------------------------------------------------------------------------
+   Wird nach js/kern.js geladen; die Helfer kommen aus window.AMS.
+   Der Diagrammcode selbst ist unverändert aus charts.js (v17) übernommen.
+   =========================================================================== */
+(function (AMS) {
+"use strict";
+const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
+        deltaText, diagramme } = AMS;
+
+/* --- 3 — Ausbildungsstand: eine Farbe, Länge trägt die Größe ---------
+   Das Diagramm zeigt 7 Gruppen; die 18 Einzelstufen des AMS stehen in
+   der Tabellenansicht. Mehr als etwa sieben Balken kann man nicht mehr
+   sinnvoll vergleichen. */
+function baueAusbildung(daten, region) {
+  if (!daten?.gruppen?.length) return;
+  const d = echarts.getInstanceByDom(document.getElementById("c-ausbildung"))
+         || echarts.init(document.getElementById("c-ausbildung"), null, { renderer: "svg" });
+  if (!diagramme.includes(d)) diagramme.push(d);
+
+  const jeGruppe = daten.gruppen_je_bundesland || {};
+  const werte = daten.gruppen.map((g) =>
+    region === "AT" ? g.bestand : (jeGruppe[region]?.[g.schluessel] ?? 0)
+  );
+  const namen = daten.gruppen.map((g) => g.name);
+  const summe = werte.reduce((a, b) => a + b, 0);
+
+  document.getElementById("u-ausbildung").textContent =
+    `${region === "AT" ? "Österreich gesamt" : region} · Stand ${monat(daten.stand)}`;
+
+  d.setOption({
+    ...basis(),
+    /* Feste linke Spalte für die Bezeichnungen: containLabel schneidet bei
+       langen Namen das erste Zeichen an. */
+    grid: { left: 172, right: 72, top: 10, bottom: 34 },
+    tooltip: {
+      ...basis().tooltip, trigger: "item",
+      formatter: (p) => `<strong>${p.name}</strong><br>${zahl(p.value)} Personen` +
+        (summe ? `<br><span style="color:${stil("--viz-muted")}">${pz(p.value / summe * 100)} % aller Arbeitslosen</span>` : ""),
+    },
+    xAxis: { ...achse(), type: "value", axisLine: { show: false },
+             axisLabel: { color: stil("--viz-muted"), fontSize: 11, formatter: (v) => zahl(v) } },
+    yAxis: { ...achse(), type: "category", data: namen, inverse: true,
+             splitLine: { show: false },
+             axisLabel: { color: stil("--viz-text-2"), fontSize: 12,
+                          width: 158, overflow: "break", margin: 12 } },
+    series: [{
+      type: "bar",
+      data: werte,
+      barWidth: "58%",
+      itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
+      label: { show: true, position: "right", distance: 8,
+               color: stil("--viz-text-2"), fontSize: 11.5,
+               formatter: (p) => zahl(p.value) },
+    }],
+  }, { replaceMerge: ["series", "yAxis"] });
+
+  // Tabelle zeigt die volle Auflösung: alle 18 AMS-Stufen
+  const jeStufe = daten.je_bundesland || {};
+  const stufenWerte = daten.stufen.map((s) =>
+    region === "AT" ? s.bestand : (jeStufe[region]?.[s.code] ?? 0)
+  );
+  const stufenSumme = stufenWerte.reduce((a, b) => a + b, 0);
+
+  document.getElementById("t-ausbildung").innerHTML = tabelle(
+    [{ titel: "Ausbildung", wert: (z) => z.name },
+     { titel: "Code", wert: (z) => z.code },
+     { titel: "Personen", num: true, wert: (z) => zahl(z.wert) },
+     { titel: "Anteil", num: true,
+       wert: (z) => stufenSumme ? pz(z.wert / stufenSumme * 100) + " %" : "–" }],
+    daten.stufen.map((s, i) => ({ name: s.name, code: s.code, wert: stufenWerte[i] }))
+  );
+}
+
+AMS.baueAusbildung = baueAusbildung;
+})(window.AMS);

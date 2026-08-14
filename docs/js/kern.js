@@ -20,7 +20,11 @@
    ===================================================================== */
 let DATEN_BASIS = "./data";   // In Oxygen: "https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/data"
 
-/* --- Hilfsmittel ------------------------------------------------------ */
+/* --- Hilfsmittel ------------------------------------------------------
+   wurzel ist das Element, von dem ALLE Farb- und Größentoken gelesen
+   werden. Es darf nie null werden: stil() läuft in jedem Diagrammmodul
+   als Erstes, ein null hier legt also das ganze Dashboard lahm.
+   Siehe setzeWurzel() weiter unten. */
 let wurzel = document.getElementById("dashboard") || document.body;
 const stil   = (name) => getComputedStyle(wurzel).getPropertyValue(name).trim();
 
@@ -308,7 +312,23 @@ const AMS = {
   setzeText, setzeHtml, sicher, diagramme, baueFuss, kartenLayout,
   schrift, px, neuVermessen,
   setzeBasis: (pfad) => { DATEN_BASIS = pfad; },
-  setzeWurzel: (element) => { wurzel = element; },
+  /* Fail-soft: ein null-Argument darf den Rückfall (#dashboard bzw. body)
+     NICHT überschreiben. Genau das ist am 14.08. auf der WordPress-Seite
+     passiert — der `.viz-root`-Wrapper fehlte im Oxygen-Markup, der übliche
+     Aufruf `setzeWurzel(document.querySelector(".viz-root"))` übergab null,
+     und jedes der 13 Module starb in stil() an getComputedStyle(null).
+     Ohne Wrapper fehlen nur die Token: die Diagramme kommen dann in den
+     ECharts-Vorgabefarben, statt gar nicht zu erscheinen. */
+  setzeWurzel: (element) => {
+    if (!element) {
+      console.warn("[Dashboard] setzeWurzel: kein Element übergeben — " +
+        "fehlt der .viz-root-Wrapper? Es bleibt bei " +
+        (wurzel === document.body ? "document.body" : "#dashboard") +
+        ", die --viz-*-Token greifen dort vermutlich nicht.");
+      return;
+    }
+    wurzel = element;
+  },
   start,
 };
 global.AMS = AMS;

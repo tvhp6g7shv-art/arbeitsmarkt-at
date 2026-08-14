@@ -148,10 +148,10 @@ In Oxygen: Seite auswählen → **Page Settings → Custom CSS/JS → JavaScript
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
-<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/kern.js?v=22" defer></script>
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/kern.js?v=23" defer></script>
 <!-- danach nur die Diagramme, die die Seite zeigt, z. B.: -->
-<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/charts/zeitreihe.js?v=22" defer></script>
-<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/charts/fluss.js?v=22" defer></script>
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/charts/zeitreihe.js?v=23" defer></script>
+<script src="https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/js/charts/fluss.js?v=23" defer></script>
 ```
 
 ### b) Pro Diagramm ein Code Block
@@ -312,7 +312,8 @@ Der Hinweiskasten aus `docs/index.html` gehört mit auf die Seite.
 | Symptom | Ursache |
 |---|---|
 | Diagrammfläche bleibt leer | ECharts nicht geladen, oder `id` stimmt nicht mit dem `<div>` überein |
-| Diagramm da, aber grau/farblos | `.viz-root`-Wrapper fehlt oder die Variablen sind nicht im Stylesheet |
+| Diagramm da, aber grau/farblos | Die Variablen fehlen im Stylesheet, oder `wurzel` zeigt auf ein Element ohne Tokens |
+| **Keine einzige Zeichenfläche gefüllt**, Konsole voller `getComputedStyle … not of type 'Element'` | Der `.viz-root`-Wrapper fehlt, `setzeWurzel(document.querySelector(".viz-root"))` hat `null` übergeben. Seit v23 fängt `setzeWurzel` das ab und warnt — dann greift der Fall darüber. Am 14.08. auf der WordPress-Seite passiert, alle 13 Module tot |
 | Nichts passiert, Konsole zeigt CORS-Fehler | Adresse in `BASIS` falsch — muss `https://…github.io/…/data` sein |
 | Diagramm ist 0 Pixel hoch | Der Container braucht eine feste Höhe (`height:340px`), ECharts kann sie nicht erraten |
 | Beim Umschalten auf Mobil verrutscht alles | `window.addEventListener("resize", () => d.resize())` fehlt |

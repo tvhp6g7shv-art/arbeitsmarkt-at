@@ -54,8 +54,9 @@ function baueGenerationen(daten, region) {
              axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     yAxis: { ...achse(), type: "category", data: namen, inverse: true,
              splitLine: { show: false },
-             axisLabel: { ...kategorieLabel(feld), color: stil("--viz-text-2"), fontSize: S.serie, lineHeight: 15,
-                          width: 158, overflow: "break", margin: 12 } },
+             axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, lineHeight: 15,
+                          width: 158, overflow: "break", margin: 12,
+                          ...kategorieLabel(feld) } },
     series: [{
       type: "bar", data: werte, barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },

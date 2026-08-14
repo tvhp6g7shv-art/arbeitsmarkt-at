@@ -45,9 +45,9 @@ function baueAusbildung(daten, region) {
              axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => zahl(v) } },
     yAxis: { ...achse(), type: "category", data: namen, inverse: true,
              splitLine: { show: false },
-             axisLabel: { ...kategorieLabel(document.getElementById("c-ausbildung")),
-                          color: stil("--viz-text-2"), fontSize: S.serie,
-                          width: 158, overflow: "break", margin: 12 } },
+             axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie,
+                          width: 158, overflow: "break", margin: 12,
+                          ...kategorieLabel(document.getElementById("c-ausbildung")) } },
     series: [{
       type: "bar",
       data: werte,

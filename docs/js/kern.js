@@ -149,6 +149,39 @@ const balkenGitter = (el, desktop) => istSchmal(el)
       left: randLinks(el, desktop?.left),
       right: Math.max(RAND_RECHTS, desktop?.right ?? RAND_RECHTS) };
 
+/* --- Hover an Balken: dunkler, nicht heller -------------------------------
+   ECharts hellt einen Balken beim Hover per Default auf (lift +10 %). Bei
+   hellen Grautoenen wie --viz-grid (#ececec) landet er damit fast auf Weiss
+   und verschwindet vor dem Hintergrund — beobachtet 19.08.2026 an der
+   EU-Rangliste. Umgekehrt ist richtig: der angefasste Balken tritt hervor.
+
+   `hoverDunkler(farbe)` mischt die Farbe um ANTEIL Richtung Schwarz und gibt
+   ein fertiges `emphasis`-Objekt zurueck. Bei ohnehin schwarzen Balken
+   (--viz-series-1, #0a0a0a) ist das Ergebnis praktisch dieselbe Farbe — die
+   Angabe verhindert dort schlicht das Aufhellen. Eine Regel, kein Sonderfall. */
+const HOVER_ANTEIL = 0.22;
+function dunkler(farbe, anteil = HOVER_ANTEIL) {
+  const h = String(farbe).trim();
+  const kurz = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(h);
+  const lang = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(h);
+  let rgb;
+  if (lang)      rgb = [1, 2, 3].map((i) => parseInt(lang[i], 16));
+  else if (kurz) rgb = [1, 2, 3].map((i) => parseInt(kurz[i] + kurz[i], 16));
+  else {
+    const m = /^rgba?\(([^)]+)\)/i.exec(h);
+    if (!m) return farbe;                    /* unbekanntes Format: unveraendert */
+    const t = m[1].split(",").map((s) => parseFloat(s));
+    rgb = t.slice(0, 3).map((v) => (isFinite(v) ? v : 0));
+    const a = t[3];
+    const d = rgb.map((v) => Math.round(Math.max(0, v * (1 - anteil))));
+    return a === undefined ? `rgb(${d.join(",")})` : `rgba(${d.join(",")},${a})`;
+  }
+  return "#" + rgb
+    .map((v) => Math.round(Math.max(0, v * (1 - anteil))).toString(16).padStart(2, "0"))
+    .join("");
+}
+const hoverDunkler = (farbe) => ({ itemStyle: { color: dunkler(farbe) } });
+
 /* Kategorienamen links hart begrenzen, sonst frisst „Pflichtschule oder
    weniger" die halbe Breite — oder sie ragt links aus dem Diagramm.
 
@@ -511,6 +544,8 @@ const AMS = {
   schrift, px, neuVermessen,
   /* Breitenabhaengiges Layout — siehe „Schmale Fenster" oben */
   istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen,
+  /* Hover an Balken: dunkler statt heller — siehe „Hover an Balken" oben */
+  dunkler, hoverDunkler,
   setzeBasis: (pfad) => { DATEN_BASIS = pfad; },
   /* Fail-soft: ein null-Argument darf den Rückfall (#dashboard bzw. body)
      NICHT überschreiben. Genau das ist am 14.08. auf der WordPress-Seite

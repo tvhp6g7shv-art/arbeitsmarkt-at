@@ -8,7 +8,8 @@
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
         deltaText, diagramme, schrift ,
-        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen,
+        hoverDunkler} = AMS;
 
 /* --- 10b — EU-Rangliste: eine Farbe für Österreich, Grau für den Rest ---
    Die Botschaft ist "wo steht Österreich", nicht "welches Land ist welches".
@@ -53,13 +54,16 @@ function baueEuRang(daten) {
       axisLabel: { hideOverlap: true, color: stil("--viz-muted"), fontSize: S.achse, formatter: (v) => v + " %" } },
     series: [{
       type: "bar", barWidth: "62%",
-      data: liste.map((e) => ({
-        value: e.wert,
-        itemStyle: {
-          color: e.hervorgehoben ? stil("--viz-series-1") : stil("--viz-grid"),
-          borderRadius: [4, 4, 0, 0],
-        },
-      })),
+      data: liste.map((e) => {
+        const farbe = e.hervorgehoben ? stil("--viz-series-1") : stil("--viz-grid");
+        return {
+          value: e.wert,
+          itemStyle: { color: farbe, borderRadius: [4, 4, 0, 0] },
+          /* Ohne die Angabe hellt ECharts den Balken beim Hover auf — die
+             grauen landen dann fast auf Weiss und verschwinden. */
+          emphasis: hoverDunkler(farbe),
+        };
+      }),
       label: {
         show: true, position: "top", fontSize: S.eng,
         color: stil("--viz-text-2"),

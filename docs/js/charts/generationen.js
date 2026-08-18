@@ -8,7 +8,8 @@
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
         deltaText, diagramme, schrift ,
-        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen,
+        hoverDunkler} = AMS;
 
 /* --- 3b — Generationen: eine Farbe, Geburtsjahre als Zweitzeile ------
    Die Zuordnung Altersgruppe → Generation ist eine Näherung; der Hinweis
@@ -66,6 +67,8 @@ function baueGenerationen(daten, region) {
     series: [{
       type: "bar", data: werte, barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
+      /* Ohne die Angabe hellt ECharts den Balken beim Hover auf. */
+      emphasis: hoverDunkler(stil("--viz-series-1")),
       label: { show: true, position: "right", distance: 8,
                color: stil("--viz-text-2"), fontSize: S.label,
                formatter: (p) => zahl(p.value) },

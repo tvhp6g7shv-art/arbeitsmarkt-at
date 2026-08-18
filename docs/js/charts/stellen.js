@@ -8,7 +8,8 @@
 "use strict";
 const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
         deltaText, diagramme, schrift ,
-        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen} = AMS;
+        istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen,
+        hoverDunkler} = AMS;
 
 /* --- 11 — Offene Stellen und Stellenandrang -------------------------- */
 function baueStellen(daten) {
@@ -47,6 +48,8 @@ function baueStellen(daten) {
                    ...kategorieLabel(feld, 130, sortiert.length) } },
     series: [{ type: "bar", data: sortiert.map((l) => l.andrang), barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
+      /* Ohne die Angabe hellt ECharts den Balken beim Hover auf. */
+      emphasis: hoverDunkler(stil("--viz-series-1")),
       label: { show: true, position: "right", distance: 8,
                color: stil("--viz-text-2"), fontSize: S.label,
                formatter: (p) => pz(p.value) } }],

@@ -37,7 +37,12 @@ function baueFluss(daten) {
     lineStyle: { width: 2, color: farben[i] },
     itemStyle: { color: farben[i] },
     emphasis: { focus: "series" },
-    endLabel: { show: true, formatter: (p) => p.seriesName,
+    /* v43: `show` haengt an derselben Bedingung wie der rechte Gitterrand
+       unten. Vorher stand hier fest `true`, waehrend das Gitter im
+       Schmalmodus von 100 auf 8 px zusammenging — die Beschriftung wurde
+       also weiter gezeichnet, nur ohne Platz. Gemessen bei 388 px
+       Diagrammbreite: „Zugaenge" ragte 44 px aus der Flaeche. */
+    endLabel: { show: endLabelZeigen(feld), formatter: (p) => p.seriesName,
                 color: stil("--viz-text-2"), fontSize: S.achse, distance: 6 },
     labelLayout: { moveOverlap: "shiftY" },
   }));

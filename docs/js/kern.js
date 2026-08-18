@@ -138,8 +138,13 @@ const randLinks = (el, desktopLinks = 120) => istSchmal(el)
 /* Gitter fuer liegende Balken. Schmal: containLabel rechnet den linken
    Platz selbst. Sonst: fester bzw. gedeckelter Rand links, immer
    mindestens RAND_RECHTS rechts. */
+/* v43: links 20 statt 4. `containLabel` rechnet den Platz der
+   Kategorienamen selbst — aber nicht deren `margin` (12 px), sobald am
+   Etikett eine feste `width` steht. Gemessen bei 388 px Diagrammbreite:
+   die Namen ragten 9-12 px aus der Flaeche. Die 16 px Aufschlag decken
+   den Rand ab, kosten aber nur diese 16 px Zeichenflaeche. */
 const balkenGitter = (el, desktop) => istSchmal(el)
-  ? { left: 4, right: RAND_RECHTS, top: 10, bottom: 34, containLabel: true }
+  ? { left: 20, right: RAND_RECHTS, top: 10, bottom: 34, containLabel: true }
   : { top: 10, bottom: 34, ...desktop,
       left: randLinks(el, desktop?.left),
       right: Math.max(RAND_RECHTS, desktop?.right ?? RAND_RECHTS) };

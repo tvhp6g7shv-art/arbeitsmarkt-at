@@ -2,7 +2,10 @@ name: Daten aktualisieren
 
 on:
   schedule:
-    - cron: "0 5 6 * *"
+    # Taeglich 05:00 UTC (06:00 MEZ / 07:00 MESZ). Die AMS- und
+    # Eurostat-Quellen liefern monatlich; der Lauf schreibt nur dann
+    # einen Commit, wenn sich die Dateien wirklich geaendert haben.
+    - cron: "0 5 * * *"
   workflow_dispatch:
   push:
     paths:

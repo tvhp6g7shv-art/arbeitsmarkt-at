@@ -105,25 +105,64 @@ const achse = () => ({
    Kategorienamen, rechts 72 px fuer die Werte — bei 350 px Fenster
    bleiben 106 px Zeichenflaeche). */
 const SCHMAL = 560;
-const istSchmal = (el) =>
-  (el?.clientWidth || document.documentElement.clientWidth) < SCHMAL;
+const feldBreite = (el) =>
+  el?.clientWidth || document.documentElement.clientWidth;
+const istSchmal = (el) => feldBreite(el) < SCHMAL;
 
-/* Gitter fuer liegende Balken. Desktop: feste Pixel, damit die
-   Kategorienamen aller Diagramme in einer Flucht stehen. Schmal:
-   containLabel rechnet den Platz selbst und die Namen werden gekuerzt,
-   statt die Zeichenflaeche zu erdruecken. */
+/* Zeilenhoehe der Kategorienamen und Mindestrand rechts.
+
+   RAND_RECHTS: Am rechten Gitterrand stehen ZWEI Dinge, die ECharts beim
+   Layout nicht mitrechnet — die Wertbeschriftung des laengsten Balkens
+   (`position: "right"`, Abstand 8) und die HAELFTE der letzten
+   Achsenzahl, die mittig ueber dem Gitterende sitzt. Mit den alten 8 px
+   im Schmalmodus ragte „150 000" um 13 px aus der Zeichenflaeche und
+   wurde zu „150 0" abgeschnitten (gemessen 18.08.2026 bei 480 px
+   Diagrammbreite). 60 px decken beides ab. */
+const ZEILE = 16;
+const RAND_RECHTS = 60;
+
+/* Anteil der Breite, den die Kategorienamen hoechstens belegen duerfen.
+   Darueber bleibt zu wenig Zeichenflaeche fuer die Balken. */
+const ANTEIL_LINKS = 0.34;
+
+/* Linker Gitterrand fuer liegende Balken. Desktop: der feste Pixelwert
+   aus der Diagrammdatei, damit die Kategorienamen aller Diagramme in
+   einer Flucht stehen — aber gedeckelt, sobald die Zeichenflaeche
+   schmaler wird. Genau dieser Deckel fehlte: auf dem iPad quer stand der
+   Rand weiter auf 150–210 px, waehrend die Flaeche nur noch rund 480 px
+   breit war. */
+const randLinks = (el, desktopLinks = 120) => istSchmal(el)
+  ? Math.round(feldBreite(el) * 0.32)
+  : Math.min(desktopLinks, Math.round(feldBreite(el) * ANTEIL_LINKS));
+
+/* Gitter fuer liegende Balken. Schmal: containLabel rechnet den linken
+   Platz selbst. Sonst: fester bzw. gedeckelter Rand links, immer
+   mindestens RAND_RECHTS rechts. */
 const balkenGitter = (el, desktop) => istSchmal(el)
-  ? { left: 4, right: 8, top: 10, bottom: 34, containLabel: true }
-  : { top: 10, bottom: 34, ...desktop };
+  ? { left: 4, right: RAND_RECHTS, top: 10, bottom: 34, containLabel: true }
+  : { top: 10, bottom: 34, ...desktop,
+      left: randLinks(el, desktop?.left),
+      right: Math.max(RAND_RECHTS, desktop?.right ?? RAND_RECHTS) };
 
 /* Kategorienamen links hart begrenzen, sonst frisst „Pflichtschule oder
-   weniger" die halbe Breite. */
-function kategorieLabel(el) {
-  if (!istSchmal(el)) return {};
+   weniger" die halbe Breite — oder sie ragt links aus dem Diagramm.
+
+   `anzahl` ist die Zahl der Kategorien: Passen zwei Textzeilen nicht in
+   die Hoehe einer Kategoriezeile, wird gekuerzt statt umgebrochen. Ohne
+   das kleben bei zehn Wirtschaftszweigen in 260 px Hoehe die
+   zweizeiligen Namen ineinander. */
+function kategorieLabel(el, desktopLinks = 120, anzahl = 0) {
+  const links = randLinks(el, desktopLinks);
+  /* 44 px sind oberer (10) + unterer (34) Gitterrand. */
+  const platz = anzahl > 0 ? ((el?.clientHeight || 300) - 44) / anzahl : 999;
+  const zweiZeilen = platz >= 2 * ZEILE;
+  /* Breite und Hoehe reichen: nichts vorschreiben, die Diagrammdatei
+     behaelt ihre Vorgaben. So bleibt die Desktop-Ansicht unveraendert. */
+  if (!istSchmal(el) && links >= desktopLinks && zweiZeilen) return {};
   return {
-    width: Math.max(64, Math.round((el?.clientWidth || 320) * 0.32)),
-    overflow: "truncate",
-    lineHeight: 14,
+    width: Math.max(56, links - 16),   /* 12 px `margin` + Luft fuer „…" */
+    overflow: zweiZeilen ? "break" : "truncate",
+    lineHeight: ZEILE,
   };
 }
 
@@ -137,16 +176,26 @@ const legende = (el, werte) => istSchmal(el)
 const endLabelZeigen = (el) => !istSchmal(el);
 
 /* Ruft `neuBauen` auf, sobald die Seite die Schwelle wechselt — nicht bei
-   jedem Pixel. Entprellt, weil ein Fensterzug Dutzende Ereignisse wirft. */
+   jedem Pixel. Entprellt, weil ein Fensterzug Dutzende Ereignisse wirft.
+
+   v42: Nicht mehr nur die 560er-Schwelle. Seit die Gitterraender links
+   gedeckelt werden, haengt die Geometrie an der Breite selbst — `resize()`
+   allein zeichnet nur mit den alten Pixelwerten neu. Verglichen wird
+   deshalb eine grobe Stufe von 160 px; das loest beim Umschlagen des
+   Layouts (960/1024 px) aus, aber nicht bei jedem Zug am Fenster. */
+const STUFE = 160;
+const breitenStufe = (el) =>
+  istSchmal(el) ? -1 : Math.floor(feldBreite(el) / STUFE);
+
 function beiBreitenwechsel(neuBauen) {
-  let warSchmal = istSchmal(document.getElementById("c-zeitreihe"));
+  let warStufe = breitenStufe(document.getElementById("c-zeitreihe"));
   let timer = null;
   global.addEventListener("resize", () => {
     clearTimeout(timer);
     timer = setTimeout(() => {
-      const jetzt = istSchmal(document.getElementById("c-zeitreihe"));
-      if (jetzt === warSchmal) return;
-      warSchmal = jetzt;
+      const jetzt = breitenStufe(document.getElementById("c-zeitreihe"));
+      if (jetzt === warStufe) return;
+      warStufe = jetzt;
       neuBauen();
     }, 200);
   });

@@ -397,16 +397,16 @@ FLUSS_MONATE = 24
 # Diese Zeile erscheint in jeder eingebetteten Grafik und erfüllt die
 # CC-BY-Namensnennungspflicht.
 #
-# Achtung: arbeitsmarktdashboard.at löst derzeit noch nicht auf (Stand
-# 2026-08-13). Bis die Domain steht, gehen alle Links in eingebetteten
-# Grafiken ins Leere. Wer das vermeiden will, trägt vorübergehend die
-# GitHub-Pages-Adresse als "url" ein und tauscht sie später:
-#   "url": "https://tvhp6g7shv-art.github.io/arbeitsmarkt-at/",
+# Live-Domain seit 2026-08-18: arbeitsmarkt-monitor.at (mit Bindestrich,
+# löst auf, HTTPS aktiv). Die frühere Platzhalter-Domain
+# arbeitsmarktdashboard.at ist nicht registriert und wurde ersetzt.
+# arbeitsmarktmonitor.at (ohne Bindestrich) zeigt auf dieselbe IP und
+# leitet weiter — nicht als kanonische URL verwenden.
 # ---------------------------------------------------------------------------
 
 EINBETTUNG = {
-    "grafik_von": "arbeitsmarktdashboard.at",
-    "url": "https://arbeitsmarktdashboard.at",
+    "grafik_von": "arbeitsmarkt-monitor.at",
+    "url": "https://arbeitsmarkt-monitor.at",
     "lizenz_grafik": "CC BY 4.0",
 }
 

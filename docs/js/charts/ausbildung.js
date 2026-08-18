@@ -47,7 +47,7 @@ function baueAusbildung(daten, region) {
              splitLine: { show: false },
              axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie,
                           width: 158, overflow: "break", margin: 12,
-                          ...kategorieLabel(document.getElementById("c-ausbildung")) } },
+                          ...kategorieLabel(document.getElementById("c-ausbildung"), 172, namen.length) } },
     series: [{
       type: "bar",
       data: werte,

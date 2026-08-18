@@ -44,7 +44,7 @@ function baueStellen(daten) {
     yAxis: { ...achse(), type: "category", inverse: true,
       data: sortiert.map((l) => l.name), splitLine: { show: false },
       axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, margin: 12,
-                   ...kategorieLabel(feld) } },
+                   ...kategorieLabel(feld, 130, sortiert.length) } },
     series: [{ type: "bar", data: sortiert.map((l) => l.andrang), barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
       label: { show: true, position: "right", distance: 8,

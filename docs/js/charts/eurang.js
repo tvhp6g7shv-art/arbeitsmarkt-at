@@ -74,8 +74,14 @@ function baueEuRang(daten) {
       markLine: daten.eu_referenz === null || daten.eu_referenz === undefined ? undefined : {
         silent: true, symbol: "none",
         lineStyle: { color: stil("--viz-series-2"), width: 1.5, type: "dashed" },
+        /* `align: "right"` ist nicht kosmetisch: ohne die Angabe setzt
+           ECharts den Text linksbuendig ans ANFANGSende der Linie und er
+           ragt links aus der Zeichenflaeche (gemessen 18.08.2026 bei
+           646 px Breite: 43 px abgeschnitten). Mit der Angabe sitzt er
+           rechtsbuendig am rechten Linienende, wie gedacht. */
         label: { formatter: `EU-27: ${pz(daten.eu_referenz)} %`,
-                 color: stil("--viz-text-2"), fontSize: S.achse, position: "insideEndTop" },
+                 color: stil("--viz-text-2"), fontSize: S.achse,
+                 position: "insideEndTop", align: "right" },
         data: [{ yAxis: daten.eu_referenz }],
       },
     }],

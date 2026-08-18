@@ -56,7 +56,7 @@ function baueBranche(daten) {
       data: top.map((b) => b.name), splitLine: { show: false },
       axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, width: 196,
                    overflow: "break", margin: 12,
-                   ...kategorieLabel(feld) } },
+                   ...kategorieLabel(feld, 210, top.length) } },
     series: [{ type: "bar", data: top.map((b) => b.bestand), barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },
       label: { show: true, position: "right", distance: 8,

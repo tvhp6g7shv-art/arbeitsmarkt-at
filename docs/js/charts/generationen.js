@@ -62,7 +62,7 @@ function baueGenerationen(daten, region) {
              splitLine: { show: false },
              axisLabel: { color: stil("--viz-text-2"), fontSize: S.serie, lineHeight: 15,
                           width: 104, overflow: "break", margin: 12,
-                          ...kategorieLabel(feld) } },
+                          ...kategorieLabel(feld, 118, namen.length) } },
     series: [{
       type: "bar", data: werte, barWidth: "58%",
       itemStyle: { color: stil("--viz-series-1"), borderRadius: [0, 4, 4, 0] },

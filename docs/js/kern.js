@@ -340,9 +340,13 @@ const diagramme = [];
 async function start() {
   /* Jede Datei einzeln laden. Fällt eine aus, fehlt nur ihr Abschnitt —
      nicht die halbe Seite. Zwingend sind allein meta und kpi. */
+  /* karte_geo und eukarte_geo fehlen hier mit Absicht: sie sind zusammen
+     522 KB roh (176 KB ueber die Leitung) und damit rund 90 % aller Daten,
+     obwohl beide Karten weit unten stehen. Sie werden nachgeladen, sobald
+     ihr Abschnitt in Sichtweite kommt — siehe `nachladenBeiSicht` unten. */
   const DATEIEN = ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke",
-                   "bundeslaender", "karte", "karte_geo", "generationen",
-                   "fluss", "dauer", "schulung", "eu", "eukarte", "eukarte_geo",
+                   "bundeslaender", "karte", "generationen",
+                   "fluss", "dauer", "schulung", "eu", "eukarte",
                    "stellen", "branche"];
   const geladen = {};
   await Promise.all(DATEIEN.map(async (name) => {
@@ -353,11 +357,13 @@ async function start() {
   const meta = geladen.meta, kpi = geladen.kpi;
   const zeitreihe = geladen.zeitreihe, ausbildung = geladen.ausbildung;
   const bezirke = geladen.bezirke, laender = geladen.bundeslaender;
-  const karte = geladen.karte, geo = geladen.karte_geo;
+  const karte = geladen.karte;
   const generationen = geladen.generationen, fluss = geladen.fluss;
   const dauer = geladen.dauer, schulung = geladen.schulung;
   const eu = geladen.eu, stellen = geladen.stellen, branche = geladen.branche;
-  const eukarte = geladen.eukarte, eukarteGeo = geladen.eukarte_geo;
+  const eukarte = geladen.eukarte;
+  /* `let`, nicht `const`: die Geometrie trifft erst beim Heranscrollen ein. */
+  let geo = null, eukarteGeo = null;
 
   if (!meta || !kpi) {
     document.getElementById("lead").textContent =
@@ -382,19 +388,81 @@ async function start() {
     sicher("Ausbildung", () => AMS.baueAusbildung(ausbildung, "AT"));
     sicher("Verlauf", () => AMS.baueVerlauf(ausbildung, verlaufModus));
     sicher("Generationen", () => AMS.baueGenerationen(generationen, "AT"));
-    sicher("Karte", () => AMS.baueKarte(karte, geo));
+    /* Die beiden Karten nur, wenn ihre Geometrie schon da ist. Beim
+       Neubau nach einem Breitenwechsel kann das noch fehlen. */
+    if (geo) sicher("Karte", () => AMS.baueKarte(karte, geo));
     sicher("Bundesländer", () => AMS.baueLaender(laender));
     sicher("AMS-Bezirke", () => AMS.baueBezirke(bezirke, meta));
     sicher("Zu-/Abgänge", () => AMS.baueFluss(fluss));
     sicher("Vormerkdauer", () => AMS.baueDauer(dauer));
     sicher("Schulungen", () => AMS.baueSchulung(schulung));
     sicher("EU-Rangliste", () => AMS.baueEuRang(eu));
-    sicher("EU-Karte", () => AMS.baueEuKarte(eukarte, eukarteGeo));
+    if (eukarteGeo) sicher("EU-Karte", () => AMS.baueEuKarte(eukarte, eukarteGeo));
     sicher("Offene Stellen", () => AMS.baueStellen(stellen));
     sicher("Branchen", () => AMS.baueBranche(branche));
   }
   baueAlles();
   beiBreitenwechsel(baueAlles);
+
+  /* --- Geometrie der beiden Karten erst beim Heranscrollen -------------
+     `karte_geo` (379 KB roh / 103 KB uebertragen) und `eukarte_geo`
+     (143 / 52 KB) sind zusammen rund 90 % aller Daten. Beide Karten
+     stehen weit unten; wer nur die Kennzahlen oben liest, hat sie bisher
+     trotzdem vollstaendig heruntergeladen.
+
+     300 px Vorlauf: die Datei ist unterwegs, bevor der Abschnitt im Bild
+     ist, und die Karte steht meist schon, wenn man dort ankommt.
+
+     Ohne IntersectionObserver (sehr alte Browser) wird sofort geladen —
+     dann ist der Zustand wie vorher, nur nicht schneller.
+
+     Faellt eine der beiden Dateien aus, steht das NICHT in der
+     Ausfallmeldung im Fuss: die wird weiter oben einmalig erzeugt, wenn
+     der Nachladeversuch noch gar nicht gelaufen ist. Der Abschnitt bleibt
+     dann einfach leer, und `sicher()` schreibt den Grund in die Konsole. */
+  const nachladenBeiSicht = (feldId, name, danach) => {
+    /* Beobachtet wird ueber das DIAGRAMMFELD, nicht ueber die Sektion:
+       auf der WordPress-Seite heisst die Sektion `s-karte`, in
+       docs/index.html hat dieselbe Sektion gar keine id (nur
+       `data-chart="karte"`). Die Feld-ids `c-karte`/`c-eukarte` gibt es
+       in beiden. Von dort aus die Karte suchen, sonst das Feld selbst. */
+    const feld = document.getElementById(feldId);
+    const sektion = feld && (feld.closest(".viz-karte") || feld);
+    if (!sektion) return;
+    /* Beide Kartenabschnitte stehen im Markup auf `display: none` und
+       werden erst von ihrer Baufunktion eingeblendet. Ein unsichtbares
+       Element loest aber NIE einen IntersectionObserver aus — die Karte
+       wuerde also auf ihre Daten warten, die ihrerseits auf die
+       Sichtbarkeit warten. Deshalb hier vorab einblenden; die leere
+       Flaeche belegt dann auch schon ihren Platz.
+       Auf der WordPress-Seite faellt das nicht auf: dort erzwingt
+       Abschnitt 27 der idl.css ohnehin `display` fuer alle Karten. */
+    if (sektion.style.display === "none") sektion.style.display = "";
+    let gestartet = false;
+    const holen = async () => {
+      if (gestartet) return;
+      gestartet = true;
+      const daten = await hole(name).catch(() => null);
+      if (!daten) { FEHLENDE.push(name); return; }
+      danach(daten);
+    };
+    if (typeof global.IntersectionObserver !== "function") { holen(); return; }
+    const beobachter = new global.IntersectionObserver((eintraege) => {
+      if (!eintraege.some((e) => e.isIntersecting)) return;
+      beobachter.disconnect();
+      holen();
+    }, { rootMargin: "300px" });
+    beobachter.observe(sektion);
+  };
+
+  nachladenBeiSicht("c-karte", "karte_geo", (daten) => {
+    geo = daten;
+    sicher("Karte", () => AMS.baueKarte(karte, geo));
+  });
+  nachladenBeiSicht("c-eukarte", "eukarte_geo", (daten) => {
+    eukarteGeo = daten;
+    sicher("EU-Karte", () => AMS.baueEuKarte(eukarte, eukarteGeo));
+  });
 
   document.getElementById("m-verlauf").addEventListener("click", (e) => {
     const knopf = e.target.closest("button[data-modus]");

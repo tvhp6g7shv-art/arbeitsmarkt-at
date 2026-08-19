@@ -27,22 +27,19 @@ const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
    nur manchmal erscheint, liest sich als Fehler. Der eine Wert, auf den es
    ankommt, steht rechts außerhalb des Balkens. */
 
-/* Erste Fassung nahm seq-2 und seq-4. Zwei Befunde bei der Sichtpruefung
-   am 19.08.2026, beide nachgerechnet:
+/* Drei Stufen einer Rampe, monochrom. Kein --viz-kritisch: das ist in
+   idl.css als Statusfarbe deklariert („nur fuer Veraenderungen, immer mit
+   Pfeil und Text"), hier waere es eine Kategorie — User-Entscheid 19.08.
 
-   1. seq-2 (#d9d9d9) gegen die weisse Karte ist 1,41 : 1. Bei „unter 20"
-      besteht der Balken zu 97 % aus dieser Klasse — er las sich als leere
-      Spur. seq-3 (#b3b3b3) bringt 2,10 : 1.
-   2. WICHTIGER: seq-4 (#8c8c8c) und --viz-kritisch (#f84444) haben mit
-      1,06 : 1 praktisch dieselbe Helligkeit. Wer Rot-Gruen nicht
-      unterscheidet, sieht zwei gleich helle Flaechen nebeneinander — die
-      Aussage der Grafik faellt genau dort aus. seq-5 (#595959) hebt das
-      auf 1,97 : 1.
+   Nebeneffekt, der den Ausschlag gab: Rot (#f84444) und Mittelgrau
+   (#8c8c8c) lagen bei 1,06 : 1, also praktisch gleich hell. Wer Rot-Gruen
+   nicht unterscheidet, sah zwei gleiche Flaechen. Monochrom traegt die
+   Helligkeit die Rangordnung selbst, das Problem entfaellt.
 
-   Damit: hell 2,10 gegen die Karte, 3,34 zwischen den beiden Grautoenen,
-   1,97 zwischen Mittelgrau und Rot. Die Reihenfolge hell -> dunkel -> Signal
-   traegt die Rangordnung zusaetzlich zur Farbe. */
-const FARBEN = ["--viz-seq-3", "--viz-seq-5", "--viz-kritisch"];
+   Warum 3/5/6 und nicht 2/4/6: seq-2 gegen die weisse Karte ist 1,41 : 1,
+   und bei „unter 20" besteht der Balken zu 97 % aus dieser Klasse — er las
+   sich als leere Spur. seq-3 bringt 2,10 (hell) bzw. 2,47 (dunkel). */
+const FARBEN = ["--viz-seq-3", "--viz-seq-5", "--viz-seq-6"];
 
 function baueVerfestigung(daten) {
   const S = schrift();
@@ -58,8 +55,11 @@ function baueVerfestigung(daten) {
   const gruppen = daten.gruppen;
   const klassen = daten.klassen.map((k) => k.name);
 
+  /* Die Zusammenlegung ab 60 gehoert hierher, nicht in den Hinweistext:
+     u-verlauf haengt seinen Definitionshinweis genauso hinter das Datum. */
   setzeText("u-verfestigung",
-    `Anteil je Altersgruppe nach Dauer der Vormerkung · Stand ${monat(daten.stand)}`);
+    `Anteil je Altersgruppe nach Dauer der Vormerkung · Stand ${monat(daten.stand)}`
+    + ` · ab ${daten.schwelle} zusammengefasst`);
   setzeText("h-verfestigung", daten.hinweis ?? "");
 
   /* Die letzte Klasse trägt die Endbeschriftung. Sie steht rechts außen und

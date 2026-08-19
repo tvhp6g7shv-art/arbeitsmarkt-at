@@ -188,13 +188,12 @@ def baue_verfestigung(aktueller_monat) -> dict | None:
         "gruppen": gruppen,
         "monoton": monoton,
         "schwelle": schwelle,
+        # Erster Entwurf hatte 399 Zeichen und wollte drei Dinge zugleich
+        # sagen. Die bestehenden elf Hinweiszeilen liegen bei 150-234.
+        # Die Zusammenlegung ab 60 steht jetzt in der Unterzeile.
         "hinweis": (
-            "Vormerkdauer ist nicht Arbeitslosigkeitsdauer: Unterbrechungen "
-            "durch Schulungen oder kurze Beschäftigung setzen die Zählung "
-            "zurück. Gezeigt wird ein Bestand zum Stichtag, kein Verlauf — "
-            "die Grafik sagt, dass Arbeitslosigkeit mit dem Alter länger "
-            f"dauert, nicht warum. Die Gruppen ab {schwelle} sind "
-            "zusammengefasst, weil auf die oberste allein zu wenige Personen "
-            "entfallen, um einen eigenen Balken zu tragen."
+            "Vormerkdauer ist nicht Arbeitslosigkeitsdauer: Schulungen setzen "
+            "die Zählung zurück. Die Grafik zeigt, dass es länger dauert — "
+            "nicht warum."
         ),
     }

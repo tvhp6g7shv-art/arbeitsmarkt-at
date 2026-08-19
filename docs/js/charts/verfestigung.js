@@ -27,7 +27,22 @@ const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
    nur manchmal erscheint, liest sich als Fehler. Der eine Wert, auf den es
    ankommt, steht rechts außerhalb des Balkens. */
 
-const FARBEN = ["--viz-seq-2", "--viz-seq-4", "--viz-kritisch"];
+/* Erste Fassung nahm seq-2 und seq-4. Zwei Befunde bei der Sichtpruefung
+   am 19.08.2026, beide nachgerechnet:
+
+   1. seq-2 (#d9d9d9) gegen die weisse Karte ist 1,41 : 1. Bei „unter 20"
+      besteht der Balken zu 97 % aus dieser Klasse — er las sich als leere
+      Spur. seq-3 (#b3b3b3) bringt 2,10 : 1.
+   2. WICHTIGER: seq-4 (#8c8c8c) und --viz-kritisch (#f84444) haben mit
+      1,06 : 1 praktisch dieselbe Helligkeit. Wer Rot-Gruen nicht
+      unterscheidet, sieht zwei gleich helle Flaechen nebeneinander — die
+      Aussage der Grafik faellt genau dort aus. seq-5 (#595959) hebt das
+      auf 1,97 : 1.
+
+   Damit: hell 2,10 gegen die Karte, 3,34 zwischen den beiden Grautoenen,
+   1,97 zwischen Mittelgrau und Rot. Die Reihenfolge hell -> dunkel -> Signal
+   traegt die Rangordnung zusaetzlich zur Farbe. */
+const FARBEN = ["--viz-seq-3", "--viz-seq-5", "--viz-kritisch"];
 
 function baueVerfestigung(daten) {
   const S = schrift();
@@ -53,9 +68,16 @@ function baueVerfestigung(daten) {
 
   d.setOption({
     ...basis(),
-    grid: balkenGitter(feld, { left: 96, right: 76 }),
-    legend: legende(feld, { top: 0, left: 0, itemWidth: 11, itemHeight: 11,
-      itemGap: 14, data: klassen,
+    /* `top: 46` ueberschreibt die 10 aus balkenGitter. Ohne das klebt die
+       Legende am obersten Balken — bei den Diagrammen ohne Legende ist der
+       kleine Rand richtig, hier nicht. verlauf.js loest dasselbe mit 34;
+       hier braucht es etwas mehr, weil die Balken dicker sind. */
+    grid: { ...balkenGitter(feld, { left: 96, right: 76 }), top: 46 },
+    /* Legende buendig mit der Zeichenflaeche statt am Feldrand: sonst haengt
+       sie ueber der Spalte der Altersbeschriftungen. Schmal uebernimmt
+       `containLabel` den linken Rand, dort bleibt 0 richtig. */
+    legend: legende(feld, { top: 0, left: istSchmal(feld) ? 0 : 96,
+      itemWidth: 11, itemHeight: 11, itemGap: 14, data: klassen,
       textStyle: { color: stil("--viz-text-2"), fontSize: S.serie } }),
     tooltip: {
       ...basis().tooltip, trigger: "axis",
@@ -83,6 +105,17 @@ function baueVerfestigung(daten) {
         color: stil(FARBEN[k]),
         /* Rundung nur an den Aussenkanten des gestapelten Balkens. */
         borderRadius: k === 0 ? [4, 0, 0, 4] : (k === letzte ? [0, 4, 4, 0] : 0),
+        /* 2-px-Fuge in Kartenfarbe zwischen den Segmenten.
+           NICHT Zierrat, sondern der eigentliche Fix fuer die
+           Unterscheidbarkeit: Mittelgrau und Rot liegen in der Helligkeit
+           nah beieinander (hell 1,97 : 1, dunkel sogar nur 1,24 : 1), und
+           mit festen Stufen der sequenziellen Rampe ist das nicht zu
+           beheben — die Rampe kehrt im Dunkelmodus ihre Leserichtung um,
+           was in einem Modus hilft und im anderen schadet.
+           Die Fuge macht die Grenze unabhaengig von der Farbwahrnehmung
+           sichtbar und wirkt in beiden Modi gleich. */
+        borderColor: stil("--viz-surface"),
+        borderWidth: 2,
       },
       emphasis: hoverDunkler(stil(FARBEN[k])),
       label: k === letzte

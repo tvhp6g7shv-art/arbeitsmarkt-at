@@ -43,51 +43,57 @@
 .viz-root {
   color-scheme: light;
 
-  --viz-surface:        #fcfcfb;
-  --viz-plane:          #f9f9f7;
-  --viz-text:           #0b0b0b;
-  --viz-text-2:         #52514e;
-  --viz-muted:          #898781;
-  --viz-grid:           #e1e0d9;
-  --viz-axis:           #c3c2b7;
-  --viz-border:         rgba(11,11,11,0.10);
+  --viz-surface:        #ffffff;
+  --viz-plane:          #fafafa;
+  --viz-text:           #0a0a0a;
+  --viz-text-2:         #0a0a0a;
+  --viz-muted:          #767676;
+  --viz-grid:           #ececec;
+  --viz-axis:           #d9d9d9;
+  --viz-border:         #e5e5e5;
 
-  /* Kategoriale Serien — Reihenfolge ist bewusst gewählt, nicht cyceln */
-  --viz-series-1:       #2a78d6;
-  --viz-series-2:       #eb6834;
-  --viz-series-3:       #1baf7a;
-  --viz-series-4:       #eda100;
-  --viz-series-5:       #e87ba4;
-  --viz-series-6:       #008300;
+  /* Kategoriale Serien — Reihenfolge ist bewusst gewählt, nicht cyceln.
+     Seit 19.08.2026 monochrom wie die Live-Seite (LifeOS-Restyling v31):
+     1 ist der dunkelste Ton, dann 4, 6, 2, 3, 5. Wer hier bunte Farben
+     einsetzt, bricht die Übereinstimmung mit arbeitsmarkt-monitor.at. */
+  --viz-series-1:       #0a0a0a;
+  --viz-series-2:       #9a9a9a;
+  --viz-series-3:       #c9c9c9;
+  --viz-series-4:       #4d4d4d;
+  --viz-series-5:       #e0e0e0;
+  --viz-series-6:       #737373;
 
-  /* Sequenzielle Skala (eine Farbe, hell → dunkel) für die Karte */
-  --viz-seq-1:          #cde2fb;
-  --viz-seq-2:          #86b6ef;
-  --viz-seq-3:          #3987e5;
-  --viz-seq-4:          #256abf;
-  --viz-seq-5:          #184f95;
-  --viz-seq-6:          #0d366b;
+  /* Sequenzielle Skala (ein Ton, hell → dunkel) für die Karte.
+     Im Dunkelmodus kehrt sie ihre Leserichtung um (dunkel = wenig),
+     sonst verschwindet die unterste Stufe im Kartengrund. */
+  --viz-seq-1:          #f2f2f2;
+  --viz-seq-2:          #d9d9d9;
+  --viz-seq-3:          #b3b3b3;
+  --viz-seq-4:          #8c8c8c;
+  --viz-seq-5:          #595959;
+  --viz-seq-6:          #262626;
 
   /* Status — nur für Veränderungen, immer mit Pfeil und Text */
-  --viz-gut:            #006300;
-  --viz-kritisch:       #d03b3b;
+  --viz-gut:            #04b404;
+  --viz-kritisch:       #f84444;
 
   /* Divergierende Skala für Veränderungen: Grün = Rückgang, Rot = Anstieg.
      Neutral in der Mitte ist Grau, nie ein dritter Farbton.
-     Geprüft mit dem Palettenvalidator: die beiden Pole #2f9e63 / #a52a1f
-     liegen bei Deuteranopie ΔE 13,8 auseinander (Ziel ≥ 8), Normalsicht 29,9
-     (Boden 15), beide über 3:1 Kontrast zur hellen Fläche. Das Grün ist
-     bewusst heller als das Rot — so trägt die Helligkeit die Unterscheidung
-     mit, nicht der Farbton allein. */
+     Pole seit 19.08.2026 aus den Wertungsfarben der Live-Seite abgeleitet
+     (#3cbb36 / #fa5b56, User-Entscheid 18.08.). Benachbarte Stufen liegen
+     in beiden Farbschemata über ΔE 9,4 (CIE76) auseinander — Rechenweg in
+     dunkelmodus-kontrast.py im Ordner Dashboards. Das Grün ist bewusst
+     heller als das Rot, so trägt die Helligkeit die Unterscheidung mit
+     und nicht der Farbton allein. */
   --viz-div-neutral:    #f0efec;
-  --viz-div-gut-1:      #dcefe4;
-  --viz-div-gut-2:      #a5d7bb;
-  --viz-div-gut-3:      #6ec293;
-  --viz-div-gut-4:      #2f9e63;
-  --viz-div-schlecht-1: #f8ddd6;
-  --viz-div-schlecht-2: #e8ae9f;
-  --viz-div-schlecht-3: #cc6e58;
-  --viz-div-schlecht-4: #a52a1f;
+  --viz-div-gut-1:      #d4e7ce;
+  --viz-div-gut-2:      #a5d89e;
+  --viz-div-gut-3:      #77ca6f;
+  --viz-div-gut-4:      #3cbb36;
+  --viz-div-schlecht-1: #f7d7d1;
+  --viz-div-schlecht-2: #fcafa6;
+  --viz-div-schlecht-3: #fd887e;
+  --viz-div-schlecht-4: #fa5b56;
 
   /* --- Typografie -------------------------------------------------
      Größen in px, weil ECharts nur Zahlen kennt; kern.js liest sie mit
@@ -110,43 +116,48 @@
   --viz-radius: 10px;
   --viz-gap: 20px;
 }
+/* Dunkelmodus — Palette B „weiches Anthrazit", 19.08.2026.
+   Identisch mit Abschnitt 34 in idl.css auf arbeitsmarkt-monitor.at.
+   Alle Werte gerechnet: 0 Verletzungen der Sollkontraste, divergierende
+   Rampe über CIE76-ΔE ≥ 9,4. Wer hier etwas ändert, muss Abschnitt 34
+   mitziehen — sonst laufen die zwei Auslieferungen wieder auseinander. */
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) .viz-root {
     color-scheme: dark;
-    --viz-surface: #1a1a19; --viz-plane: #0d0d0d;
-    --viz-text: #ffffff;    --viz-text-2: #c3c2b7;
-    --viz-muted: #898781;   --viz-grid: #2c2c2a; --viz-axis: #383835;
-    --viz-border: rgba(255,255,255,0.10);
-    --viz-series-1: #3987e5; --viz-series-2: #d95926;
-    --viz-series-3: #199e70; --viz-series-4: #c98500;
-    --viz-series-5: #d55181; --viz-series-6: #008300;
-    --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
-    --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
-    --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
-    --viz-div-neutral: #383835;
-    --viz-div-gut-1: #1e4a37; --viz-div-gut-2: #276e4f;
-    --viz-div-gut-3: #33936a; --viz-div-gut-4: #45b87a;
-    --viz-div-schlecht-1: #4d201a; --viz-div-schlecht-2: #7a2a20;
-    --viz-div-schlecht-3: #9e3325; --viz-div-schlecht-4: #c2402f;
+    --viz-surface: #1c1f21; --viz-plane: #161819;
+    --viz-text: #e9eaea;    --viz-text-2: #e9eaea;
+    --viz-muted: #9aa0a3;   --viz-grid: #2b2f31; --viz-axis: #42484c;
+    --viz-border: #373d41;
+    --viz-series-1: #e9eaea; --viz-series-2: #9ca4a8;
+    --viz-series-3: #757d81; --viz-series-4: #c6ccd0;
+    --viz-series-5: #626a6e; --viz-series-6: #868e92;
+    --viz-seq-1: #292f32; --viz-seq-2: #3c4347; --viz-seq-3: #555d62;
+    --viz-seq-4: #7b8489; --viz-seq-5: #a6aeb2; --viz-seq-6: #dde2e4;
+    --viz-gut: #3fd069;   --viz-kritisch: #f77070;
+    --viz-div-neutral: #2e3336;
+    --viz-div-gut-1: #1a3327; --viz-div-gut-2: #204d38;
+    --viz-div-gut-3: #276b4b; --viz-div-gut-4: #309362;
+    --viz-div-schlecht-1: #3a2224; --viz-div-schlecht-2: #582c2f;
+    --viz-div-schlecht-3: #80393c; --viz-div-schlecht-4: #b84a4d;
   }
 }
 :root[data-theme="dark"] .viz-root {
   color-scheme: dark;
-  --viz-surface: #1a1a19; --viz-plane: #0d0d0d;
-  --viz-text: #ffffff;    --viz-text-2: #c3c2b7;
-  --viz-muted: #898781;   --viz-grid: #2c2c2a; --viz-axis: #383835;
-  --viz-border: rgba(255,255,255,0.10);
-  --viz-series-1: #3987e5; --viz-series-2: #d95926;
-  --viz-series-3: #199e70; --viz-series-4: #c98500;
-  --viz-series-5: #d55181; --viz-series-6: #008300;
-  --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
-  --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
-  --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
-  --viz-div-neutral: #383835;
-  --viz-div-gut-1: #1e4a37; --viz-div-gut-2: #276e4f;
-  --viz-div-gut-3: #33936a; --viz-div-gut-4: #45b87a;
-  --viz-div-schlecht-1: #4d201a; --viz-div-schlecht-2: #7a2a20;
-  --viz-div-schlecht-3: #9e3325; --viz-div-schlecht-4: #c2402f;
+  --viz-surface: #1c1f21; --viz-plane: #161819;
+  --viz-text: #e9eaea;    --viz-text-2: #e9eaea;
+  --viz-muted: #9aa0a3;   --viz-grid: #2b2f31; --viz-axis: #42484c;
+  --viz-border: #373d41;
+  --viz-series-1: #e9eaea; --viz-series-2: #9ca4a8;
+  --viz-series-3: #757d81; --viz-series-4: #c6ccd0;
+  --viz-series-5: #626a6e; --viz-series-6: #868e92;
+  --viz-seq-1: #292f32; --viz-seq-2: #3c4347; --viz-seq-3: #555d62;
+  --viz-seq-4: #7b8489; --viz-seq-5: #a6aeb2; --viz-seq-6: #dde2e4;
+  --viz-gut: #3fd069;   --viz-kritisch: #f77070;
+  --viz-div-neutral: #2e3336;
+  --viz-div-gut-1: #1a3327; --viz-div-gut-2: #204d38;
+  --viz-div-gut-3: #276b4b; --viz-div-gut-4: #309362;
+  --viz-div-schlecht-1: #3a2224; --viz-div-schlecht-2: #582c2f;
+  --viz-div-schlecht-3: #80393c; --viz-div-schlecht-4: #b84a4d;
 }
 
 /* --- Grundgerüst (in Oxygen ersetzt du das durch deine eigenen Sektionen) ---
@@ -155,11 +166,11 @@
 * { box-sizing: border-box; }
 /* --viz-font ist auf .viz-root definiert und gilt hier noch nicht — die
    Seitenfläche gehört zur Seite, nicht zum Dashboard. Darum ausgeschrieben. */
-body { margin:0; background: #f9f9f7; font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif; }
+body { margin:0; background: #ffffff; font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif; }
 @media (prefers-color-scheme: dark) {
-  body:where(:not([data-theme="light"] body)) { background: #0d0d0d; }
+  body:where(:not([data-theme="light"] body)) { background: #131516; }
 }
-:root[data-theme="dark"] body { background: #0d0d0d; }
+:root[data-theme="dark"] body { background: #131516; }
 .viz-root { max-width: 1180px; margin: 0 auto; padding: 32px 20px 64px; color: var(--viz-text); font-family: var(--viz-font); }
 .viz-root h1 { font-family: var(--viz-font-display); font-size: 1.75rem; font-weight: var(--viz-fw-kpi); margin: 0 0 6px; letter-spacing: -0.01em; }
 .viz-root h2 { font-family: var(--viz-font-display); font-size: 1.0rem; margin: 0 0 2px; font-weight: var(--viz-fw-kraeftig); }
@@ -241,6 +252,9 @@ dialog.viz-dialog {
   max-width: 640px; width: calc(100% - 40px); font-family: var(--viz-font);
 }
 dialog.viz-dialog::backdrop { background: rgba(0,0,0,.35); }
+@media (prefers-color-scheme: dark) {
+  dialog.viz-dialog::backdrop { background: rgba(0,0,0,.68); }
+}
 dialog.viz-dialog h3 { margin: 0 0 4px; font-size: 1rem; }
 dialog.viz-dialog p { color: var(--viz-text-2); font-size: .84rem; line-height: 1.55; margin: 0 0 14px; }
 dialog.viz-dialog textarea {

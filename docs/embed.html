@@ -46,20 +46,48 @@
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 
-/* Dieselben Variablen wie im Dashboard — hier eingebettet, damit die Grafik
-   auch auf fremden Seiten richtig aussieht, egal welches CSS dort gilt. */
+/* Eigener Farbsatz, hier eingebettet, damit die Grafik auf fremden Seiten
+   richtig aussieht — egal welches CSS dort gilt.
+
+   BEWUSST BUNT, anders als das Dashboard (User-Entscheid 19.08.2026).
+   Eine eingebettete Grafik steht allein in einer fremden Seite und muss
+   ohne den Kontext des Dashboards lesbar sein; die monochrome Fassung von
+   arbeitsmarkt-monitor.at wird hier NICHT nachgezogen.
+
+   Nachgerechnet am 19.08.2026 (Rechenweg: dunkelmodus.md im Ordner
+   Dashboards). Gebessert wurde nur, was Sollwerte riss:
+     hell   --viz-muted     #898781 -> #76746e  (3,50 -> 4,55:1)
+            --viz-series-3  #1baf7a -> #1aa674  (2,74 -> 3,03:1)
+            --viz-series-4  #eda100 -> #b27300  (2,11 -> 3,83:1)
+            --viz-series-5  #e87ba4 -> #e56797  (2,62 -> 3,04:1)
+            --viz-div-gut-1 #dcefe4 -> #d7eee1  (dE 8,4 -> 10,3 zum Neutral)
+     dunkel --viz-series-5  #d55181 -> #d85e8b  (Deuteranopie gegen Serie 3:
+                                                 dE 5,2 -> 8,7)
+            --viz-muted ausgeschrieben; es fehlte und erbte still aus hell.
+   Bei Serie 4 reichte reines Abdunkeln nicht: #c48500 haette zwar den
+   Kontrast erfuellt, waere aber bei Deuteranopie von der orangen Serie 2
+   nicht mehr zu unterscheiden gewesen (dE 6,8 statt 8). #b27300 loest
+   beides — dafuer ist es ein dunkleres Gold statt eines hellen Bernsteins.
+   Bei den uebrigen blieben Farbton und Saettigung unangetastet, nur die
+   Helligkeit wanderte.
+
+   Damit erfuellen beide Schemata: alle sechs Serien ueber 3,0:1 gegen die
+   Karte, alle 15 Serienpaare ueber dE 8 bei Deuteranopie, alle Stufen der
+   divergierenden Rampe ueber dE 9,4.
+   Der Dunkelmodus folgt der Systemeinstellung des BETRACHTERS, nicht der
+   Gastgeberseite — ebenfalls Entscheid vom 19.08. */
 .viz-root {
   color-scheme: light;
   --viz-surface: #fcfcfb; --viz-plane: #f9f9f7;
-  --viz-text: #0b0b0b;    --viz-text-2: #52514e; --viz-muted: #898781;
+  --viz-text: #0b0b0b;    --viz-text-2: #52514e; --viz-muted: #76746e;
   --viz-grid: #e1e0d9;    --viz-axis: #c3c2b7;   --viz-border: rgba(11,11,11,0.10);
-  --viz-series-1: #2a78d6; --viz-series-2: #eb6834; --viz-series-3: #1baf7a;
-  --viz-series-4: #eda100; --viz-series-5: #e87ba4; --viz-series-6: #008300;
+  --viz-series-1: #2a78d6; --viz-series-2: #eb6834; --viz-series-3: #1aa674;
+  --viz-series-4: #b27300; --viz-series-5: #e56797; --viz-series-6: #008300;
   --viz-seq-1: #cde2fb; --viz-seq-2: #86b6ef; --viz-seq-3: #3987e5;
   --viz-seq-4: #256abf; --viz-seq-5: #184f95; --viz-seq-6: #0d366b;
   --viz-gut: #006300;   --viz-kritisch: #d03b3b;
   --viz-div-neutral: #f0efec;
-  --viz-div-gut-1: #dcefe4; --viz-div-gut-2: #a5d7bb;
+  --viz-div-gut-1: #d7eee1; --viz-div-gut-2: #a5d7bb;
   --viz-div-gut-3: #6ec293; --viz-div-gut-4: #2f9e63;
   --viz-div-schlecht-1: #f8ddd6; --viz-div-schlecht-2: #e8ae9f;
   --viz-div-schlecht-3: #cc6e58; --viz-div-schlecht-4: #a52a1f;
@@ -73,10 +101,10 @@
   .viz-root {
     color-scheme: dark;
     --viz-surface: #1a1a19; --viz-plane: #0d0d0d;
-    --viz-text: #ffffff;    --viz-text-2: #c3c2b7;
+    --viz-text: #ffffff;    --viz-text-2: #c3c2b7; --viz-muted: #898781;
     --viz-grid: #2c2c2a;    --viz-axis: #383835; --viz-border: rgba(255,255,255,0.10);
     --viz-series-1: #3987e5; --viz-series-2: #d95926; --viz-series-3: #199e70;
-    --viz-series-4: #c98500; --viz-series-5: #d55181; --viz-series-6: #008300;
+    --viz-series-4: #c98500; --viz-series-5: #d85e8b; --viz-series-6: #008300;
     --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
     --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
     --viz-gut: #0ca30c;   --viz-kritisch: #e66767;

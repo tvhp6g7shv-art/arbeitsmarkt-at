@@ -551,7 +551,14 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
     <p class="viz-unterzeile" style="margin-top:12px" id="h-eukarte"></p>
   </section>
 
-  <p class="viz-fuss" id="fuss"></p>
+  <!-- Quellenangabe, Definitionshinweis und Signatur sind der Fuß des
+       Dokuments, kein Absatz im Fließtext. Als <footer> ohne umgebendes
+       <main>/<article> ist das zugleich das contentinfo-Landmark, über
+       das Screenreader gezielt anspringen können.
+
+       kern.js greift weiter über getElementById("fuss") zu, das Aussehen
+       hängt an der Klasse — der Tagwechsel ändert an beidem nichts. -->
+  <footer class="viz-fuss" id="fuss"></footer>
 
   <dialog class="viz-dialog" id="einbett-dialog">
     <h3>Grafik einbetten</h3>

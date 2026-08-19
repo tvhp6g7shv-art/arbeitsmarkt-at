@@ -161,11 +161,17 @@ h2 { font-family: var(--viz-font-display); font-size: 1rem; margin: 0 0 2px; fon
   <p class="viz-unterzeile" id="untertitel">Daten werden geladen …</p>
   <div id="buehne"></div>
   <p class="viz-hinweisfeld" id="hinweisfeld"></p>
-  <p class="viz-quelle">
-    <span id="quelle"></span>
-    <span id="stand"></span>
-  </p>
-  <p class="viz-signatur" id="signatur"></p>
+  <!-- Quellenangabe und Signatur zusammen als Fuß der Grafik. Das
+       eingebettete Dokument ist eigenständig (eigenes <html> im iframe),
+       deshalb ist <footer> hier auch das contentinfo-Landmark.
+       Die beiden Absätze behalten ihre Klassen, das Aussehen bleibt. -->
+  <footer>
+    <p class="viz-quelle">
+      <span id="quelle"></span>
+      <span id="stand"></span>
+    </p>
+    <p class="viz-signatur" id="signatur"></p>
+  </footer>
 </div>
 
 <script>

@@ -13,7 +13,7 @@
    das ist die Bedingung der CC-BY-Lizenz der Datenquellen. */
 const EINBETT_HOEHEN = {
   zeitreihe: 460, ausbildung: 540, verlauf: 540, generationen: 460,
-  karte: 680, fluss: 460, dauer: 440, schulung: 420,
+  karte: 680, fluss: 460, dauer: 440, verfestigung: 520, schulung: 420,
   stellen: 440, branche: 560, eukarte: 680, eurang: 440,
 };
 const EINBETT_TITEL = {
@@ -24,6 +24,7 @@ const EINBETT_TITEL = {
   karte: "Entwicklung der Arbeitslosigkeit nach Bezirken gegenüber dem Vorjahr",
   fluss: "Zugänge und Abgänge in die Arbeitslosigkeit",
   dauer: "Dauer der bestehenden Arbeitslosigkeit",
+  verfestigung: "Wie lange Arbeitslosigkeit dauert — nach Alter",
   schulung: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",
   stellen: "Offene Stellen und Arbeitslose je offener Stelle",
   branche: "Arbeitslosigkeit nach Wirtschaftszweig",

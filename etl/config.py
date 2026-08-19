@@ -365,6 +365,18 @@ AUSBILDUNG_GRUPPEN = [
 ALTER_UNTERGRENZE = 15
 ALTER_OBERGRENZE = 74
 
+# Ab diesem Alter fasst die Verfestigungs-Auswertung die Gruppen zusammen.
+# Grund: "65 Jahre und älter" umfasst rund 840 Personen, keine 0,3 % aller
+# Arbeitslosen, trägt aber den höchsten Langzeitanteil der ganzen Tabelle.
+# Als eigener Balken wäre das die Zahl, die zitiert wird — eine Schlagzeile
+# auf wenigen hundert Fällen. Mit "60 bis unter 65" zusammengelegt stehen
+# rund 26.800 Personen dahinter.
+#
+# Die übrigen Abschnitte fassen AMS-Gruppen NICHT zusammen. Diese Abweichung
+# muss im Einordnungssatz des Abschnitts sichtbar bleiben, nicht nur hier.
+# Wer die Schwelle ändert, ändert damit auch die Achsenbeschriftung.
+VERFESTIGUNG_AB = 60
+
 GENERATIONEN = [
     ("alpha",  "Generation Alpha",     2013, 2100),
     ("z",      "Generation Z",         1997, 2012),

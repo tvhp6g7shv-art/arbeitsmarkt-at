@@ -379,7 +379,7 @@ async function start() {
      ihr Abschnitt in Sichtweite kommt — siehe `nachladenBeiSicht` unten. */
   const DATEIEN = ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke",
                    "bundeslaender", "karte", "generationen",
-                   "fluss", "dauer", "schulung", "eu", "eukarte",
+                   "fluss", "dauer", "verfestigung", "schulung", "eu", "eukarte",
                    "stellen", "branche"];
   const geladen = {};
   await Promise.all(DATEIEN.map(async (name) => {
@@ -393,6 +393,7 @@ async function start() {
   const karte = geladen.karte;
   const generationen = geladen.generationen, fluss = geladen.fluss;
   const dauer = geladen.dauer, schulung = geladen.schulung;
+  const verfestigung = geladen.verfestigung;
   const eu = geladen.eu, stellen = geladen.stellen, branche = geladen.branche;
   const eukarte = geladen.eukarte;
   /* `let`, nicht `const`: die Geometrie trifft erst beim Heranscrollen ein. */
@@ -428,6 +429,7 @@ async function start() {
     sicher("AMS-Bezirke", () => AMS.baueBezirke(bezirke, meta));
     sicher("Zu-/Abgänge", () => AMS.baueFluss(fluss));
     sicher("Vormerkdauer", () => AMS.baueDauer(dauer));
+    sicher("Verfestigung", () => AMS.baueVerfestigung(verfestigung));
     sicher("Schulungen", () => AMS.baueSchulung(schulung));
     sicher("EU-Rangliste", () => AMS.baueEuRang(eu));
     if (eukarteGeo) sicher("EU-Karte", () => AMS.baueEuKarte(eukarte, eukarteGeo));
@@ -512,10 +514,14 @@ async function start() {
   const ausgefallen = [...new Set([...FEHLER, ...FEHLENDE])];
   if (ausgefallen.length) {
     const feld = document.getElementById("fuss");
-    if (feld) feld.insertAdjacentHTML("beforeend",
+    /* Vor die Signatur, nicht dahinter: die Signaturzeile schließt den
+       Fuß ab und darf nicht von einer Fehlermeldung untertitelt werden. */
+    const meldung =
       `<br><span style="color:${stil("--viz-kritisch")}">Gerade nicht ` +
       `verfügbar: ${ausgefallen.join(", ")}. Die übrigen Angaben sind ` +
-      `davon unberührt.</span>`);
+      `davon unberührt.</span>`;
+    if (signatur) signatur.insertAdjacentHTML("beforebegin", meldung);
+    else if (feld) feld.insertAdjacentHTML("beforeend", meldung);
   }
   /* js/einbetten.js ist optional: embed.html laedt es nicht, und eine
      Gastgeberseite kann es weglassen. Ohne diesen Guard riss der Aufruf den
@@ -542,6 +548,8 @@ const AMS = {
   hole, basis, achse, tabelle, stil, zahl, pz, monat, deltaText,
   setzeText, setzeHtml, sicher, diagramme, baueFuss, kartenLayout,
   schrift, px, neuVermessen,
+  /* Ausgabestand — embed.html baut seinen Fuß selbst und holt sich die
+     Signatur hier ab, damit die Nummer nur an einer Stelle steht. */
   /* Breitenabhaengiges Layout — siehe „Schmale Fenster" oben */
   istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen,
   /* Hover an Balken: dunkler statt heller — siehe „Hover an Balken" oben */

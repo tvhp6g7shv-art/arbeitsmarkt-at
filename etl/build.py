@@ -22,6 +22,7 @@ enthält nur noch den Ablauf. Wer an einer einzelnen Auswertung arbeitet,
     eurostat.py      Quoten, EU-Vergleich/Rangliste, Inflation (eu.json)
     fluss.py         Zugänge/Abgänge (fluss.json)
     dauer.py         Vormerkdauer, Langzeit (dauer.json)
+    verfestigung.py  Vormerkdauer je Altersgruppe (verfestigung.json)
     schulung.py      Personen in Schulung (schulung.json)
     stellen.py       Offene Stellen, Andrang (stellen.json)
     branche.py       Wirtschaftszweige (branche.json)
@@ -50,6 +51,7 @@ import generationen
 import eurostat
 from fluss import baue_fluss
 from dauer import baue_dauer
+from verfestigung import baue_verfestigung
 from schulung import baue_schulung
 from stellen import baue_stellen
 from branche import baue_branche
@@ -109,6 +111,7 @@ def main() -> None:
     for name, wert in [
         ("fluss",     baue_fluss(daten)),
         ("dauer",     baue_dauer(LZBL.get("tabelle"))),
+        ("verfestigung", baue_verfestigung(ctx["aktueller_monat"])),
         ("schulung",  baue_schulung(mapping)),
         ("eu",        eurostat.hole_eurostat_vergleich()),
         ("stellen",   baue_stellen(daten, mapping)),

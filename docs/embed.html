@@ -10,19 +10,20 @@
      Diagramme. defer hält die Reihenfolge ein. Ziffer bei jedem Upload
      hochzählen (Browser-Cache). kpi und einbetten braucht die
      Einbettseite nicht. -->
-<script src="js/kern.js?v=29" defer></script>
-<script src="js/charts/zeitreihe.js?v=29" defer></script>
-<script src="js/charts/ausbildung.js?v=29" defer></script>
-<script src="js/charts/verlauf.js?v=29" defer></script>
-<script src="js/charts/generationen.js?v=29" defer></script>
-<script src="js/charts/karte.js?v=29" defer></script>
-<script src="js/charts/fluss.js?v=29" defer></script>
-<script src="js/charts/dauer.js?v=29" defer></script>
-<script src="js/charts/schulung.js?v=29" defer></script>
-<script src="js/charts/eukarte.js?v=29" defer></script>
-<script src="js/charts/eurang.js?v=29" defer></script>
-<script src="js/charts/stellen.js?v=29" defer></script>
-<script src="js/charts/branche.js?v=29" defer></script>
+<script src="js/kern.js?v=30" defer></script>
+<script src="js/charts/zeitreihe.js?v=30" defer></script>
+<script src="js/charts/ausbildung.js?v=30" defer></script>
+<script src="js/charts/verlauf.js?v=30" defer></script>
+<script src="js/charts/generationen.js?v=30" defer></script>
+<script src="js/charts/karte.js?v=30" defer></script>
+<script src="js/charts/fluss.js?v=30" defer></script>
+<script src="js/charts/dauer.js?v=30" defer></script>
+<script src="js/charts/verfestigung.js?v=30" defer></script>
+<script src="js/charts/schulung.js?v=30" defer></script>
+<script src="js/charts/eukarte.js?v=30" defer></script>
+<script src="js/charts/eurang.js?v=30" defer></script>
+<script src="js/charts/stellen.js?v=30" defer></script>
+<script src="js/charts/branche.js?v=30" defer></script>
 <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* ===================================================================
@@ -168,6 +169,7 @@ const CHARTS = {
   karte:        { titel: "Entwicklung der Arbeitslosigkeit nach Bezirken ggü. Vorjahr",              dateien: ["karte", "karte_geo"],       bau: (A, d) => A.baueKarte(d.karte, d.karte_geo), karte: true },
   fluss:        { titel: "Zugänge und Abgänge in die Arbeitslosigkeit",                    dateien: ["fluss"],                    bau: (A, d) => A.baueFluss(d.fluss) },
   dauer:        { titel: "Dauer der bestehenden Arbeitslosigkeit",                   dateien: ["dauer"],                    bau: (A, d) => A.baueDauer(d.dauer) },
+  verfestigung: { titel: "Wie lange Arbeitslosigkeit dauert — nach Alter",           dateien: ["verfestigung"],             bau: (A, d) => A.baueVerfestigung(d.verfestigung), hoch: true },
   schulung:     { titel: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",                   dateien: ["schulung"],                 bau: (A, d) => A.baueSchulung(d.schulung) },
   stellen:      { titel: "Offene Stellen und Arbeitslose je offener Stelle",      dateien: ["stellen"],                  bau: (A, d) => A.baueStellen(d.stellen) },
   branche:      { titel: "Arbeitslosigkeit nach Wirtschaftszweig",      dateien: ["branche"],                  bau: (A, d) => A.baueBranche(d.branche), hoch: true },
@@ -229,7 +231,6 @@ async function los() {
   document.getElementById("stand").textContent =
     meta?.stand_daten ? "Stand: " + new Date(meta.stand_daten)
       .toLocaleDateString("de-AT", { month: "long", year: "numeric" }) : "";
-
   /* Der iframe erbt die Schrift der Gastgeberseite nicht, lädt Figtree also
      selbst — und ECharts hat womöglich schon mit der Ersatzschrift gemessen.
      Darum nach dem Aufbau neu vermessen, sobald die Schrift steht. Danach

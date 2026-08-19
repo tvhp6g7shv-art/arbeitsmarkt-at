@@ -111,8 +111,19 @@ def lade_altersdaten(mapping: dict[str, dict]) -> pd.DataFrame | None:
             tabelle.groupby(["datum", spalte_vmd], as_index=False)["bestand"].sum()
             .rename(columns={spalte_vmd: "dauer"})
         )
+        # Zusätzlich die Kreuztabelle Alter x Vormerkdauer sichern — sie ist
+        # die einzige Stelle, an der beide Merkmale gemeinsam vorliegen.
+        # Ohne diese Zeile wäre die Verfestigungs-Auswertung auf einen
+        # zweiten Download derselben 80-MB-Datei angewiesen.
+        VORMERKDAUER["kreuz"] = (
+            tabelle.groupby(["datum", "altersgruppe", spalte_vmd],
+                            as_index=False)["bestand"].sum()
+            .rename(columns={spalte_vmd: "dauer"})
+        )
         log(f"    Vormerkdauergruppen: "
             f"{', '.join(sorted(tabelle[spalte_vmd].unique())[:8])}")
+        log(f"    Kreuztabelle Alter x Dauer: "
+            f"{len(VORMERKDAUER['kreuz']):,} Zeilen gesichert")
     else:
         warnen("Keine Vormerkdauer-Spalte gefunden — Verweildauer-Auswertung entfällt")
 

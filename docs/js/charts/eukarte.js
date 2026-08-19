@@ -78,11 +78,10 @@ function baueEuKarte(daten, geo) {
     (at && at.veraenderung_pp !== null && at.veraenderung_pp !== undefined
       ? `Österreich: ${vz(at.veraenderung_pp)} auf ${pz(at.quote)} %. `
       : "") +
-    "Prozentpunkte, nicht Prozent: von 4,0 auf 4,4 sind +0,4 %-Punkte. Diese Quoten " +
-    "folgen der EU-Definition und sind nicht mit den absoluten AMS-Zahlen weiter " +
-    "oben verrechenbar. Eurostat liefert die Reihe jährlich — die Karte ist " +
-    "deshalb weniger aktuell als die Monatszahlen. Überseegebiete sind aus " +
-    "Darstellungsgründen nicht gezeichnet, ihre Werte stecken im Landeswert.");
+    "Prozentpunkte, nicht Prozent: von 4,0 auf 4,4 sind +0,4 %-Punkte. Die Quoten " +
+    "folgen der EU-Definition und sind mit den AMS-Zahlen oben nicht " +
+    "verrechenbar. Eurostat liefert jährlich — die Karte ist weniger aktuell " +
+    "als die Monatszahlen.");
 
   const normalisieren = AMS.flaechenNormalisieren ?? ((g) => g);
   echarts.registerMap("eu-laender", normalisieren(geo));

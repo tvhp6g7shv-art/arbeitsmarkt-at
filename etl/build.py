@@ -195,11 +195,10 @@ def main() -> None:
             "verrechenbar."
         ),
         "hinweis_bezirke": (
-            "Die Bezirksangaben sind AMS-Geschäftsstellenbezirke (RGS), nicht "
-            "politische Bezirke. Die beiden Nummernsysteme unterscheiden sich: "
-            "RGSCode 102 ist Mattersburg, Bezirkskennziffer 102 ist Rust. Wien "
-            "ist beim AMS in rund 15 Geschäftsstellen aufgeteilt. Die Karte "
-            "zeigt daher Bundesländer; Bezirkswerte stehen in der Tabelle."
+            "AMS-Geschäftsstellenbezirke (RGS), nicht politische Bezirke: "
+            "RGS 102 ist Mattersburg, Bezirk 102 ist Rust. Wien hat rund 15 "
+            "Geschäftsstellen. Die Karte zeigt Bundesländer, Bezirkswerte "
+            "die Tabelle."
         ),
         "einbettung": config.EINBETTUNG,
         "schema": SCHEMA_REPORT,

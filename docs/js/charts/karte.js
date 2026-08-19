@@ -94,9 +94,9 @@ function baueKarte(karte, geo) {
         `Stärkster Anstieg: ${staerkster_anstieg.name} ` +
         `(+${pz(staerkster_anstieg.veraenderung_pct)} %). `
       : "") +
-    "Die Farbe zeigt nur die Richtung und Stärke der Veränderung. " +
+    "Die Farbe zeigt nur Richtung und Stärke der Veränderung. " +
     "Ein hoher Anstieg in einem kleinen Bezirk kann wenige hundert Personen " +
-    "bedeuten — die absoluten Zahlen stehen in der Tabelle.");
+    "bedeuten — absolute Zahlen in der Tabelle.");
 
   echarts.registerMap("at-bezirke", flaechenNormalisieren(geo));
   const d = echarts.init(feld, null, { renderer: "canvas" });

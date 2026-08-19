@@ -229,11 +229,9 @@ def baue_generationen(daten: pd.DataFrame, aktueller_monat, vorjahresmonat) -> d
     return {
         "stand": m(aktueller_monat),
         "hinweis": (
-            "Generationen sind Geburtsjahrgänge, das AMS liefert Altersgruppen. "
-            "Jede Altersgruppe wurde der Generation mit der größten Überschneidung "
-            "zugeordnet und für jeden Monat neu berechnet. An den Rändern zweier "
-            "Generationen ist die Zuordnung daher unscharf. Die exakten "
-            "Altersgruppen stehen in der Tabelle."
+            "Das AMS liefert Altersgruppen, keine Geburtsjahrgänge. Jede wurde "
+            "der Generation mit der größten Überschneidung zugeordnet — an den "
+            "Rändern unscharf. Exakte Gruppen in der Tabelle."
         ),
         "generationen": eintraege,
         "je_bundesland": je_bundesland,

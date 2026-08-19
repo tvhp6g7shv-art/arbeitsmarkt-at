@@ -43,8 +43,8 @@ def baue_schulung(mapping: dict) -> dict | None:
         "stand": pd.Timestamp(letzte.index[-1]).strftime("%Y-%m-%d"),
         "hinweis": (
             "Schulungsteilnehmer:innen gelten nicht als arbeitslos, sind aber "
-            "beim AMS vorgemerkt. Arbeitslose plus Schulungen ergibt die Zahl, "
-            "die in Medienberichten meist als „vorgemerkte Personen“ steht."
+            "vorgemerkt. Arbeitslose plus Schulungen ergibt die in Medien "
+            "meist genannten „vorgemerkten Personen“."
         ),
         "bestand": int(aktuell),
         "veraenderung_pct": prozent(aktuell, alt) if alt else None,

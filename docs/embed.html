@@ -10,20 +10,20 @@
      Diagramme. defer hält die Reihenfolge ein. Ziffer bei jedem Upload
      hochzählen (Browser-Cache). kpi und einbetten braucht die
      Einbettseite nicht. -->
-<script src="js/kern.js?v=31" defer></script>
-<script src="js/charts/zeitreihe.js?v=31" defer></script>
-<script src="js/charts/ausbildung.js?v=31" defer></script>
-<script src="js/charts/verlauf.js?v=31" defer></script>
-<script src="js/charts/generationen.js?v=31" defer></script>
-<script src="js/charts/karte.js?v=31" defer></script>
-<script src="js/charts/fluss.js?v=31" defer></script>
-<script src="js/charts/dauer.js?v=31" defer></script>
-<script src="js/charts/verfestigung.js?v=31" defer></script>
-<script src="js/charts/schulung.js?v=31" defer></script>
-<script src="js/charts/eukarte.js?v=31" defer></script>
-<script src="js/charts/eurang.js?v=31" defer></script>
-<script src="js/charts/stellen.js?v=31" defer></script>
-<script src="js/charts/branche.js?v=31" defer></script>
+<script src="js/kern.js?v=32" defer></script>
+<script src="js/charts/zeitreihe.js?v=32" defer></script>
+<script src="js/charts/ausbildung.js?v=32" defer></script>
+<script src="js/charts/verlauf.js?v=32" defer></script>
+<script src="js/charts/generationen.js?v=32" defer></script>
+<script src="js/charts/karte.js?v=32" defer></script>
+<script src="js/charts/fluss.js?v=32" defer></script>
+<script src="js/charts/dauer.js?v=32" defer></script>
+<script src="js/charts/verfestigung.js?v=32" defer></script>
+<script src="js/charts/schulung.js?v=32" defer></script>
+<script src="js/charts/eukarte.js?v=32" defer></script>
+<script src="js/charts/eurang.js?v=32" defer></script>
+<script src="js/charts/stellen.js?v=32" defer></script>
+<script src="js/charts/branche.js?v=32" defer></script>
 <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* ===================================================================
@@ -139,6 +139,17 @@ h2 { font-family: var(--viz-font-display); font-size: 1rem; margin: 0 0 2px; fon
   display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
 }
 .viz-quelle a { color: inherit; }
+
+/* Signaturzeile — identisch zu index.html, nur eine Spur kleiner, weil
+   die eingebettete Grafik insgesamt kleiner gesetzt ist. Inhalt kommt
+   aus AMS.signaturHtml(), damit die Versionsnummer nur in kern.js steht. */
+.viz-signatur {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px;
+  margin: 8px 0 0; padding-top: 8px; border-top: 1px solid var(--viz-grid);
+  color: var(--viz-muted); font-size: .72rem; line-height: 1.5;
+}
+.viz-signatur a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.viz-signatur-teiler { opacity: .5; }
 </style>
 <!-- Webanalyse: GoatCounter — cookielos, kein Consent-Banner nötig. Zählt
      Einbettungen auf fremden Seiten; ?chart=<name> steht mit im Pfad. -->
@@ -154,6 +165,7 @@ h2 { font-family: var(--viz-font-display); font-size: 1rem; margin: 0 0 2px; fon
     <span id="quelle"></span>
     <span id="stand"></span>
   </p>
+  <p class="viz-signatur" id="signatur"></p>
 </div>
 
 <script>
@@ -231,6 +243,13 @@ async function los() {
   document.getElementById("stand").textContent =
     meta?.stand_daten ? "Stand: " + new Date(meta.stand_daten)
       .toLocaleDateString("de-AT", { month: "long", year: "numeric" }) : "";
+
+  /* Signatur aus kern.js — Guard, weil eine Gastgeberseite eine ältere
+     kern.js im Cache haben kann; dann fehlt nur diese Zeile, statt dass
+     der Aufbau hier abreißt. */
+  if (typeof A.signaturHtml === "function")
+    document.getElementById("signatur").innerHTML = A.signaturHtml();
+
   /* Der iframe erbt die Schrift der Gastgeberseite nicht, lädt Figtree also
      selbst — und ECharts hat womöglich schon mit der Ersatzschrift gemessen.
      Darum nach dem Aufbau neu vermessen, sobald die Schrift steht. Danach

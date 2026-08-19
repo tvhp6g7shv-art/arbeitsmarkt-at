@@ -237,6 +237,23 @@ table.viz-tabelle td.num, table.viz-tabelle th.num { text-align: right; }
 
 .viz-fuss { color: var(--viz-muted); font-size: .78rem; line-height: 1.6; margin-top: 28px; }
 .viz-fuss a { color: inherit; }
+
+/* Signaturzeile: Herkunft, Urheber, Ausgabestand. Von kern.js gefüllt
+   (signaturHtml), damit die Versionsnummer nur an einer Stelle steht.
+
+   flex + wrap statt eines Fließtexts mit „|": auf schmalen Fenstern
+   bricht die Zeile dann zwischen den Teilen um und nicht mitten im
+   Namen. Die Teiler sind eigene Elemente, weil sie beim Umbruch am
+   Zeilenende stehen bleiben sollen und für Screenreader nichts
+   bedeuten (aria-hidden im Markup). */
+.viz-signatur {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px;
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--viz-grid);
+}
+.viz-signatur a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.viz-signatur a:hover { color: var(--viz-text-2); }
+.viz-signatur-teiler { opacity: .5; }
 .viz-hinweis { background: var(--viz-surface); border: 1px solid var(--viz-border); border-left: 3px solid var(--viz-series-2); border-radius: 7px; padding: 13px 16px; font-size: .83rem; color: var(--viz-text-2); margin-bottom: var(--viz-gap); }
 
 /* --- Einbetten --- */
@@ -565,24 +582,24 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
      NICHT VERWECHSELN mit der Ausgabenummer „V NN" in der Fußzeile:
      die steht in VERSION in js/kern.js, zählt nur sichtbare
      Änderungen und ist an diese Ziffer hier nicht gekoppelt. -->
-<script src="js/kern.js?v=31" defer></script>
-<script src="js/charts/kpi.js?v=31" defer></script>
-<script src="js/charts/zeitreihe.js?v=31" defer></script>
-<script src="js/charts/ausbildung.js?v=31" defer></script>
-<script src="js/charts/verlauf.js?v=31" defer></script>
-<script src="js/charts/generationen.js?v=31" defer></script>
-<script src="js/charts/karte.js?v=31" defer></script>
-<script src="js/charts/bezirke.js?v=31" defer></script>
-<script src="js/charts/bundeslaender.js?v=31" defer></script>
-<script src="js/charts/fluss.js?v=31" defer></script>
-<script src="js/charts/dauer.js?v=31" defer></script>
-<script src="js/charts/verfestigung.js?v=31" defer></script>
-<script src="js/charts/schulung.js?v=31" defer></script>
-<script src="js/charts/eukarte.js?v=31" defer></script>
-<script src="js/charts/eurang.js?v=31" defer></script>
-<script src="js/charts/stellen.js?v=31" defer></script>
-<script src="js/charts/branche.js?v=31" defer></script>
-<script src="js/einbetten.js?v=31" defer></script>
+<script src="js/kern.js?v=32" defer></script>
+<script src="js/charts/kpi.js?v=32" defer></script>
+<script src="js/charts/zeitreihe.js?v=32" defer></script>
+<script src="js/charts/ausbildung.js?v=32" defer></script>
+<script src="js/charts/verlauf.js?v=32" defer></script>
+<script src="js/charts/generationen.js?v=32" defer></script>
+<script src="js/charts/karte.js?v=32" defer></script>
+<script src="js/charts/bezirke.js?v=32" defer></script>
+<script src="js/charts/bundeslaender.js?v=32" defer></script>
+<script src="js/charts/fluss.js?v=32" defer></script>
+<script src="js/charts/dauer.js?v=32" defer></script>
+<script src="js/charts/verfestigung.js?v=32" defer></script>
+<script src="js/charts/schulung.js?v=32" defer></script>
+<script src="js/charts/eukarte.js?v=32" defer></script>
+<script src="js/charts/eurang.js?v=32" defer></script>
+<script src="js/charts/stellen.js?v=32" defer></script>
+<script src="js/charts/branche.js?v=32" defer></script>
+<script src="js/einbetten.js?v=32" defer></script>
 
 <script>
 /* Startet das Dashboard, sobald ECharts und die js/-Module geladen sind. */

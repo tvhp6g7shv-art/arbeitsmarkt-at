@@ -20,6 +20,29 @@
    ===================================================================== */
 let DATEN_BASIS = "./data";   // In Oxygen: "https://DEIN-GITHUB-NAME.github.io/arbeitsmarkt-at/data"
 
+/* --- Ausgabestand ----------------------------------------------------
+   EINZIGE Quelle für die Fußzeilen-Signatur. index.html, embed.html und
+   die WordPress-Seite lesen alle diese Datei, also steht die Nummer nur
+   hier — nicht im Markup.
+
+   Was die Nummer zählt: sichtbare Ausgaben. Hochzählen, wenn sich für
+   Besucher etwas ändert (neues Diagramm, neue Darstellung, neuer
+   Abschnitt). NICHT hochzählen bei der täglichen Datenaktualisierung
+   (die zeigt `stand_daten` aus meta.json) und nicht bei reinen
+   Fehlerbehebungen — dafür ist die `?v=NN`-Cacheziffer in index.html
+   und embed.html zuständig, die eine andere Zählung führt.
+
+   BEIM HOCHZÄHLEN: `datum` und `datum_text` mitziehen und denselben
+   Eintrag in doku/changelog.md sowie auf der Seite /changelog/
+   ergänzen. Sonst behauptet die Fußzeile einen Stand, den der
+   Changelog nicht kennt. */
+const VERSION = {
+  nummer:     "02",                   // 02: Abschnitt „Wie lange Arbeitslosigkeit dauert — nach Alter"
+  datum:      "2026-08-19",           // maschinenlesbar, für <time datetime>
+  datum_text: "19. August 2026",      // sichtbar
+  changelog:  "https://arbeitsmarkt-monitor.at/changelog/",
+};
+
 /* --- Hilfsmittel ------------------------------------------------------
    wurzel ist das Element, von dem ALLE Farb- und Größentoken gelesen
    werden. Es darf nie null werden: stil() läuft in jedem Diagrammmodul
@@ -357,12 +380,36 @@ function sicher(name, aufruf) {
   }
 }
 
+/* --- Signaturzeile ---------------------------------------------------
+   Herkunft, Urheber und Ausgabestand in einer Zeile. Steht in allen drei
+   Auslieferungen identisch (index.html, embed.html, WordPress), deshalb
+   hier gebaut und nicht dreimal ins Markup geschrieben.
+
+   Die Versionsnummer verlinkt auf den Changelog: ohne Link ist sie eine
+   Ziffer ohne Bedeutung — mit Link ist sie der Einstieg in die Historie.
+
+   `rel="noopener"` bei target="_blank" ist Pflicht, sonst bekommt die
+   Zielseite über window.opener Zugriff auf diese hier. */
+function signaturHtml() {
+  return (
+    `<a href="https://arbeitsmarkt-monitor.at/" target="_blank" rel="noopener">arbeitsmarkt-monitor.at</a>` +
+    `<span class="viz-signatur-teiler" aria-hidden="true">|</span>` +
+    `Ein Projekt von Philip Reitsperger` +
+    `<span class="viz-signatur-teiler" aria-hidden="true">|</span>` +
+    `<a href="${VERSION.changelog}" target="_blank" rel="noopener" ` +
+    `title="Was sich in dieser Ausgabe geändert hat">V ${VERSION.nummer}</a>` +
+    `<span class="viz-signatur-teiler" aria-hidden="true">|</span>` +
+    `<time datetime="${VERSION.datum}">${VERSION.datum_text}</time>`
+  );
+}
+
 /* --- Quellenangabe (CC BY 4.0 verlangt Namensnennung) ---------------- */
 function baueFuss(meta) {
   document.getElementById("fuss").innerHTML =
     "Datenquellen: " +
     meta.quellen.map((q) => `<a href="${q.url}" target="_blank" rel="noopener">${q.name}</a> (${q.lizenz})`).join(" · ") +
-    `<br>${meta.hinweis_definitionen}`;
+    `<br>${meta.hinweis_definitionen}` +
+    `<span class="viz-signatur">${signaturHtml()}</span>`;
 }
 
 /* =====================================================================
@@ -516,6 +563,7 @@ async function start() {
     const feld = document.getElementById("fuss");
     /* Vor die Signatur, nicht dahinter: die Signaturzeile schließt den
        Fuß ab und darf nicht von einer Fehlermeldung untertitelt werden. */
+    const signatur = feld?.querySelector(".viz-signatur");
     const meldung =
       `<br><span style="color:${stil("--viz-kritisch")}">Gerade nicht ` +
       `verfügbar: ${ausgefallen.join(", ")}. Die übrigen Angaben sind ` +
@@ -550,6 +598,7 @@ const AMS = {
   schrift, px, neuVermessen,
   /* Ausgabestand — embed.html baut seinen Fuß selbst und holt sich die
      Signatur hier ab, damit die Nummer nur an einer Stelle steht. */
+  VERSION, signaturHtml,
   /* Breitenabhaengiges Layout — siehe „Schmale Fenster" oben */
   istSchmal, balkenGitter, kategorieLabel, legende, endLabelZeigen,
   /* Hover an Balken: dunkler statt heller — siehe „Hover an Balken" oben */

@@ -1,0 +1,19 @@
+{
+  "hinweis": "Zustand des Bluesky-Bots. Eine Ausgabe, die hier steht, wird nicht mehr gepostet. V 01 und V 02 sind vor Inbetriebnahme des Bots erschienen und deshalb vorab eingetragen — ohne diesen Vorlauf haette der erste scharfe Lauf die gesamte Versionsgeschichte in die Timeline gekippt. Soll eine dieser Ausgaben doch noch gepostet werden, den Eintrag hier loeschen.",
+  "gepostet": [
+    {
+      "nummer": "01",
+      "datum": "2026-08-19",
+      "gepostet_am": null,
+      "url": null,
+      "grund": "Vorgeschichte — vor Inbetriebnahme des Bots erschienen"
+    },
+    {
+      "nummer": "02",
+      "datum": "2026-08-19",
+      "gepostet_am": null,
+      "url": null,
+      "grund": "Vorgeschichte — vor Inbetriebnahme des Bots erschienen"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+name: Bluesky — neue Ausgabe posten
+
+# Ausgeloest wird nicht nach der Uhr, sondern von der Quelle: sobald
+# docs/data/changelog.json auf main landet, laeuft der Bot. Kein Cron, kein
+# Nachschauen, kein Zustand, der zwischen zwei Laeufen auseinanderdriftet.
+#
+# Der taegliche ETL-Automat schreibt nur nach docs/data/*.json AUSSER
+# changelog.json — der paths-Filter faengt ihn also nicht.
+#
+# Der Commit ist die Freigabe: Wer einen Eintrag mit "veroeffentlicht": true
+# pusht, hat den Text selbst geschrieben.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/data/changelog.json"
+  workflow_dispatch:
+    inputs:
+      senden:
+        description: 'Wirklich posten? "ja" schaltet scharf, alles andere ist Trockenlauf'
+        required: true
+        default: "nein"
+
+concurrency:
+  # Zwei gleichzeitige Laeufe wuerden denselben Eintrag zweimal posten und
+  # sich beim Zurueckschreiben des Zustands gegenseitig ueberholen.
+  group: social-changelog
+  cancel-in-progress: false
+
+jobs:
+  posten:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Repository holen
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Abhängigkeiten installieren
+        run: |
+          pip install -r social/requirements.txt
+          python -m playwright install --with-deps chromium
+
+      # Zuerst die billigen Pruefungen. Fallen sie durch, wird gar nicht erst
+      # ein Browser gestartet und nichts gepostet.
+      - name: Versionsstände abgleichen
+        run: python social/pruefe_version.py
+
+      - name: changelog.json validieren
+        run: python social/posten.py --pruefen
+
+      # Ohne Bild: der Renderjob wartet notfalls fuenf Minuten auf Pages und
+      # startet einen Browser. Das gleich zweimal zu tun — einmal trocken,
+      # einmal scharf — verdoppelt die Laufzeit ohne Erkenntnisgewinn.
+      - name: Trockenlauf (Text und Facets)
+        run: python social/posten.py --ohne-bild
+
+      - name: Posten
+        if: github.event_name == 'push' || github.event.inputs.senden == 'ja'
+        env:
+          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
+          BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
+        run: python social/posten.py --senden
+
+      - name: Zustand übernehmen
+        if: github.event_name == 'push' || github.event.inputs.senden == 'ja'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add social/gepostet.json
+          if git diff --staged --quiet; then
+            echo "Kein neuer Beitrag — Zustand unverändert."
+          else
+            git commit -m "Bluesky: Ausgabe gepostet ($(date -u '+%Y-%m-%d'))"
+            # Der ETL-Automat pusht taeglich dazwischen, deshalb erst rebasen.
+            git fetch origin main
+            git rebase origin/main
+            git push
+          fi

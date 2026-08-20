@@ -37,9 +37,9 @@ let DATEN_BASIS = "./data";   // In Oxygen: "https://DEIN-GITHUB-NAME.github.io/
    ergänzen. Sonst behauptet die Fußzeile einen Stand, den der
    Changelog nicht kennt. */
 const VERSION = {
-  nummer:     "02",                   // 02: Abschnitt „Wie lange Arbeitslosigkeit dauert — nach Alter"
-  datum:      "2026-08-19",           // maschinenlesbar, für <time datetime>
-  datum_text: "19. August 2026",      // sichtbar
+  nummer:     "03",                   // 03: Abschnitt „Zwei Österreichs: Wann das Jahr schlecht läuft"
+  datum:      "2026-08-20",           // maschinenlesbar, für <time datetime>
+  datum_text: "20. August 2026",      // sichtbar
   changelog:  "https://arbeitsmarkt-monitor.at/changelog/",
 };
 
@@ -427,7 +427,7 @@ async function start() {
   const DATEIEN = ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke",
                    "bundeslaender", "karte", "generationen",
                    "fluss", "dauer", "verfestigung", "schulung", "eu", "eukarte",
-                   "stellen", "branche"];
+                   "stellen", "branche", "selbstaendige"];
   const geladen = {};
   await Promise.all(DATEIEN.map(async (name) => {
     geladen[name] = await hole(name).catch(() => null);
@@ -443,6 +443,7 @@ async function start() {
   const verfestigung = geladen.verfestigung;
   const eu = geladen.eu, stellen = geladen.stellen, branche = geladen.branche;
   const eukarte = geladen.eukarte;
+  const selbstaendige = geladen.selbstaendige;
   /* `let`, nicht `const`: die Geometrie trifft erst beim Heranscrollen ein. */
   let geo = null, eukarteGeo = null;
 
@@ -473,6 +474,7 @@ async function start() {
        Neubau nach einem Breitenwechsel kann das noch fehlen. */
     if (geo) sicher("Karte", () => AMS.baueKarte(karte, geo));
     sicher("Bundesländer", () => AMS.baueLaender(laender));
+    sicher("Saisonfigur", () => AMS.baueSaison(laender));
     sicher("AMS-Bezirke", () => AMS.baueBezirke(bezirke, meta));
     sicher("Zu-/Abgänge", () => AMS.baueFluss(fluss));
     sicher("Vormerkdauer", () => AMS.baueDauer(dauer));
@@ -482,6 +484,7 @@ async function start() {
     if (eukarteGeo) sicher("EU-Karte", () => AMS.baueEuKarte(eukarte, eukarteGeo));
     sicher("Offene Stellen", () => AMS.baueStellen(stellen));
     sicher("Branchen", () => AMS.baueBranche(branche));
+    sicher("Selbständige", () => AMS.baueSelbstaendige(selbstaendige));
   }
   baueAlles();
   beiBreitenwechsel(baueAlles);

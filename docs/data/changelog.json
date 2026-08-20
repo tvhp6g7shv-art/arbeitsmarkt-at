@@ -1,5 +1,5 @@
 {
-  "hinweis": "Maschinenlesbare Quelle des Changelogs. Wird NICHT von etl/build.py erzeugt und nicht von ihr angefasst — build.py schreibt ausschliesslich die Namen aus seinem ausgaben-Woerterbuch und loescht nichts. Beim Hochzaehlen einer Ausgabe hier oben einen neuen Eintrag ergaenzen. Der Bluesky-Bot liest diese Datei; siehe doku/changelog-bot.md.",
+  "hinweis": "Maschinenlesbare Quelle des Changelogs. Wird NICHT von etl/build.py erzeugt und nicht von ihr angefasst — build.py schreibt ausschliesslich die Namen aus seinem ausgaben-Woerterbuch und loescht nichts. Beim Hochzaehlen einer Ausgabe hier oben einen neuen Eintrag ergaenzen. Der Bluesky-Bot liest diese Datei; siehe doku/changelog-bot.md. — Seit 20.08.2026 rendert auch die Changelog-Seite auf arbeitsmarkt-monitor.at aus dieser Datei (Feld `seite`, ein Absatz je Eintrag). Wer hier eine Ausgabe ergaenzt, ergaenzt damit Seite, Fusszeile und Bluesky in einem Zug.",
   "aktuell": "03",
   "basis_url": "https://arbeitsmarkt-monitor.at",
   "changelog_url": "https://arbeitsmarkt-monitor.at/changelog/",
@@ -7,24 +7,26 @@
   "ausgaben": [
     {
       "nummer": "03",
-      "datum": "2026-08-24",
-      "datum_text": "24. August 2026",
-      "titel": "Zwei Österreichs — und die Zahl, die niemand erhebt",
-      "veroeffentlicht": false,
+      "datum": "2026-08-20",
+      "datum_text": "20. August 2026",
+      "titel": "Zwei Österreichs: Wann das Jahr schlecht läuft",
+      "veroeffentlicht": true,
       "cacheziffer": 34,
-      "charts": ["saison", "selbstaendige"],
-      "social": "Neu: Es gibt nicht eine österreichische Saisonfigur, sondern zwei. Tirol hat sein Jahrestief im Juli, bei −27 % — im Osten ist der Winter der schlechteste Teil des Jahres.\n\nDazu: Selbständige in der Arbeitslosenstatistik.\n\nhttps://arbeitsmarkt-monitor.at/changelog/",
+      "charts": [
+        "saison"
+      ],
+      "social": "Neu: Es gibt nicht eine österreichische Saisonfigur, sondern zwei. In Kärnten ist der Jänner der schlechteste Monat des Jahres, in Tirol der April: einmal gibt der Bau den Takt vor, einmal der Tourismus.\n\nhttps://arbeitsmarkt-monitor.at/changelog/",
       "abschnitte": [
         {
           "chart": "saison",
           "titel": "Zwei Österreichs: Wann das Jahr schlecht läuft",
           "alt": "Neun kleine Liniendiagramme, eines je Bundesland, alle auf derselben Skala. Sie zeigen die Saisonfigur der Arbeitslosigkeit im Jahresverlauf. In Kärnten, Burgenland, Steiermark, Ober- und Niederösterreich sowie Wien liegt die Spitze im Winter. In Tirol, Salzburg und Vorarlberg liegen die Spitzen in den Zwischensaisonen April und November; Tirol hat sein Jahrestief im Juli bei minus 27 Prozent."
-        },
-        {
-          "chart": "selbstaendige",
-          "titel": "Selbständig und arbeitslos — die Zahl, die niemand erhebt",
-          "alt": "Zwei liegende Balken, jeder auf 100 Prozent normiert. Oben: von 4,1 Millionen Erwerbstätigen stehen nur 3,5 Millionen im Nenner der nationalen Arbeitslosenquote. Unten: von 244.900 Arbeitslosen nach ILO-Definition waren 67.800 oder 27,7 Prozent gar nicht beim AMS vorgemerkt."
         }
+      ],
+      "seite": [
+        "Neuer Abschnitt „Zwei Österreichs: Wann das Jahr schlecht läuft“: neun kleine Liniendiagramme, eines je Bundesland, alle auf derselben Skala. Sie zeigen, wie stark die Arbeitslosigkeit im Jahresverlauf vom eigenen Zwölfmonatstrend abweicht — und dass es dabei nicht eine österreichische Saisonfigur gibt, sondern zwei.",
+        "In Kärnten, im Burgenland, in der Steiermark, in Ober- und Niederösterreich sowie in Wien hat das Jahr einen Berg, und der liegt im Winter: dort gibt der Bau den Takt vor. In Tirol, Salzburg und Vorarlberg sind es zwei — April und November, die Zwischensaisonen des Tourismus. Die Einteilung ist nicht verdrahtet, sondern wird aus den Daten gerechnet.",
+        "Der Abschnitt braucht keine eigene Datendatei: die Saisonfigur entsteht im Browser aus den Sparklines, die ohnehin geladen werden. Er zieht damit bei jeder Datenaktualisierung von selbst nach."
       ]
     },
     {
@@ -34,7 +36,9 @@
       "titel": "Wie lange Arbeitslosigkeit dauert — nach Alter",
       "veroeffentlicht": true,
       "cacheziffer": 32,
-      "charts": ["verfestigung"],
+      "charts": [
+        "verfestigung"
+      ],
       "social": "Neu: Wie lange Arbeitslosigkeit dauert — nach Alter. Unter den Jüngsten sind 0,3 % länger als ein Jahr vorgemerkt, ab 60 sind es 38,5 %. Über zehn Altersgruppen ohne einen einzigen Rückschritt.\n\nhttps://arbeitsmarkt-monitor.at/changelog/",
       "abschnitte": [
         {
@@ -42,6 +46,10 @@
           "titel": "Wie lange Arbeitslosigkeit dauert — nach Alter",
           "alt": "Zehn gestapelte Balken, einer je Altersgruppe, aufgeteilt in drei Dauerklassen. Der Anteil der über ein Jahr Vorgemerkten steigt von 0,3 Prozent bei den unter 20-Jährigen auf 38,5 Prozent ab 60 Jahren, über alle Altersgruppen hinweg ohne Rückschritt."
         }
+      ],
+      "seite": [
+        "Neuer Abschnitt „Wie lange Arbeitslosigkeit dauert — nach Alter“: zehn Altersgruppen, drei Dauerklassen. Der Anteil der länger als ein Jahr Vorgemerkten steigt von 0,3&nbsp;% bei den unter 20-Jährigen auf 38,5&nbsp;% ab 60 — über alle Altersgruppen hinweg ohne einen einzigen Rückschritt.",
+        "Dazu die Fußzeile mit dem Ausgabestand: Jede Grafik nennt jetzt Herkunft, Urheber und Ausgabe — und verweist von dort auf diese Seite."
       ]
     },
     {
@@ -53,7 +61,10 @@
       "cacheziffer": 31,
       "charts": [],
       "social": null,
-      "abschnitte": []
+      "abschnitte": [],
+      "seite": [
+        "Erste gezählte Ausgabe. Sie markiert nicht den Beginn der Arbeit, sondern den Beginn der Zählung: ab hier ist jede sichtbare Änderung nachlesbar. Enthalten sind der Dunkelmodus, der der Systemeinstellung des Betrachters folgt, die einheitliche Farbgebung — die Diagramme dieser Website sind monochrom, eingebettete Grafiken bleiben bewusst farbig, weil sie auf fremden Seiten allein stehen — und 14 Abschnitte von der Monatsentwicklung über Bezirke, Ausbildung und Generationen bis zum EU-Vergleich."
+      ]
     }
   ]
 }

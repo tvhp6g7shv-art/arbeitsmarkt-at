@@ -24,9 +24,8 @@
         }
       ],
       "seite": [
-        "Neuer Abschnitt „Zwei Österreichs: Wann das Jahr schlecht läuft“: neun kleine Liniendiagramme, eines je Bundesland, alle auf derselben Skala. Sie zeigen, wie stark die Arbeitslosigkeit im Jahresverlauf vom eigenen Zwölfmonatstrend abweicht — und dass es dabei nicht eine österreichische Saisonfigur gibt, sondern zwei.",
-        "In Kärnten, im Burgenland, in der Steiermark, in Ober- und Niederösterreich sowie in Wien hat das Jahr einen Berg, und der liegt im Winter: dort gibt der Bau den Takt vor. In Tirol, Salzburg und Vorarlberg sind es zwei — April und November, die Zwischensaisonen des Tourismus. Die Einteilung ist nicht verdrahtet, sondern wird aus den Daten gerechnet.",
-        "Der Abschnitt braucht keine eigene Datendatei: die Saisonfigur entsteht im Browser aus den Sparklines, die ohnehin geladen werden. Er zieht damit bei jeder Datenaktualisierung von selbst nach."
+        "Neuer Abschnitt „Zwei Österreichs: Wann das Jahr schlecht läuft“: neun kleine Liniendiagramme, eines je Bundesland, alle auf derselben Skala. Sie zeigen, wie stark die Arbeitslosigkeit im Jahresverlauf vom eigenen Zwölfmonatstrend abweicht.",
+        "Es gibt dabei nicht eine österreichische Saisonfigur, sondern zwei. In Kärnten, im Burgenland, in der Steiermark, in Ober- und Niederösterreich sowie in Wien hat das Jahr einen Berg, und der liegt im Winter. In Tirol, Salzburg und Vorarlberg sind es zwei, April und November. Der schlechteste Monat ist also nicht überall derselbe: in Kärnten der Jänner, in Tirol der April."
       ]
     },
     {

@@ -10,3 +10,6 @@ venv/
 
 # Hinweis: docs/data/ NICHT ignorieren — die JSON-Dateien werden vom
 # GitHub-Actions-Workflow committet und von der Oxygen-Seite geladen.
+
+# Renderproben des Bluesky-Bots — Ausgabe, keine Quelle
+social/bilder/

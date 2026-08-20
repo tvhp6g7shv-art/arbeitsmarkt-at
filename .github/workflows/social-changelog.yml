@@ -21,6 +21,10 @@ on:
         description: 'Wirklich posten? "ja" schaltet scharf, alles andere ist Trockenlauf'
         required: true
         default: "nein"
+      chart:
+        description: 'Nur fuer die Renderprobe: Grafikname, z. B. verfestigung. Leer = die Grafiken der obersten Ausgabe'
+        required: false
+        default: ""
 
 concurrency:
   # Zwei gleichzeitige Laeufe wuerden denselben Eintrag zweimal posten und
@@ -48,6 +52,47 @@ jobs:
         run: |
           pip install -r social/requirements.txt
           python -m playwright install --with-deps chromium
+
+      # Renderprobe. Steht BEWUSST vor der Versionspruefung: das Bild entsteht
+      # aus der ausgelieferten embed.html auf Pages und haengt nicht daran, ob
+      # changelog.json und kern.js zueinander passen. Andernfalls liesse sich
+      # der Renderjob erst pruefen, wenn die naechste Ausgabe schon live ist —
+      # also erst zusammen mit dem ersten scharfen Lauf. Genau das soll die
+      # Probe verhindern.
+      #
+      # Laeuft nur bei workflow_dispatch ohne "senden: ja". Im scharfen Lauf
+      # rendert posten.py ohnehin selbst; hier zweimal zu rendern waere nur
+      # doppelte Laufzeit.
+      - name: Renderprobe
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.senden != 'ja'
+        env:
+          CHART: ${{ github.event.inputs.chart }}
+        run: |
+          set -euo pipefail
+          if [ -n "$CHART" ]; then
+            charts="$CHART"
+          else
+            charts=$(python social/charts_der_ausgabe.py)
+          fi
+          if [ -z "$charts" ]; then
+            echo "Die oberste Ausgabe nennt keine Grafik — nichts zu rendern."
+            exit 0
+          fi
+          mkdir -p social/bilder
+          for c in $charts; do
+            echo "::group::$c"
+            python social/rendern.py "$c" --ziel "social/bilder/$c.png"
+            echo "::endgroup::"
+          done
+          ls -lh social/bilder/
+
+      - name: Renderprobe hochladen
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.senden != 'ja'
+        uses: actions/upload-artifact@v4
+        with:
+          name: renderprobe
+          path: social/bilder/
+          if-no-files-found: ignore
 
       # Zuerst die billigen Pruefungen. Fallen sie durch, wird gar nicht erst
       # ein Browser gestartet und nichts gepostet.

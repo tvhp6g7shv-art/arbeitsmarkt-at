@@ -10,20 +10,21 @@
      Diagramme. defer hält die Reihenfolge ein. Ziffer bei jedem Upload
      hochzählen (Browser-Cache). kpi und einbetten braucht die
      Einbettseite nicht. -->
-<script src="js/kern.js?v=32" defer></script>
-<script src="js/charts/zeitreihe.js?v=32" defer></script>
-<script src="js/charts/ausbildung.js?v=32" defer></script>
-<script src="js/charts/verlauf.js?v=32" defer></script>
-<script src="js/charts/generationen.js?v=32" defer></script>
-<script src="js/charts/karte.js?v=32" defer></script>
-<script src="js/charts/fluss.js?v=32" defer></script>
-<script src="js/charts/dauer.js?v=32" defer></script>
-<script src="js/charts/verfestigung.js?v=32" defer></script>
-<script src="js/charts/schulung.js?v=32" defer></script>
-<script src="js/charts/eukarte.js?v=32" defer></script>
-<script src="js/charts/eurang.js?v=32" defer></script>
-<script src="js/charts/stellen.js?v=32" defer></script>
-<script src="js/charts/branche.js?v=32" defer></script>
+<script src="js/kern.js?v=34" defer></script>
+<script src="js/charts/zeitreihe.js?v=34" defer></script>
+<script src="js/charts/ausbildung.js?v=34" defer></script>
+<script src="js/charts/verlauf.js?v=34" defer></script>
+<script src="js/charts/generationen.js?v=34" defer></script>
+<script src="js/charts/karte.js?v=34" defer></script>
+<script src="js/charts/fluss.js?v=34" defer></script>
+<script src="js/charts/dauer.js?v=34" defer></script>
+<script src="js/charts/verfestigung.js?v=34" defer></script>
+<script src="js/charts/saison.js?v=34" defer></script>
+<script src="js/charts/schulung.js?v=34" defer></script>
+<script src="js/charts/eukarte.js?v=34" defer></script>
+<script src="js/charts/eurang.js?v=34" defer></script>
+<script src="js/charts/stellen.js?v=34" defer></script>
+<script src="js/charts/branche.js?v=34" defer></script>
 <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* ===================================================================
@@ -86,6 +87,12 @@
   --viz-series-4: #b27300; --viz-series-5: #e56797; --viz-series-6: #008300;
   --viz-seq-1: #cde2fb; --viz-seq-2: #86b6ef; --viz-seq-3: #3987e5;
   --viz-seq-4: #256abf; --viz-seq-5: #184f95; --viz-seq-6: #0d366b;
+  /* Kategorialer Akzent, KEINE Statusfarbe — eingefuehrt 20.08.2026 fuer
+     „Zwei Oesterreichs". Hier warm statt petrol: --viz-series-1 ist in
+     dieser Palette bereits Blau, ein zweites Blau waere keine Trennung.
+     4,77 : 1 zur Flaeche; gegen Gruppe 1 trennt der Farbabstand, nicht der
+     Kontrast — das ist das Bauprinzip dieser Palette. */
+  --viz-akzent: #bf4d1a;
   --viz-gut: #006300;   --viz-kritisch: #d03b3b;
   --viz-div-neutral: #f0efec;
   --viz-div-gut-1: #d7eee1; --viz-div-gut-2: #a5d7bb;
@@ -108,6 +115,8 @@
     --viz-series-4: #c98500; --viz-series-5: #d85e8b; --viz-series-6: #008300;
     --viz-seq-1: #0d366b; --viz-seq-2: #184f95; --viz-seq-3: #256abf;
     --viz-seq-4: #3987e5; --viz-seq-5: #86b6ef; --viz-seq-6: #cde2fb;
+    /* Kategorialer Akzent, dunkel: 5,44 : 1 zur Flaeche. */
+    --viz-akzent: #eb6834;
     --viz-gut: #0ca30c;   --viz-kritisch: #e66767;
     --viz-div-neutral: #383835;
     --viz-div-gut-1: #1e4a37; --viz-div-gut-2: #276e4f;
@@ -126,6 +135,13 @@ h2 { font-family: var(--viz-font-display); font-size: 1rem; margin: 0 0 2px; fon
 .viz-unterzeile { color: var(--viz-muted); font-size: .78rem; margin: 0; }
 .viz-chart { width: 100%; height: 340px; }
 .viz-chart-hoch { height: 440px; }
+/* Neun kleine Felder in drei Reihen brauchen mehr Hoehe als eine
+   einzelne Zeichenflaeche: zwei Gruppenkoepfe, drei Landeszeilen und
+   drei Monatsachsen belegen 178 px, bevor die erste Linie gezeichnet
+   ist. Unter 560 px stellt saison.js auf EINE Spalte um — dann stehen
+   neun Felder untereinander und es braucht deutlich mehr. */
+#c-saison { height: 620px; }
+@media (max-width: 560px) { #c-saison { height: 1020px; } }
 .viz-chart-karte { height: 560px; }
 .viz-chart-karte-eu { height: 700px; }
 .viz-verborgen { display: none; }
@@ -188,6 +204,7 @@ const CHARTS = {
   fluss:        { titel: "Zugänge und Abgänge in die Arbeitslosigkeit",                    dateien: ["fluss"],                    bau: (A, d) => A.baueFluss(d.fluss) },
   dauer:        { titel: "Dauer der bestehenden Arbeitslosigkeit",                   dateien: ["dauer"],                    bau: (A, d) => A.baueDauer(d.dauer) },
   verfestigung: { titel: "Wie lange Arbeitslosigkeit dauert — nach Alter",           dateien: ["verfestigung"],             bau: (A, d) => A.baueVerfestigung(d.verfestigung), hoch: true },
+  saison:       { titel: "Zwei Österreichs: Wann das Jahr schlecht läuft",            dateien: ["bundeslaender"],           bau: (A, d) => A.baueSaison(d.bundeslaender), hoch: true },
   schulung:     { titel: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",                   dateien: ["schulung"],                 bau: (A, d) => A.baueSchulung(d.schulung) },
   stellen:      { titel: "Offene Stellen und Arbeitslose je offener Stelle",      dateien: ["stellen"],                  bau: (A, d) => A.baueStellen(d.stellen) },
   branche:      { titel: "Arbeitslosigkeit nach Wirtschaftszweig",      dateien: ["branche"],                  bau: (A, d) => A.baueBranche(d.branche), hoch: true },

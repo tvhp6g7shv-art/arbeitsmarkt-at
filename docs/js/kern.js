@@ -592,6 +592,49 @@ async function start() {
     d.resize();
     if (typeof d.__neuLayouten === "function") d.__neuLayouten();
   }));
+
+  springeZuAbschnitt();
+}
+
+/* --- Tieflink auf einen Abschnitt: /#s-saison -------------------------
+   WARUM DAS NÖTIG IST (Befund 20.08.2026, am Live-Stand gemessen).
+   Die Sprungnavigation verlinkt seit jeher auf `#s-…`, und beim Klick
+   funktioniert das auch. Ein Aufruf VON AUSSEN mit derselben Adresse tat es
+   nicht: `https://arbeitsmarkt-monitor.at/#s-saison` blieb bei `scrollY: 0`
+   stehen, während die Karte 6.023 px weiter unten stand.
+
+   Der Grund ist nicht der Anker, sondern der Zeitpunkt. Abschnitte, die sich
+   selbst einblenden, tragen beim Seitenaufbau `style="display:none"`
+   (`#s-saison`, `#s-verfestigung`, `#s-selbstaendige`). Auf ein verstecktes
+   Element springt der Browser nicht — und wenn das Modul es Sekunden später
+   einblendet, hat er den Fragmentbezeichner längst abgehakt. Ohne diese
+   Funktion landet jeder geteilte Link oben auf der Seite, und der Leser
+   sucht die angekündigte Grafik selbst.
+
+   Deshalb wird kurz gewartet, statt einmal zu prüfen: Der Abschnitt kann erst
+   nach einem `fetch` erscheinen. Zehn Versuche à 300 ms decken den üblichen
+   Fall ab; danach wird aufgegeben, ohne die Seite zu bewegen — ein Sprung ins
+   Leere wäre schlimmer als kein Sprung.
+
+   `history.replaceState` bleibt aus: Die Adresse soll teilbar bleiben.
+   ---------------------------------------------------------------------- */
+function springeZuAbschnitt() {
+  const kennung = (location.hash || "").slice(1);
+  if (!/^s-[\w-]+$/.test(kennung)) return;
+  /* Hat der Browser von selbst gescrollt, ist nichts zu tun. */
+  if (window.scrollY > 0) return;
+
+  let versuche = 0;
+  const versuchen = () => {
+    const ziel = document.getElementById(kennung);
+    const sichtbar = ziel && ziel.getClientRects().length > 0;
+    if (sichtbar) {
+      ziel.scrollIntoView({ block: "start", behavior: "auto" });
+      return;
+    }
+    if (++versuche < 10) setTimeout(versuchen, 300);
+  };
+  versuchen();
 }
 
 /* --- Namensraum: die Chart-Dateien hängen sich hier an ---------------- */

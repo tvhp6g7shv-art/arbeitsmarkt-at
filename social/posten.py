@@ -38,6 +38,7 @@ import os
 import re
 import sys
 import time
+from urllib.parse import urlparse
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -133,6 +134,10 @@ def pruefe_changelog(daten: dict) -> list[str]:
             f"neue Eintraege gehoeren nach oben"
         )
 
+    # Was schon in der Timeline steht, wird nicht mehr beurteilt — siehe
+    # Kommentar bei der Ankerpruefung weiter unten.
+    erledigt = {e["nummer"] for e in lies_zustand().get("gepostet", [])}
+
     for ausgabe in daten["ausgaben"]:
         nr = ausgabe["nummer"]
         for feld in ("nummer", "datum", "datum_text", "titel", "veroeffentlicht", "charts"):
@@ -157,6 +162,44 @@ def pruefe_changelog(daten: dict) -> list[str]:
             )
         if not facets_fuer_links(text):
             befunde.append(f"V {nr}: social enthaelt keinen Link — Beitrag fuehrt nirgendwohin")
+
+        # DER LINK ZEIGT AUF DIE WEBSITE, NICHT AUF DEN CHANGELOG.
+        # User-Entscheid 20.08.2026. Bis V 03 verlinkten die Beitraege auf
+        # /changelog/ — wer den Beitrag sah, landete auf einer Liste von
+        # Aenderungen statt beim Dashboard.
+        #
+        # BEWUSST DIE STARTSEITE, NICHT DER ABSCHNITTSANKER. Ein
+        # `/#s-<chart>` waere praeziser, ist aber zerbrechlich: Abschnitte,
+        # die sich selbst einblenden, tragen beim Seitenaufbau
+        # `style="display:none"`, und auf ein verstecktes Element springt der
+        # Browser nicht (gemessen 20.08.: scrollY 0 bei 6.023 px Abstand).
+        # `springeZuAbschnitt()` in kern.js faengt das ab, ist aber nicht
+        # unter echten Bedingungen nachgewiesen. Die Startseite zeigt das
+        # Dashboard samt Sprungnavigation — das traegt ohne Sonderfall.
+        #
+        # NUR FUER NOCH NICHT GEPOSTETE AUSGABEN: Eine erschienene Ausgabe
+        # rueckwirkend zu bemaengeln wuerde jeden kuenftigen Lauf durchfallen
+        # lassen, und aendern laesst sich an einem Beitrag in der Timeline
+        # ohnehin nichts. V 02 und V 03 behalten ihren Changelog-Link.
+        if nr not in erledigt:
+            basis = daten["basis_url"].rstrip("/")
+            changelog_pfad = urlparse(daten.get("changelog_url", "")).path.rstrip("/")
+            auf_website = []
+            for f in facets_fuer_links(text):
+                ziel = f["features"][0]["uri"]
+                zerlegt = urlparse(ziel)
+                if f"{zerlegt.scheme}://{zerlegt.netloc}" != basis:
+                    continue
+                if changelog_pfad and zerlegt.path.rstrip("/") == changelog_pfad:
+                    continue          # der Changelog zaehlt ausdruecklich nicht
+                auf_website.append(ziel)
+            if not auf_website:
+                befunde.append(
+                    f"V {nr}: social verlinkt nicht auf {basis} — seit 20.08.2026 "
+                    f"zeigt der Beitrag auf die Website, nicht auf den Changelog. "
+                    f"Startseite genuegt; ein Abschnittsanker wie {basis}/#s-<chart> "
+                    f"ist erlaubt und praeziser"
+                )
 
         if len(ausgabe.get("charts", [])) > MAX_BILDER:
             befunde.append(f"V {nr}: {len(ausgabe['charts'])} Charts, Bluesky nimmt {MAX_BILDER}")

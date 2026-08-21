@@ -102,20 +102,33 @@ function baueSelbstaendige(daten) {
   setzeText("u-selbstaendige", daten.unterzeile ?? "");
   setzeText("h-selbstaendige", daten.hinweis ?? "");
 
-  /* Senkrechte Aufteilung. Schmal braucht deutlich mehr Luft: dort brechen
-     BEIDE Titel, BEIDE Untertitel und beide Legenden um. Ohne die größeren
-     Abstände schöbe sich der zweite Titelblock in den oberen Balken.
-     Die Werte sind Prozent der Feldhöhe, damit die Aufteilung bei jeder
-     Einbetthöhe gleich aussieht.
+  /* SENKRECHTE AUFTEILUNG — GEMESSEN, NICHT GESCHAETZT.
+     ------------------------------------------------------------------
+     Erster Anlauf setzte Titel, Legende und Balken auf feste Prozentwerte
+     der Feldhoehe, gerechnet aus geschaetzten Zeilenhoehen. Auf der
+     Live-Seite sind die Schriften groesser als in der Rechnung: die
+     Legende landete AUF dem Untertitel, und unter dem zweiten Balken
+     blieb ein Drittel der Karte leer. Am 21.08.2026 am fertigen Bild
+     aufgefallen — der User: „Die Grafik sieht voellig zerstoert aus."
 
-     Gerechnet für die beiden Auslieferungshöhen (470 px breit / 560 px
-     schmal) mit gemessenen Zeilenhöhen; die Abnahmeseite prüft, dass die
-     Reihenfolge Titel < Legende < Grid je Panel eingehalten bleibt. */
-  const lage = schmal
-    ? [{ titel: "0%",  legende: "14%", grid: "22%", hoehe: "11%" },
-       { titel: "39%", legende: "53%", grid: "65%", hoehe: "11%" }]
-    : [{ titel: "0%",  legende: "8%",  grid: "18%", hoehe: "15%" },
-       { titel: "48%", legende: "56%", grid: "66%", hoehe: "15%" }];
+     Konsequenz: keine Schaetzung mehr. Das Diagramm wird ZWEIMAL gebaut.
+     Der erste Lauf dient nur dem Messen; danach stehen Kopfblockhoehe und
+     Legendenhoehe in Pixeln fest, und der zweite Lauf setzt die Lage
+     daraus. Das ist unabhaengig von Schriftgroesse, Zeilenumbruch und
+     Feldbreite — also auch von der Frage, ob die Legende ein- oder
+     zweizeilig umbricht.
+
+     Warum nicht die Feldhoehe anpassen: `.viz-chart` bekommt seine Hoehe
+     aus `idl.css` (Abschnitt 42) bzw. dem `<style>`-Block der beiden
+     HTML-Dateien. Eine Inline-Hoehe daneben waere eine zweite Quelle.
+     Stattdessen fuellt der uebrige Platz die BALKEN — sie wachsen, bis
+     die Karte voll ist, gedeckelt bei 110 px. */
+  const ACHSE = 22;      // Zeile mit „0 %" bis „100 %" unter dem Balken
+  const LUFT = 30;       // zwischen den beiden Panels
+  const RAND = 10;       // unter dem zweiten Panel
+  const NACH_KOPF = 6;   // Kopfblock -> Legende
+  const NACH_LEG = 14;   // Legende -> Balken
+  const BALKEN_MAX = 110;
 
   const seitenrand = schmal ? { left: 8, right: 14 } : { left: 12, right: 20 };
 
@@ -126,86 +139,49 @@ function baueSelbstaendige(daten) {
   const textBreite = Math.max(160,
     feld.clientWidth - seitenrand.left - seitenrand.right);
 
-  const titel = panels.map((p, i) => ({
-    text: p.titel,
-    subtext: p.untertitel,
-    top: lage[i].titel,
-    left: seitenrand.left,
-    textStyle: { color: stil("--viz-text"), fontSize: S.serie,
-                 fontWeight: 600, fontFamily: S.familie,
-                 width: textBreite, overflow: "break", lineHeight: S.serie + 6 },
-    subtextStyle: { color: stil("--viz-muted"), fontSize: S.achse,
-                    fontFamily: S.familie,
-                    width: textBreite, overflow: "break", lineHeight: S.achse + 5 },
-  }));
-
-  const legenden = panels.map((p, i) => ({
-    top: lage[i].legende,
-    left: seitenrand.left,
-    orient: "horizontal",
-    itemWidth: 11, itemHeight: 11, itemGap: schmal ? 10 : 14,
-    icon: "roundRect",
-    data: p.segmente.map((s) => s.name),
-    textStyle: { color: stil("--viz-text-2"), fontSize: S.serie,
-                 fontFamily: S.familie },
-  }));
-
-  const grids = panels.map((p, i) => ({
-    top: lage[i].grid, height: lage[i].hoehe,
-    left: seitenrand.left, right: seitenrand.right,
-    containLabel: false,
-  }));
-
-  /* Eine einzige Kategorie je Grid: der Balken IST das Panel. Die
-     Beschriftung steht im Titel darüber, die Achse bleibt leer. */
-  const yAchsen = panels.map((_, i) => ({
-    ...achse(), gridIndex: i, type: "category", data: [""],
-    axisLabel: { show: false }, axisTick: { show: false },
-    axisLine: { show: false }, splitLine: { show: false },
-  }));
-
-  const xAchsen = panels.map((_, i) => ({
-    ...achse(), gridIndex: i, type: "value", min: 0, max: 100,
-    axisLine: { show: false }, axisTick: { show: false },
-    splitLine: { show: false },
-    axisLabel: { color: stil("--viz-muted"), fontSize: S.achse,
-                 hideOverlap: true, formatter: (v) => v + " %" },
-  }));
-
-  /* Segmente je Panel zu Serien machen. `stack` je Panel eigen, sonst
-     stapelt ECharts über die Grids hinweg. */
-  const serien = [];
-  panels.forEach((p, i) => {
-    const letzte = p.segmente.length - 1;
-    p.segmente.forEach((seg, k) => {
-      serien.push({
-        name: seg.name, type: "bar", stack: "panel" + i,
-        xAxisIndex: i, yAxisIndex: i, barWidth: schmal ? "56%" : "48%",
-        data: [anteil(seg.wert, p.gesamt)],
-        itemStyle: {
-          color: stil(farben[i][k]),
-          borderRadius: k === 0 ? [4, 0, 0, 4] : (k === letzte ? [0, 4, 4, 0] : 0),
-          /* 2-px-Fuge in Kartenfarbe zwischen den Segmenten — dieselbe
-             Begründung wie in verfestigung.js: die Rampenstufen liegen in
-             der Helligkeit nah beieinander und kehren im Dunkelmodus ihre
-             Leserichtung um. Die Fuge wirkt in beiden Modi und unabhängig
-             von der Farbwahrnehmung. */
-          borderColor: stil("--viz-surface"),
-          borderWidth: 2,
-        },
-        emphasis: hoverDunkler(stil(farben[i][k])),
-        label: { show: false },
-      });
-    });
-  });
-
-  d.setOption({
+  const bau = (lage) => ({
     ...basis(),
-    title: titel,
-    legend: legenden,
-    grid: grids,
-    xAxis: xAchsen,
-    yAxis: yAchsen,
+    title: panels.map((p, i) => ({
+      text: p.titel,
+      subtext: p.untertitel,
+      top: lage[i].titel,
+      left: seitenrand.left,
+      textStyle: { color: stil("--viz-text"), fontSize: S.serie,
+                   fontWeight: 600, fontFamily: S.familie,
+                   width: textBreite, overflow: "break", lineHeight: S.serie + 6 },
+      subtextStyle: { color: stil("--viz-muted"), fontSize: S.achse,
+                      fontFamily: S.familie,
+                      width: textBreite, overflow: "break", lineHeight: S.achse + 5 },
+    })),
+    legend: panels.map((p, i) => ({
+      top: lage[i].legende,
+      left: seitenrand.left,
+      orient: "horizontal",
+      itemWidth: 11, itemHeight: 11, itemGap: schmal ? 10 : 14,
+      icon: "roundRect",
+      data: p.segmente.map((s) => s.name),
+      textStyle: { color: stil("--viz-text-2"), fontSize: S.serie,
+                   fontFamily: S.familie },
+    })),
+    grid: panels.map((p, i) => ({
+      top: lage[i].grid, height: lage[i].hoehe,
+      left: seitenrand.left, right: seitenrand.right,
+      containLabel: false,
+    })),
+    xAxis: panels.map((_, i) => ({
+      ...achse(), gridIndex: i, type: "value", min: 0, max: 100,
+      axisLine: { show: false }, axisTick: { show: false },
+      splitLine: { show: false },
+      axisLabel: { color: stil("--viz-muted"), fontSize: S.achse,
+                   hideOverlap: true, formatter: (v) => v + " %" },
+    })),
+    /* Eine einzige Kategorie je Grid: der Balken IST das Panel. Die
+       Beschriftung steht im Titel darüber, die Achse bleibt leer. */
+    yAxis: panels.map((_, i) => ({
+      ...achse(), gridIndex: i, type: "category", data: [""],
+      axisLabel: { show: false }, axisTick: { show: false },
+      axisLine: { show: false }, splitLine: { show: false },
+    })),
     tooltip: {
       ...basis().tooltip, trigger: "axis",
       axisPointer: { type: "shadow",
@@ -233,8 +209,93 @@ function baueSelbstaendige(daten) {
         }).join("<br>");
       },
     },
-    series: serien,
-  }, { replaceMerge: ["series", "xAxis", "yAxis", "grid", "title", "legend"] });
+    series: panels.flatMap((p, i) => {
+      const letzte = p.segmente.length - 1;
+      return p.segmente.map((seg, k) => ({
+        name: seg.name, type: "bar", stack: "panel" + i,
+        xAxisIndex: i, yAxisIndex: i, barWidth: "62%",
+        data: [anteil(seg.wert, p.gesamt)],
+        itemStyle: {
+          color: stil(farben[i][k]),
+          borderRadius: k === 0 ? [4, 0, 0, 4] : (k === letzte ? [0, 4, 4, 0] : 0),
+          /* 2-px-Fuge in Kartenfarbe zwischen den Segmenten — dieselbe
+             Begründung wie in verfestigung.js: die Rampenstufen liegen in
+             der Helligkeit nah beieinander und kehren im Dunkelmodus ihre
+             Leserichtung um. Die Fuge wirkt in beiden Modi und unabhängig
+             von der Farbwahrnehmung. */
+          borderColor: stil("--viz-surface"),
+          borderWidth: 2,
+        },
+        emphasis: hoverDunkler(stil(farben[i][k])),
+        label: { show: false },
+      }));
+    }),
+  });
+
+  const ersetzen = { replaceMerge: ["series", "xAxis", "yAxis", "grid", "title", "legend"] };
+
+  /* --- Lauf 1: nur zum Messen -----------------------------------------
+     Die Abstände sind absichtlich viel zu groß. Nichts darf sich
+     überlappen, sonst misst der zweite Schritt zwei Blöcke als einen. */
+  const weit = [{ titel: 0, legende: 90, grid: 150, hoehe: 40 },
+                { titel: 260, legende: 350, grid: 410, hoehe: 40 }];
+  d.setOption(bau(weit), ersetzen);
+
+  /* --- Messen ----------------------------------------------------------
+     Aus dem gezeichneten SVG, nicht aus der Option. Kopfblock = alle
+     Textknoten, die zu Titel oder Untertitel gehören; Legende = die
+     Textknoten, die exakt einem Segmentnamen entsprechen. Die Trennung
+     über „exakt gleich" ist nötig, weil Segmentnamen als Teilzeichenkette
+     auch im Untertitel vorkommen können. */
+  function bloecke() {
+    const svg = feld.querySelector("svg");
+    if (!svg) return null;
+    const b0 = feld.getBoundingClientRect();
+    const texte = [...svg.querySelectorAll("text")];
+    const namen = panels.flatMap((p) => p.segmente.map((s) => s.name));
+    const kasten = (el) => {
+      const b = el.getBoundingClientRect();
+      return { oben: b.top - b0.top, unten: b.bottom - b0.top };
+    };
+    return panels.map((p, i) => {
+      const kopfText = p.titel + " " + p.untertitel;
+      const kopf = texte.filter((el) => {
+        const s = (el.textContent || "").trim();
+        return s && !namen.includes(s) && !/^[\d\s.,]+%$/.test(s)
+               && kopfText.includes(s.slice(0, 14));
+      }).map(kasten);
+      const eigene = p.segmente.map((s) => s.name);
+      const leg = texte.filter((el) => eigene.includes((el.textContent || "").trim()))
+                       .map(kasten);
+      const spanne = (a) => a.length
+        ? Math.max(...a.map((x) => x.unten)) - Math.min(...a.map((x) => x.oben)) : 0;
+      return { kopf: spanne(kopf) || 46, legende: spanne(leg) || 16 };
+    });
+  }
+
+  const gemessen = bloecke();
+  if (gemessen) {
+    /* Was fest steht, abziehen; der Rest geht in die Balken. So bleibt
+       unter dem zweiten Panel kein leerer Streifen stehen. */
+    const fest = gemessen.reduce((s, m) =>
+      s + m.kopf + NACH_KOPF + m.legende + NACH_LEG + ACHSE, 0) + LUFT + RAND;
+    const uebrig = Math.max(0, feld.clientHeight - fest);
+    const balken = Math.max(40, Math.min(BALKEN_MAX, Math.round(uebrig / panels.length)));
+
+    let y = 0;
+    const lage = gemessen.map((m) => {
+      const eintrag = {
+        titel: Math.round(y),
+        legende: Math.round(y + m.kopf + NACH_KOPF),
+        grid: Math.round(y + m.kopf + NACH_KOPF + m.legende + NACH_LEG),
+        hoehe: balken,
+      };
+      y = eintrag.grid + balken + ACHSE + LUFT;
+      return eintrag;
+    });
+    /* --- Lauf 2: die echte Lage --------------------------------------- */
+    d.setOption(bau(lage), ersetzen);
+  }
 
   /* --- Tabelle ---------------------------------------------------------
      Beide Panels in EINER Tabelle, mit einer Spalte „Messung", damit die

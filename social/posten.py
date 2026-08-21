@@ -168,14 +168,15 @@ def pruefe_changelog(daten: dict) -> list[str]:
         # /changelog/ — wer den Beitrag sah, landete auf einer Liste von
         # Aenderungen statt beim Dashboard.
         #
-        # BEWUSST DIE STARTSEITE, NICHT DER ABSCHNITTSANKER. Ein
-        # `/#s-<chart>` waere praeziser, ist aber zerbrechlich: Abschnitte,
-        # die sich selbst einblenden, tragen beim Seitenaufbau
-        # `style="display:none"`, und auf ein verstecktes Element springt der
-        # Browser nicht (gemessen 20.08.: scrollY 0 bei 6.023 px Abstand).
-        # `springeZuAbschnitt()` in kern.js faengt das ab, ist aber nicht
-        # unter echten Bedingungen nachgewiesen. Die Startseite zeigt das
-        # Dashboard samt Sprungnavigation — das traegt ohne Sonderfall.
+        # STARTSEITE GENUEGT, ABSCHNITTSANKER IST BESSER. Ein
+        # `/#s-<chart>` fuehrt direkt zur angekuendigten Grafik. Er trug
+        # anfangs nicht: Abschnitte, die sich selbst einblenden, tragen beim
+        # Seitenaufbau `style="display:none"`, und auf ein verstecktes
+        # Element springt der Browser nicht (gemessen 20.08.: scrollY 0 bei
+        # 6.023 px Abstand). `springeZuAbschnitt()` in kern.js faengt das ab
+        # und ist am 20.08.2026 vom User im echten Browser bestaetigt worden.
+        # Erlaubt bleibt beides — die Regel unten verlangt nur, dass der Link
+        # ueberhaupt auf die Website zeigt und nicht auf den Changelog.
         #
         # NUR FUER NOCH NICHT GEPOSTETE AUSGABEN: Eine erschienene Ausgabe
         # rueckwirkend zu bemaengeln wuerde jeden kuenftigen Lauf durchfallen

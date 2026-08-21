@@ -123,11 +123,27 @@ function baueSelbstaendige(daten) {
      HTML-Dateien. Eine Inline-Hoehe daneben waere eine zweite Quelle.
      Stattdessen fuellt der uebrige Platz die BALKEN — sie wachsen, bis
      die Karte voll ist, gedeckelt bei 110 px. */
+  /* DREI ZEILEN, ZWEI GRUPPEN — User-Vorgabe 21.08.2026 am Live-Bild:
+     „Die mittlere Zeile gehoert zum Titel gesetzt. Die Zeile der Legende
+     gehoert angesetzt."
+
+     Erster Anlauf verteilte Titel, Untertitel und Legende mit gleichen
+     Abstaenden. Dadurch schwebte der Untertitel in der Mitte und las sich
+     als Teil der Legende. Richtig ist eine Zweiteilung:
+
+       Titel
+       Untertitel        <- eng am Titel, itemGap 2
+                         <- ZAESUR (NACH_KOPF)
+       Legende           <- dicht am Balken, NACH_LEG klein
+       ===== Balken =====
+
+     Die Legende gehoert zum Diagramm, nicht zur Ueberschrift. */
+  const KOPF_GAP = 2;    // Titel -> Untertitel: so eng wie moeglich
+  const NACH_KOPF = 24;  // Kopfblock -> Legende: die Zaesur
+  const NACH_LEG = 6;    // Legende -> Balken: angesetzt
   const ACHSE = 22;      // Zeile mit „0 %" bis „100 %" unter dem Balken
-  const LUFT = 30;       // zwischen den beiden Panels
-  const RAND = 10;       // unter dem zweiten Panel
-  const NACH_KOPF = 6;   // Kopfblock -> Legende
-  const NACH_LEG = 14;   // Legende -> Balken
+  const LUFT = 34;       // zwischen den beiden Panels
+  const RAND = 8;        // unter dem zweiten Panel
   const BALKEN_MAX = 110;
 
   const seitenrand = schmal ? { left: 8, right: 14 } : { left: 12, right: 20 };
@@ -146,6 +162,7 @@ function baueSelbstaendige(daten) {
       subtext: p.untertitel,
       top: lage[i].titel,
       left: seitenrand.left,
+      itemGap: KOPF_GAP,
       textStyle: { color: stil("--viz-text"), fontSize: S.serie,
                    fontWeight: 600, fontFamily: S.familie,
                    width: textBreite, overflow: "break", lineHeight: S.serie + 6 },

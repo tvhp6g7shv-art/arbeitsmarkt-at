@@ -432,7 +432,16 @@ async function start() {
      also eine Stoerungsmeldung, die die Seite sich selbst gebaut hat.
      Wieder eintragen, wenn beide Dateien gepusht, der CSS-Abschnitt in
      `idl.css` steht (Nummer klaeren: 40 ist doppelt vergeben) und die
-     Sichtpruefung erledigt ist. → doku/selbstaendige.md */
+     Sichtpruefung erledigt ist. → doku/selbstaendige.md
+
+     STAND 21.08.2026: Datei und Modul sind jetzt committet, der Abschnitt
+     bleibt aber ABSICHTLICH noch ausgeklinkt. Grund ist die Reihenfolge der
+     Freigabe: `embed.html` laedt seine Dateien selbst und haengt NICHT an
+     dieser Liste — die Renderprobe des Bluesky-Bots funktioniert deshalb
+     schon, bevor der Abschnitt auf der Seite steht. So laesst sich das
+     ausgelieferte Bild ansehen, ohne dass etwas veroeffentlicht ist.
+     Eingehaengt wird mit V 04, zusammen mit dem Changelog-Eintrag —
+     `code/selbstaendige-freigeben.py` macht beide Schritte auf einmal. */
   const DATEIEN = ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke",
                    "bundeslaender", "karte", "generationen",
                    "fluss", "dauer", "verfestigung", "schulung", "eu", "eukarte",

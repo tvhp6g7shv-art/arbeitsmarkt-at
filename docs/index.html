@@ -63,6 +63,15 @@
   --viz-series-5:       #e0e0e0;
   --viz-series-6:       #737373;
 
+  /* Kategorialer Akzent — KEINE Statusfarbe.
+     Eingeführt 20.08.2026 für „Zwei Österreichs": zwei Graustufen trennten
+     die beiden Ländergruppen im Dunkelmodus nur 2,77 : 1. --viz-gut und
+     --viz-kritisch schieden aus, weil sie „gut" und „schlecht" bedeuten und
+     der Zwischensaisontyp weder das eine noch das andere ist.
+     5,38 : 1 zur Kartenfläche, 3,68 : 1 zu --viz-series-1 — die Gruppen-
+     überschrift trägt denselben Ton und ist Text, deshalb über 4,5. */
+  --viz-akzent:         #1e738f;
+
   /* Sequenzielle Skala (ein Ton, hell → dunkel) für die Karte.
      Im Dunkelmodus kehrt sie ihre Leserichtung um (dunkel = wenig),
      sonst verschwindet die unterste Stufe im Kartengrund. */
@@ -131,6 +140,8 @@
     --viz-series-1: #e9eaea; --viz-series-2: #9ca4a8;
     --viz-series-3: #757d81; --viz-series-4: #c6ccd0;
     --viz-series-5: #626a6e; --viz-series-6: #868e92;
+    /* Kategorialer Akzent, dunkel: 4,92 : 1 zur Kartenfläche. */
+    --viz-akzent: #4396b1;
     --viz-seq-1: #292f32; --viz-seq-2: #3c4347; --viz-seq-3: #555d62;
     --viz-seq-4: #7b8489; --viz-seq-5: #a6aeb2; --viz-seq-6: #dde2e4;
     --viz-gut: #3fd069;   --viz-kritisch: #f77070;
@@ -150,6 +161,8 @@
   --viz-series-1: #e9eaea; --viz-series-2: #9ca4a8;
   --viz-series-3: #757d81; --viz-series-4: #c6ccd0;
   --viz-series-5: #626a6e; --viz-series-6: #868e92;
+  /* Kategorialer Akzent, dunkel: 4,92 : 1 zur Kartenfläche. */
+  --viz-akzent: #4396b1;
   --viz-seq-1: #292f32; --viz-seq-2: #3c4347; --viz-seq-3: #555d62;
   --viz-seq-4: #7b8489; --viz-seq-5: #a6aeb2; --viz-seq-6: #dde2e4;
   --viz-gut: #3fd069;   --viz-kritisch: #f77070;
@@ -198,6 +211,18 @@ body { margin:0; background: #ffffff; font-family: "Figtree", system-ui, -apple-
 /* --- Diagrammflächen: Höhe schließt die Achsenbeschriftung ein --- */
 .viz-chart { width: 100%; height: 340px; }
 .viz-chart-hoch { height: 420px; }
+/* Neun kleine Felder in drei Reihen brauchen mehr Hoehe als eine
+   einzelne Zeichenflaeche: zwei Gruppenkoepfe, drei Landeszeilen und
+   drei Monatsachsen belegen 178 px, bevor die erste Linie gezeichnet
+   ist. Unter 560 px stellt saison.js auf EINE Spalte um — dann stehen
+   neun Felder untereinander und es braucht deutlich mehr. */
+#c-saison { height: 620px; }
+   /* Zwei Panels untereinander, jedes mit Titel, Untertitel und Legende.
+      Unter 560 px brechen beide Legenden auf zwei Zeilen um — selbstaendige.js
+      verschiebt die Lage dann, braucht dafuer aber mehr Hoehe. */
+#c-selbstaendige { height: 470px; }
+@media (max-width: 560px) { #c-selbstaendige { height: 560px; } }
+@media (max-width: 560px) { #c-saison { height: 1020px; } }
 /* Kartenhoehen am 14.08.2026 im Browser ausgemessen (siehe kern.js,
    kartenLayout): Oesterreich hat das Seitenverhaeltnis 1,95 und fuellt bei
    560 px Hoehe 98 % der Breite. Europa hat 0,77 — es ist HOEHER als breit
@@ -402,6 +427,27 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
     <div id="t-laender"></div>
   </section>
 
+  <!-- 5b — SAISONFIGUR JE BUNDESLAND („Zwei Österreichs")
+       data-nav: wie bei s-verfestigung — die Sprungnavigation naehme sonst
+       die volle Ueberschrift in die Pille. Siehe Kommentar dort.
+       Kein eigener Datensatz: der Abschnitt rechnet aus bundeslaender.json. -->
+  <section class="viz-karte" id="s-saison" data-chart="saison"
+           data-nav="Saison" style="display:none">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Zwei Österreichs: Wann das Jahr schlecht läuft</h2>
+        <p class="viz-unterzeile" id="u-saison"></p>
+      </div>
+      <div class="viz-knopfreihe">
+        <button class="viz-tabelle-schalter" data-ziel="t-saison">Tabelle</button>
+        <button class="viz-einbetten" data-chart="saison">Einbetten</button>
+      </div>
+    </header>
+    <div class="viz-chart viz-chart-hoch" id="c-saison"></div>
+    <div class="viz-verborgen" id="t-saison"></div>
+    <p class="viz-unterzeile" style="margin-top:12px" id="h-saison"></p>
+  </section>
+
   <!-- 6 — BEZIRKE -->
   <section class="viz-karte">
     <header class="viz-kopfzeile">
@@ -485,6 +531,30 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
     <div class="viz-chart" id="c-schulung"></div>
     <div class="viz-verborgen" id="t-schulung"></div>
     <p class="viz-unterzeile" style="margin-top:12px" id="h-schulung"></p>
+  </section>
+
+  <!-- Abschnitt ohne laufende Datenquelle. `selbstaendige.json` ist
+       handgepflegt und wird von etl/build.py NICHT erzeugt — die Zahlen
+       stammen aus vier Veröffentlichungen mit vier Stichtagen, die
+       Opting-In-Reihe endet 2018. Das ist kein Mangel des Abschnitts,
+       sondern sein Gegenstand; die Hinweiszeile sagt es ausdrücklich.
+       data-nav wie bei s-verfestigung: die volle Überschrift sprengt die
+       Pille in der Sprungnavigation. -->
+  <section class="viz-karte" id="s-selbstaendige" data-chart="selbstaendige"
+           data-nav="Selbständige" style="display:none">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Selbständig und arbeitslos — die Zahl, die niemand erhebt</h2>
+        <p class="viz-unterzeile" id="u-selbstaendige"></p>
+      </div>
+      <div class="viz-knopfreihe">
+        <button class="viz-tabelle-schalter" data-ziel="t-selbstaendige">Tabelle</button>
+        <button class="viz-einbetten" data-chart="selbstaendige">Einbetten</button>
+      </div>
+    </header>
+    <div class="viz-chart viz-chart-hoch" id="c-selbstaendige"></div>
+    <div class="viz-verborgen" id="t-selbstaendige"></div>
+    <p class="viz-unterzeile" style="margin-top:12px" id="h-selbstaendige"></p>
   </section>
 
   <section class="viz-karte" id="s-stellen" data-chart="stellen" style="display:none">
@@ -589,24 +659,26 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
      NICHT VERWECHSELN mit der Ausgabenummer „V NN" in der Fußzeile:
      die steht in VERSION in js/kern.js, zählt nur sichtbare
      Änderungen und ist an diese Ziffer hier nicht gekoppelt. -->
-<script src="js/kern.js?v=32" defer></script>
-<script src="js/charts/kpi.js?v=32" defer></script>
-<script src="js/charts/zeitreihe.js?v=32" defer></script>
-<script src="js/charts/ausbildung.js?v=32" defer></script>
-<script src="js/charts/verlauf.js?v=32" defer></script>
-<script src="js/charts/generationen.js?v=32" defer></script>
-<script src="js/charts/karte.js?v=32" defer></script>
-<script src="js/charts/bezirke.js?v=32" defer></script>
-<script src="js/charts/bundeslaender.js?v=32" defer></script>
-<script src="js/charts/fluss.js?v=32" defer></script>
-<script src="js/charts/dauer.js?v=32" defer></script>
-<script src="js/charts/verfestigung.js?v=32" defer></script>
-<script src="js/charts/schulung.js?v=32" defer></script>
-<script src="js/charts/eukarte.js?v=32" defer></script>
-<script src="js/charts/eurang.js?v=32" defer></script>
-<script src="js/charts/stellen.js?v=32" defer></script>
-<script src="js/charts/branche.js?v=32" defer></script>
-<script src="js/einbetten.js?v=32" defer></script>
+<script src="js/kern.js?v=35" defer></script>
+<script src="js/charts/kpi.js?v=35" defer></script>
+<script src="js/charts/zeitreihe.js?v=35" defer></script>
+<script src="js/charts/ausbildung.js?v=35" defer></script>
+<script src="js/charts/verlauf.js?v=35" defer></script>
+<script src="js/charts/generationen.js?v=35" defer></script>
+<script src="js/charts/karte.js?v=35" defer></script>
+<script src="js/charts/bezirke.js?v=35" defer></script>
+<script src="js/charts/bundeslaender.js?v=35" defer></script>
+<script src="js/charts/saison.js?v=35" defer></script>
+<script src="js/charts/fluss.js?v=35" defer></script>
+<script src="js/charts/dauer.js?v=35" defer></script>
+<script src="js/charts/verfestigung.js?v=35" defer></script>
+<script src="js/charts/selbstaendige.js?v=35" defer></script>
+<script src="js/charts/schulung.js?v=35" defer></script>
+<script src="js/charts/eukarte.js?v=35" defer></script>
+<script src="js/charts/eurang.js?v=35" defer></script>
+<script src="js/charts/stellen.js?v=35" defer></script>
+<script src="js/charts/branche.js?v=35" defer></script>
+<script src="js/einbetten.js?v=35" defer></script>
 
 <script>
 /* Startet das Dashboard, sobald ECharts und die js/-Module geladen sind. */

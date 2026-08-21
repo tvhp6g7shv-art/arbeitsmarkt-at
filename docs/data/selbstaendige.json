@@ -1,0 +1,195 @@
+{
+  "_hinweis_zur_datei": [
+    "HANDGEPFLEGT — diese Datei wird NICHT von etl/build.py erzeugt.",
+    "build.py schreibt nur die Namen, die es in `ausgaben` sammelt;",
+    "`selbstaendige` ist keiner davon. Die Datei bleibt bei jedem Lauf",
+    "unangetastet und wird ganz normal mitcommittet.",
+    "",
+    "WARUM HANDGEPFLEGT: Es gibt keine laufende Quelle. Die belastbaren",
+    "Zahlen stammen aus vier Veroeffentlichungen mit vier Stichtagen, und",
+    "die Kernzeitreihe (Opting-In) endet am 30.04.2018, weil seither keine",
+    "Auswertung mehr veroeffentlicht wurde. Genau diese Luecke ist der",
+    "Gegenstand des Abschnitts — sie darf nicht kaschiert werden.",
+    "",
+    "AKTUALISIEREN: jeden Wert nur zusammen mit `stichtag` und `quelle`",
+    "aendern. Ein Wert ohne Stichtag ist in diesem Abschnitt wertlos.",
+    "Naechster erwartbarer Anlass: das Ein-/Austrittsfenster 01.07.-",
+    "31.12.2026 und die Beitragsumstellung zum 01.01.2027.",
+    "",
+    "SPRACHE DER BESCHRIFTUNGEN (User-Entscheid 21.08.): In Titeln, Unter-",
+    "titeln und Segmentnamen kommen KEINE Fachbegriffe vor. Kein 'Nenner',",
+    "kein 'ILO', kein 'vorgemerkt'. Begruendung des Users: 'wir duerfen nicht",
+    "davon ausgehen, dass die Menschen wissen was ILO-Definition ist.'",
+    "Die Fachbegriffe stehen weiterhin in 'erlaeuterung', in der Tabelle und",
+    "in doku/selbstaendige.md — dort sind sie richtig, in der Grafik nicht.",
+    "Die Zahl traegt den Titel, nicht der Begriff."
+  ],
+  "stand": "2026-08-21",
+  "nenner": {
+    "titel": "4,1 Mio. Menschen arbeiten — die Arbeitslosenquote kennt nur 3,5 Mio.",
+    "untertitel": "Mitgezählt werden nur Angestellte und Arbeiter, keine Selbständigen · 2015",
+    "einheit": "Mio.",
+    "stichtag": "Jahresdurchschnitt 2015",
+    "quelle": "STATISTIK AUSTRIA, Statistische Nachrichten 5/2016",
+    "gesamt": 4.1,
+    "segmente": [
+      {
+        "name": "Angestellte und Arbeiter — zählen mit",
+        "wert": 3.5,
+        "erlaeuterung": "Fachbegriff: der Nenner der nationalen Arbeitslosenquote. Er besteht aus den unselbständig Beschäftigten laut Dachverband plus den Arbeitslosen selbst."
+      },
+      {
+        "name": "Selbständige und Mithelfende — zählen nicht mit",
+        "wert": 0.6,
+        "erlaeuterung": "Sie arbeiten, kommen in der Bezugsgröße der Quote aber nicht vor. Meldet sich eine selbständige Person arbeitslos, erhöht sie die Quote — als Erwerbstätige hat sie in derselben Rechnung nie gezählt. Kleine Unschärfe: die beiden Rechnungen zählen auch unterschiedlich (Beschäftigungsverhältnisse gegen Personen)."
+      }
+    ],
+    "kurz": "Erwerbstätige 2015"
+  },
+  "vormerkung": {
+    "titel": "244.900 Menschen suchten Arbeit — die AMS-Zahl kennt nur 135.400",
+    "untertitel": "Befragung „Haben Sie Arbeit? Suchen Sie welche?“ gegen AMS-Register · 2014",
+    "einheit": "Personen",
+    "stichtag": "Jahresdurchschnitt 2014",
+    "quelle": "STATISTIK AUSTRIA, Statistische Nachrichten 5/2016",
+    "gesamt": 244900,
+    "segmente": [
+      {
+        "name": "beim AMS als arbeitslos geführt",
+        "wert": 135400,
+        "erlaeuterung": "Nur diese Gruppe steht in der Arbeitslosenzahl, die monatlich veröffentlicht wird."
+      },
+      {
+        "name": "beim AMS, aber in Schulung",
+        "wert": 27100,
+        "erlaeuterung": "Gemeldet, zählt aber nicht als arbeitslos."
+      },
+      {
+        "name": "beim AMS, anders geführt",
+        "wert": 14600,
+        "erlaeuterung": "Beim AMS erfasst, führt nicht zur Zählung als arbeitslos."
+      },
+      {
+        "name": "gar nicht beim AMS gemeldet",
+        "wert": 67800,
+        "erlaeuterung": "27,7 % aller Arbeitsuchenden. Statistik Austria nennt als Grund, dass Personen ohne Anspruch auf Geld wenig Anlass haben, sich zu melden. Die Zahl ist NICHT nach ehemals Selbständigen aufgeschlüsselt — diese Aufschlüsselung gibt es nicht."
+      }
+    ],
+    "kurz": "Arbeitsuchende 2014"
+  },
+  "belege": {
+    "titel": "Wie viele Selbständige sich freiwillig versichert haben",
+    "zeitraum": "2009 bis 30.04.2018",
+    "quelle": "Anfragebeantwortung 696/AB (XXVI. GP), Sozialministerium, 18.06.2018",
+    "antraege_gesamt": 2342,
+    "antraege_epu": 576,
+    "antraege_neue_selbstaendige": 58,
+    "leistungsbezieher_2009_2017": 1587,
+    "stufen": [
+      {
+        "name": "¼ der Höchstbeitragsgrundlage",
+        "antraege": 1246,
+        "beitrag_2026": 59.63,
+        "alg_tag_2026": 32.21
+      },
+      {
+        "name": "½ der Höchstbeitragsgrundlage",
+        "antraege": 519,
+        "beitrag_2026": 238.51,
+        "alg_tag_2026": 52.33
+      },
+      {
+        "name": "¾ der Höchstbeitragsgrundlage",
+        "antraege": 577,
+        "beitrag_2026": 357.76,
+        "alg_tag_2026": 72.18
+      }
+    ],
+    "jahre": [
+      {
+        "jahr": "2009",
+        "antraege": 931,
+        "bezieher": 2
+      },
+      {
+        "jahr": "2010",
+        "antraege": 313,
+        "bezieher": 29
+      },
+      {
+        "jahr": "2011",
+        "antraege": 114,
+        "bezieher": 158
+      },
+      {
+        "jahr": "2012",
+        "antraege": 127,
+        "bezieher": 228
+      },
+      {
+        "jahr": "2013",
+        "antraege": 135,
+        "bezieher": 233
+      },
+      {
+        "jahr": "2014",
+        "antraege": 147,
+        "bezieher": 241
+      },
+      {
+        "jahr": "2015",
+        "antraege": 137,
+        "bezieher": 214
+      },
+      {
+        "jahr": "2016",
+        "antraege": 160,
+        "bezieher": 235
+      },
+      {
+        "jahr": "2017",
+        "antraege": 158,
+        "bezieher": 247
+      },
+      {
+        "jahr": "2018",
+        "antraege": 120,
+        "bezieher": null,
+        "teiljahr": "bis 30.04."
+      }
+    ],
+    "bezug": {
+      "epu_bestand": 376112,
+      "epu_stichtag": "Dezember 2025",
+      "epu_quelle": "Wirtschaftskammer Österreich, Mitgliederdaten",
+      "erwerbstaetige": 4500200,
+      "erwerbstaetige_stichtag": "2025",
+      "erwerbstaetige_quelle": "STATISTIK AUSTRIA, Mikrozensus-Arbeitskräfteerhebung 2025"
+    }
+  },
+  "luecken": [
+    "Eine aktuelle Zahl der freiwillig Arbeitslosenversicherten. Die letzte veröffentlichte Auswertung endet am 30.04.2018.",
+    "Eine Aufschlüsselung der AMS-Vormerkungen nach vorheriger Selbständigkeit. Das AMS-Datawarehouse gliedert nach letzter unselbständiger Beschäftigung.",
+    "Der Anteil ehemals Selbständiger an den Schuldenregulierungsverfahren. Der KSV1870 weist ihn öffentlich nicht aus."
+  ],
+  "unterzeile": "Zwei Arten, denselben Arbeitsmarkt zu zählen · Statistik Austria, 2015 und 2014 · Zahlen zur Versicherung bis 30.04.2018",
+  "hinweis": "Wer den Gewerbeschein zurücklegt und sich meldet, erhöht die Arbeitslosenquote. Als Erwerbstätiger hat er in derselben Rechnung nie gezählt. Wie viele es sind, erhebt niemand.",
+  "quellen": [
+    {
+      "name": "STATISTIK AUSTRIA — „Arbeitslos ist nicht gleich arbeitslos“, Statistische Nachrichten 5/2016",
+      "url": "https://www.statistik.at/fileadmin/pages/261/definition_arbeitslos_ist_nicht_gleich_arbeitslos_statistische_nachrichten.pdf"
+    },
+    {
+      "name": "Sozialministerium — Anfragebeantwortung 696/AB (XXVI. GP), 18.06.2018",
+      "url": "https://www.parlament.gv.at/gegenstand/XXVI/AB/696"
+    },
+    {
+      "name": "WKO — Ein-Personen-Unternehmen in Österreich, Stand Dezember 2025",
+      "url": "https://www.wko.at/zahlen-daten-fakten/epu"
+    },
+    {
+      "name": "SVS — Arbeitslosenversicherung für Gewerbetreibende, Neue Selbständige und Freiberufler, Stand 2026-2",
+      "url": "https://www.svs.at/ALVInfo"
+    }
+  ]
+}

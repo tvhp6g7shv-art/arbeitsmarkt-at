@@ -10,21 +10,22 @@
      Diagramme. defer hält die Reihenfolge ein. Ziffer bei jedem Upload
      hochzählen (Browser-Cache). kpi und einbetten braucht die
      Einbettseite nicht. -->
-<script src="js/kern.js?v=34" defer></script>
-<script src="js/charts/zeitreihe.js?v=34" defer></script>
-<script src="js/charts/ausbildung.js?v=34" defer></script>
-<script src="js/charts/verlauf.js?v=34" defer></script>
-<script src="js/charts/generationen.js?v=34" defer></script>
-<script src="js/charts/karte.js?v=34" defer></script>
-<script src="js/charts/fluss.js?v=34" defer></script>
-<script src="js/charts/dauer.js?v=34" defer></script>
-<script src="js/charts/verfestigung.js?v=34" defer></script>
-<script src="js/charts/saison.js?v=34" defer></script>
-<script src="js/charts/schulung.js?v=34" defer></script>
-<script src="js/charts/eukarte.js?v=34" defer></script>
-<script src="js/charts/eurang.js?v=34" defer></script>
-<script src="js/charts/stellen.js?v=34" defer></script>
-<script src="js/charts/branche.js?v=34" defer></script>
+<script src="js/kern.js?v=35" defer></script>
+<script src="js/charts/zeitreihe.js?v=35" defer></script>
+<script src="js/charts/ausbildung.js?v=35" defer></script>
+<script src="js/charts/verlauf.js?v=35" defer></script>
+<script src="js/charts/generationen.js?v=35" defer></script>
+<script src="js/charts/karte.js?v=35" defer></script>
+<script src="js/charts/fluss.js?v=35" defer></script>
+<script src="js/charts/dauer.js?v=35" defer></script>
+<script src="js/charts/verfestigung.js?v=35" defer></script>
+<script src="js/charts/selbstaendige.js?v=35" defer></script>
+<script src="js/charts/saison.js?v=35" defer></script>
+<script src="js/charts/schulung.js?v=35" defer></script>
+<script src="js/charts/eukarte.js?v=35" defer></script>
+<script src="js/charts/eurang.js?v=35" defer></script>
+<script src="js/charts/stellen.js?v=35" defer></script>
+<script src="js/charts/branche.js?v=35" defer></script>
 <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* ===================================================================
@@ -141,6 +142,8 @@ h2 { font-family: var(--viz-font-display); font-size: 1rem; margin: 0 0 2px; fon
    ist. Unter 560 px stellt saison.js auf EINE Spalte um — dann stehen
    neun Felder untereinander und es braucht deutlich mehr. */
 #c-saison { height: 620px; }
+#c-selbstaendige { height: 470px; }
+@media (max-width: 560px) { #c-selbstaendige { height: 560px; } }
 @media (max-width: 560px) { #c-saison { height: 1020px; } }
 .viz-chart-karte { height: 560px; }
 .viz-chart-karte-eu { height: 700px; }
@@ -205,6 +208,7 @@ const CHARTS = {
   dauer:        { titel: "Dauer der bestehenden Arbeitslosigkeit",                   dateien: ["dauer"],                    bau: (A, d) => A.baueDauer(d.dauer) },
   verfestigung: { titel: "Wie lange Arbeitslosigkeit dauert — nach Alter",           dateien: ["verfestigung"],             bau: (A, d) => A.baueVerfestigung(d.verfestigung), hoch: true },
   saison:       { titel: "Zwei Österreichs: Wann das Jahr schlecht läuft",            dateien: ["bundeslaender"],           bau: (A, d) => A.baueSaison(d.bundeslaender), hoch: true },
+  selbstaendige:{ titel: "Selbständig und arbeitslos — die Zahl, die niemand erhebt", dateien: ["selbstaendige"],          bau: (A, d) => A.baueSelbstaendige(d.selbstaendige), hoch: true },
   schulung:     { titel: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",                   dateien: ["schulung"],                 bau: (A, d) => A.baueSchulung(d.schulung) },
   stellen:      { titel: "Offene Stellen und Arbeitslose je offener Stelle",      dateien: ["stellen"],                  bau: (A, d) => A.baueStellen(d.stellen) },
   branche:      { titel: "Arbeitslosigkeit nach Wirtschaftszweig",      dateien: ["branche"],                  bau: (A, d) => A.baueBranche(d.branche), hoch: true },

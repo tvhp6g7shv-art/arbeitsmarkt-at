@@ -1,10 +1,34 @@
 {
   "hinweis": "Maschinenlesbare Quelle des Changelogs. Wird NICHT von etl/build.py erzeugt und nicht von ihr angefasst — build.py schreibt ausschliesslich die Namen aus seinem ausgaben-Woerterbuch und loescht nichts. Beim Hochzaehlen einer Ausgabe hier oben einen neuen Eintrag ergaenzen. Der Bluesky-Bot liest diese Datei; siehe doku/changelog-bot.md. — Seit 20.08.2026 rendert auch die Changelog-Seite auf arbeitsmarkt-monitor.at aus dieser Datei (Feld `seite`, ein Absatz je Eintrag). Wer hier eine Ausgabe ergaenzt, ergaenzt damit Seite, Fusszeile und Bluesky in einem Zug. — Seit 21.08.2026 gilt fuer Bluesky eine zusaetzliche Bedingung: gepostet wird nur, wenn `charts` mindestens einen Namen enthaelt, der in keiner frueheren Ausgabe stand. Seite und Fusszeile aendern sich weiterhin bei jeder Ausgabe.",
-  "aktuell": "03",
+  "aktuell": "04",
   "basis_url": "https://arbeitsmarkt-monitor.at",
   "changelog_url": "https://arbeitsmarkt-monitor.at/changelog/",
   "pages_url": "https://tvhp6g7shv-art.github.io/arbeitsmarkt-at",
   "ausgaben": [
+    {
+      "nummer": "04",
+      "datum": "2026-08-21",
+      "datum_text": "21. August 2026",
+      "titel": "Selbständig und arbeitslos — die Zahl, die niemand erhebt",
+      "veroeffentlicht": true,
+      "cacheziffer": 36,
+      "charts": [
+        "selbstaendige"
+      ],
+      "social": "Neu: 4,1 Mio. Menschen in Österreich arbeiten — die Arbeitslosenquote rechnet nur mit 3,5. Selbständige stehen im Zähler, sobald sie den Gewerbeschein zurücklegen. Im Nenner standen sie nie.\n\nhttps://arbeitsmarkt-monitor.at/",
+      "abschnitte": [
+        {
+          "chart": "selbstaendige",
+          "titel": "Selbständig und arbeitslos — die Zahl, die niemand erhebt",
+          "alt": "Zwei liegende Balken, jeder auf 100 Prozent normiert. Oben: von 4,1 Millionen Erwerbstätigen im Jahr 2015 gingen nur 3,5 Millionen in die Berechnung der Arbeitslosenquote ein; die restlichen 0,6 Millionen sind Selbständige und mithelfende Familienangehörige, die nicht mitgezählt werden. Unten: von 244.900 Menschen, die 2014 laut Befragung Arbeit suchten, waren 135.400 beim AMS als arbeitslos geführt, 27.100 in Schulung, 14.600 anders geführt und 67.800 gar nicht beim AMS gemeldet. In beiden Balken ist die dunkelste Fläche die Gruppe, die im System nicht vorkommt.",
+          "text": "Zwei liegende Balken zeigen, an welchen zwei Stellen dieselbe Gruppe aus der Statistik fällt: Selbständige stehen im Zähler der Arbeitslosenquote, sobald sie den Gewerbeschein zurücklegen, im Nenner aber nie. Und von den Menschen, die laut Befragung Arbeit suchen, ist gut ein Viertel beim AMS gar nicht gemeldet."
+        }
+      ],
+      "seite": [
+        "Neuer Abschnitt „Selbständig und arbeitslos — die Zahl, die niemand erhebt“: zwei liegende Balken, jeder auf 100&nbsp;% normiert. Sie zeigen, an welchen zwei Stellen dieselbe Gruppe aus der Statistik fällt.",
+        "Von 4,1&nbsp;Mio. Erwerbstätigen gingen 2015 nur 3,5&nbsp;Mio. in die Berechnung der Arbeitslosenquote ein — Selbständige stehen im Zähler, sobald sie den Gewerbeschein zurücklegen, im Nenner nie. Und von 244.900 Menschen, die 2014 laut Befragung Arbeit suchten, waren 67.800 beim AMS gar nicht gemeldet."
+      ]
+    },
     {
       "nummer": "03",
       "datum": "2026-08-20",

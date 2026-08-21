@@ -23,6 +23,12 @@ Vier Sicherungen, damit das trotzdem nicht danebengeht:
     Ausgabe ausliefert wie das Arbeitsverzeichnis. Pages haengt nach einem Push
     ein bis zwei Minuten nach; ohne diese Pruefung fotografiert der Bot die
     VORIGE Fassung und merkt es nicht.
+ 5. NUR BEI NEUER GRAFIK. Gepostet wird eine Ausgabe nur, wenn sie mindestens
+    einen Chart-Namen nennt, der in keiner bereits erledigten Ausgabe vorkam.
+    Eine Ausgabe ohne neue Grafik — CSS, Fusszeile, Text, ueberarbeitete
+    Fassung einer bekannten Grafik — wird still uebersprungen und in
+    gepostet.json mit Grund vermerkt. User-Entscheid 21.08.2026: ein Beitrag
+    ohne neue Grafik hat in der Timeline nichts zu zeigen.
 
 Aufrufe:
     python social/posten.py                 # Trockenlauf
@@ -121,9 +127,39 @@ def schreibe_zustand(zustand: dict) -> None:
     )
 
 
-def pruefe_changelog(daten: dict) -> list[str]:
-    """Alles, was den Bot spaeter zur Laufzeit umbringen wuerde, hier finden."""
+def gesehene_charts(daten: dict, zustand: dict) -> set[str]:
+    """Alle Grafiknamen, die in einer bereits erledigten Ausgabe vorkamen.
+
+    „Erledigt" heisst: steht in gepostet.json. Das umfasst die Vorgeschichte
+    (V 01, V 02) genauso wie die uebersprungenen Ausgaben — beide sind erledigt,
+    ihre Grafiken sind also nicht mehr neu.
+    """
+    charts_je_nummer = {
+        a["nummer"]: set(a.get("charts") or []) for a in daten.get("ausgaben", [])
+    }
+    gesehen: set[str] = set()
+    for eintrag in zustand.get("gepostet", []):
+        gesehen |= charts_je_nummer.get(eintrag.get("nummer"), set())
+    return gesehen
+
+
+def neue_charts(ausgabe: dict, gesehen: set[str]) -> list[str]:
+    """Die Grafiken dieser Ausgabe, die es vorher noch nie gab.
+
+    Reihenfolge bleibt die der Ausgabe, damit die Bilder im Beitrag so stehen
+    wie im changelog.json notiert.
+    """
+    return [c for c in (ausgabe.get("charts") or []) if c not in gesehen]
+
+
+def pruefe_changelog(daten: dict) -> tuple[list[str], list[str]]:
+    """Alles, was den Bot spaeter zur Laufzeit umbringen wuerde, hier finden.
+
+    Gibt (Befunde, Hinweise) zurueck. Befunde lassen den Lauf durchfallen,
+    Hinweise nicht — sie stehen nur im Log.
+    """
     befunde: list[str] = []
+    hinweise: list[str] = []
     nummern = [a["nummer"] for a in daten["ausgaben"]]
 
     if len(nummern) != len(set(nummern)):
@@ -136,7 +172,9 @@ def pruefe_changelog(daten: dict) -> list[str]:
 
     # Was schon in der Timeline steht, wird nicht mehr beurteilt — siehe
     # Kommentar bei der Ankerpruefung weiter unten.
-    erledigt = {e["nummer"] for e in lies_zustand().get("gepostet", [])}
+    zustand = lies_zustand()
+    erledigt = {e["nummer"] for e in zustand.get("gepostet", [])}
+    gesehen = gesehene_charts(daten, zustand)
 
     for ausgabe in daten["ausgaben"]:
         nr = ausgabe["nummer"]
@@ -150,6 +188,24 @@ def pruefe_changelog(daten: dict) -> list[str]:
 
         text = ausgabe.get("social")
         if text is None:
+            continue
+
+        # KEINE NEUE GRAFIK, KEIN BEITRAG. Was nie gepostet wird, muss auch
+        # nicht auf Laenge, Link und Alt-Text geprueft werden — ein Befund
+        # daran wuerde jeden kuenftigen Lauf rot faerben, ohne dass sich am
+        # Ergebnis etwas aendert. Der Hinweis steht trotzdem im Log, damit ein
+        # geschriebener Text nicht unbemerkt liegen bleibt.
+        #
+        # Gilt auch fuer erledigte Ausgaben: deren Grafiken stehen in `gesehen`,
+        # sie fallen also ohnehin hier heraus. Genau so soll es sein — an einem
+        # Beitrag, der in der Timeline steht, ist nichts mehr zu redigieren.
+        if not neue_charts(ausgabe, gesehen):
+            if nr not in erledigt:
+                genannt = ", ".join(ausgabe.get("charts") or []) or "keine"
+                hinweise.append(
+                    f"V {nr}: social-Text vorhanden, aber keine neue Grafik "
+                    f"(genannt: {genannt}) — wird nicht gepostet"
+                )
             continue
 
         laenge = graphemzahl(text)
@@ -210,10 +266,15 @@ def pruefe_changelog(daten: dict) -> list[str]:
             if chart not in beschriftet:
                 befunde.append(f"V {nr}: kein Alt-Text fuer {chart!r}")
 
-    return befunde
+    return befunde, hinweise
 
 
-def naechste_ausgabe(daten: dict, zustand: dict) -> dict | None:
+def offene_ausgaben(daten: dict, zustand: dict) -> list[dict]:
+    """Veroeffentlichte Ausgaben mit Text, die noch nicht erledigt sind.
+
+    Aeltestes zuerst: waere je etwas liegengeblieben, kommt die Geschichte in
+    der richtigen Reihenfolge heraus statt rueckwaerts.
+    """
     erledigt = {e["nummer"] for e in zustand["gepostet"]}
     offen = [
         a for a in daten["ausgaben"]
@@ -221,12 +282,28 @@ def naechste_ausgabe(daten: dict, zustand: dict) -> dict | None:
         and a.get("veroeffentlicht") is True
         and a.get("social")
     ]
-    if not offen:
-        return None
-    # Aeltestes zuerst: waere je etwas liegengeblieben, kommt die Geschichte in
-    # der richtigen Reihenfolge heraus statt rueckwaerts.
     offen.sort(key=lambda a: (a["datum"], a["nummer"]))
-    return offen[0]
+    return offen
+
+
+def naechste_ausgabe(daten: dict, zustand: dict) -> dict | None:
+    """Die aelteste offene Ausgabe, die eine noch nie gezeigte Grafik bringt."""
+    gesehen = gesehene_charts(daten, zustand)
+    for ausgabe in offene_ausgaben(daten, zustand):
+        if neue_charts(ausgabe, gesehen):
+            return ausgabe
+    return None
+
+
+def ohne_neue_grafik(daten: dict, zustand: dict) -> list[dict]:
+    """Offene Ausgaben, die keine neue Grafik bringen — also nie gepostet werden.
+
+    Sie werden im scharfen Lauf in gepostet.json vermerkt, damit sie nicht bei
+    jedem kuenftigen Lauf erneut auftauchen und damit ihre Grafiknamen als
+    gesehen gelten.
+    """
+    gesehen = gesehene_charts(daten, zustand)
+    return [a for a in offene_ausgaben(daten, zustand) if not neue_charts(a, gesehen)]
 
 
 # ---------------------------------------------------------------------------
@@ -347,25 +424,51 @@ def main() -> int:
 
     daten = lies_changelog()
 
-    befunde = pruefe_changelog(daten)
+    befunde, hinweise = pruefe_changelog(daten)
     if befunde:
         print("changelog.json — Befunde:")
         for befund in befunde:
             print(f"  - {befund}")
         return 1
     print(f"changelog.json in Ordnung ({len(daten['ausgaben'])} Ausgaben)")
+    for hinweis in hinweise:
+        print(f"  Hinweis: {hinweis}")
     if argumente.pruefen:
         return 0
 
     zustand = lies_zustand()
+
+    # Ausgaben ohne neue Grafik zuerst abhaken. Das haelt gepostet.json
+    # vollstaendig und verhindert, dass dieselbe Ausgabe bei jedem kuenftigen
+    # Lauf erneut beurteilt wird.
+    uebersprungen = ohne_neue_grafik(daten, zustand)
+    for eintrag in uebersprungen:
+        genannt = ", ".join(eintrag.get("charts") or []) or "keine"
+        print(
+            f"Uebersprungen: V {eintrag['nummer']} — keine neue Grafik "
+            f"(genannt: {genannt})"
+        )
+        if argumente.senden:
+            zustand["gepostet"].append({
+                "nummer": eintrag["nummer"],
+                "datum": eintrag["datum"],
+                "gepostet_am": None,
+                "url": None,
+                "grund": f"keine neue Grafik (genannt: {genannt})",
+            })
+    if uebersprungen and argumente.senden:
+        schreibe_zustand(zustand)
+
     ausgabe = naechste_ausgabe(daten, zustand)
     if ausgabe is None:
-        print("Nichts zu posten — alle veroeffentlichten Ausgaben sind erledigt.")
+        print("Nichts zu posten — keine offene Ausgabe mit neuer Grafik.")
         return 0
 
     nr = ausgabe["nummer"]
+    neu = neue_charts(ausgabe, gesehene_charts(daten, zustand))
     print(f"\nOffen: V {nr} — {ausgabe['titel']} ({ausgabe['datum']})")
     print(f"  {graphemzahl(ausgabe['social'])} Grapheme, {len(ausgabe['charts'])} Bild(er)")
+    print(f"  neue Grafik(en): {', '.join(neu)}")
 
     alt_je_chart = {a["chart"]: a["alt"] for a in ausgabe.get("abschnitte", [])}
     bilder: list[dict] = []

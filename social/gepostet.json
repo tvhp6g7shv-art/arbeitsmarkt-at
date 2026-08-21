@@ -1,5 +1,5 @@
 {
-  "hinweis": "Zustand des Bluesky-Bots. Eine Ausgabe, die hier steht, wird nicht mehr gepostet. V 01 und V 02 sind vor Inbetriebnahme des Bots erschienen und deshalb vorab eingetragen — ohne diesen Vorlauf haette der erste scharfe Lauf die gesamte Versionsgeschichte in die Timeline gekippt. Soll eine dieser Ausgaben doch noch gepostet werden, den Eintrag hier loeschen.",
+  "hinweis": "Zustand des Bluesky-Bots. Eine Ausgabe, die hier steht, wird nicht mehr gepostet. V 01 und V 02 sind vor Inbetriebnahme des Bots erschienen und deshalb vorab eingetragen — ohne diesen Vorlauf haette der erste scharfe Lauf die gesamte Versionsgeschichte in die Timeline gekippt. Soll eine dieser Ausgaben doch noch gepostet werden, den Eintrag hier loeschen. — Seit 21.08.2026 landen hier auch Ausgaben OHNE neue Grafik, mit `gepostet_am: null` und einem `grund`. Sie wurden nie gesendet, gelten aber als erledigt; ihre Grafiknamen zaehlen ab dann als gesehen.",
   "gepostet": [
     {
       "nummer": "01",

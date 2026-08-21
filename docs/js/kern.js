@@ -424,10 +424,19 @@ async function start() {
      522 KB roh (176 KB ueber die Leitung) und damit rund 90 % aller Daten,
      obwohl beide Karten weit unten stehen. Sie werden nachgeladen, sobald
      ihr Abschnitt in Sichtweite kommt — siehe `nachladenBeiSicht` unten. */
+  /* `selbstaendige` steht hier ABSICHTLICH NICHT (ausgeklinkt 21.08.2026).
+     Der Abschnitt war verdrahtet, bevor seine beiden Dateien im Repo waren:
+     `data/selbstaendige.json` und `js/charts/selbstaendige.js` liefern auf
+     Pages 404 (am 21.08. gemessen). Die Folge stand als rote Zeile im Fuss
+     jeder Seite — „Gerade nicht verfuegbar: Selbstaendige, selbstaendige" —
+     also eine Stoerungsmeldung, die die Seite sich selbst gebaut hat.
+     Wieder eintragen, wenn beide Dateien gepusht, der CSS-Abschnitt in
+     `idl.css` steht (Nummer klaeren: 40 ist doppelt vergeben) und die
+     Sichtpruefung erledigt ist. → doku/selbstaendige.md */
   const DATEIEN = ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke",
                    "bundeslaender", "karte", "generationen",
                    "fluss", "dauer", "verfestigung", "schulung", "eu", "eukarte",
-                   "stellen", "branche", "selbstaendige"];
+                   "stellen", "branche"];
   const geladen = {};
   await Promise.all(DATEIEN.map(async (name) => {
     geladen[name] = await hole(name).catch(() => null);
@@ -443,7 +452,6 @@ async function start() {
   const verfestigung = geladen.verfestigung;
   const eu = geladen.eu, stellen = geladen.stellen, branche = geladen.branche;
   const eukarte = geladen.eukarte;
-  const selbstaendige = geladen.selbstaendige;
   /* `let`, nicht `const`: die Geometrie trifft erst beim Heranscrollen ein. */
   let geo = null, eukarteGeo = null;
 
@@ -484,7 +492,7 @@ async function start() {
     if (eukarteGeo) sicher("EU-Karte", () => AMS.baueEuKarte(eukarte, eukarteGeo));
     sicher("Offene Stellen", () => AMS.baueStellen(stellen));
     sicher("Branchen", () => AMS.baueBranche(branche));
-    sicher("Selbständige", () => AMS.baueSelbstaendige(selbstaendige));
+    /* sicher("Selbständige", …) — mit DATEIEN ausgeklinkt, siehe dort. */
   }
   baueAlles();
   beiBreitenwechsel(baueAlles);

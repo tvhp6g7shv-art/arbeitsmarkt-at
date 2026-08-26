@@ -624,12 +624,52 @@ function springeZuAbschnitt() {
   /* Hat der Browser von selbst gescrollt, ist nichts zu tun. */
   if (window.scrollY > 0) return;
 
+  /* Der Sprung wird selbst gerechnet und mit `behavior: "instant"` gesetzt.
+     `behavior: "auto"` heisst laut Spezifikation NICHT "sofort", sondern
+     "nimm das berechnete `scroll-behavior`" — und das Theme setzt
+     `html { scroll-behavior: smooth }`. Die weiche Animation laeuft auf
+     dieser Seite nicht los: gemessen am 26.08.2026 blieb `scrollY` mit
+     "auto" auf 0, waehrend derselbe Aufruf mit "instant" traf. Das
+     Navigationsskript der Menueleiste rechnet aus demselben Grund seit
+     jeher selbst — nur der Tieflink tat es nicht.
+
+     `scroll-margin-top` der Karte haelt den Abstand zum klebrigen Kopf.
+     `scrollIntoView` haette ihn von selbst beruecksichtigt, `scrollTo`
+     nicht — also hier abziehen. */
+  const setzen = (ziel) => {
+    const marge = parseFloat(getComputedStyle(ziel).scrollMarginTop) || 0;
+    const y = Math.max(
+      0, window.scrollY + ziel.getBoundingClientRect().top - marge);
+    try { window.scrollTo({ top: y, left: 0, behavior: "instant" }); }
+    catch (e) { window.scrollTo(0, y); }   /* Browser ohne "instant" */
+  };
+
+  /* Nach dem Sprung waechst die Seite noch: ECharts vermisst neu, sobald
+     die Schrift eintrifft, Tabellen und Hinweiszeilen kommen dazu. Also
+     dreimal nachfassen — aber nur, solange der Leser die Seite nicht
+     selbst bewegt hat. Sonst reisst die Korrektur ihn zurueck. */
+  let eigenerScroll = false;
+  const merken = () => { eigenerScroll = true; };
+  ["wheel", "touchstart", "keydown"].forEach((art) =>
+    window.addEventListener(art, merken, { once: true, passive: true }));
+
+  let nach = 0;
+  const nachfassen = () => {
+    if (eigenerScroll || ++nach > 3) return;
+    const ziel = document.getElementById(kennung);
+    if (!ziel || ziel.getClientRects().length === 0) return;
+    const marge = parseFloat(getComputedStyle(ziel).scrollMarginTop) || 0;
+    if (Math.abs(ziel.getBoundingClientRect().top - marge) > 2) setzen(ziel);
+    setTimeout(nachfassen, 400);
+  };
+
   let versuche = 0;
   const versuchen = () => {
     const ziel = document.getElementById(kennung);
     const sichtbar = ziel && ziel.getClientRects().length > 0;
     if (sichtbar) {
-      ziel.scrollIntoView({ block: "start", behavior: "auto" });
+      setzen(ziel);
+      setTimeout(nachfassen, 400);
       return;
     }
     if (++versuche < 10) setTimeout(versuchen, 300);

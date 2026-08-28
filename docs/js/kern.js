@@ -427,7 +427,7 @@ async function start() {
   const DATEIEN = ["meta", "kpi", "zeitreihe", "ausbildung", "bezirke",
                    "bundeslaender", "karte", "generationen",
                    "fluss", "dauer", "verfestigung", "schulung", "eu", "eukarte",
-                   "stellen", "branche", "selbstaendige"];
+                   "stellen", "branche", "selbstaendige", "festspiele"];
   const geladen = {};
   await Promise.all(DATEIEN.map(async (name) => {
     geladen[name] = await hole(name).catch(() => null);
@@ -444,6 +444,7 @@ async function start() {
   const eu = geladen.eu, stellen = geladen.stellen, branche = geladen.branche;
   const eukarte = geladen.eukarte;
   const selbstaendige = geladen.selbstaendige;
+  const festspiele = geladen.festspiele;
   /* `let`, nicht `const`: die Geometrie trifft erst beim Heranscrollen ein. */
   let geo = null, eukarteGeo = null;
 
@@ -485,6 +486,7 @@ async function start() {
     sicher("Offene Stellen", () => AMS.baueStellen(stellen));
     sicher("Branchen", () => AMS.baueBranche(branche));
     sicher("Selbständige", () => AMS.baueSelbstaendige(selbstaendige));
+    sicher("Kultursaison", () => AMS.baueFestspiele(festspiele));
   }
   baueAlles();
   beiBreitenwechsel(baueAlles);

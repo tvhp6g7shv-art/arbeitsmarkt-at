@@ -448,6 +448,31 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
     <p class="viz-unterzeile" style="margin-top:12px" id="h-saison"></p>
   </section>
 
+  <!-- KULTURSAISON — Salzburg gegen den Rest des Landes.
+       Steht bewusst hier, direkt hinter „Zwei Österreichs": beide Abschnitte
+       zeigen dieselbe Sache auf verschiedenen Ebenen — der eine, dass die
+       Saison regional verschieden liegt, der andere, dass sie das auch
+       zwischen den Branchen tut.
+
+       data-nav wie bei s-saison und s-verfestigung: die Sprungnavigation
+       naehme sonst die volle Ueberschrift in die Pille. -->
+  <section class="viz-karte" id="s-festspiele" data-chart="festspiele"
+           data-nav="Kultursaison" style="display:none">
+    <header class="viz-kopfzeile">
+      <div>
+        <h2>Wann sich die Kulturbranche arbeitslos meldet</h2>
+        <p class="viz-unterzeile" id="u-festspiele"></p>
+      </div>
+      <div class="viz-knopfreihe">
+        <button class="viz-tabelle-schalter" data-ziel="t-festspiele">Tabelle</button>
+        <button class="viz-einbetten" data-chart="festspiele">Einbetten</button>
+      </div>
+    </header>
+    <div class="viz-chart viz-chart-hoch" id="c-festspiele"></div>
+    <div class="viz-verborgen" id="t-festspiele"></div>
+    <p class="viz-unterzeile" style="margin-top:12px" id="h-festspiele"></p>
+  </section>
+
   <!-- 6 — BEZIRKE -->
   <section class="viz-karte">
     <header class="viz-kopfzeile">
@@ -659,26 +684,27 @@ dialog.viz-dialog button.sekundaer { background: none; color: var(--viz-text-2);
      NICHT VERWECHSELN mit der Ausgabenummer „V NN" in der Fußzeile:
      die steht in VERSION in js/kern.js, zählt nur sichtbare
      Änderungen und ist an diese Ziffer hier nicht gekoppelt. -->
-<script src="js/kern.js?v=37" defer></script>
-<script src="js/charts/kpi.js?v=36" defer></script>
-<script src="js/charts/zeitreihe.js?v=36" defer></script>
-<script src="js/charts/ausbildung.js?v=36" defer></script>
-<script src="js/charts/verlauf.js?v=36" defer></script>
-<script src="js/charts/generationen.js?v=36" defer></script>
-<script src="js/charts/karte.js?v=36" defer></script>
-<script src="js/charts/bezirke.js?v=36" defer></script>
-<script src="js/charts/bundeslaender.js?v=36" defer></script>
-<script src="js/charts/saison.js?v=36" defer></script>
-<script src="js/charts/fluss.js?v=36" defer></script>
-<script src="js/charts/dauer.js?v=36" defer></script>
-<script src="js/charts/verfestigung.js?v=36" defer></script>
-<script src="js/charts/selbstaendige.js?v=36" defer></script>
-<script src="js/charts/schulung.js?v=36" defer></script>
-<script src="js/charts/eukarte.js?v=36" defer></script>
-<script src="js/charts/eurang.js?v=36" defer></script>
-<script src="js/charts/stellen.js?v=36" defer></script>
-<script src="js/charts/branche.js?v=36" defer></script>
-<script src="js/einbetten.js?v=36" defer></script>
+<script src="js/kern.js?v=39" defer></script>
+<script src="js/charts/kpi.js?v=39" defer></script>
+<script src="js/charts/zeitreihe.js?v=39" defer></script>
+<script src="js/charts/ausbildung.js?v=39" defer></script>
+<script src="js/charts/verlauf.js?v=39" defer></script>
+<script src="js/charts/generationen.js?v=39" defer></script>
+<script src="js/charts/karte.js?v=39" defer></script>
+<script src="js/charts/bezirke.js?v=39" defer></script>
+<script src="js/charts/bundeslaender.js?v=39" defer></script>
+<script src="js/charts/saison.js?v=39" defer></script>
+<script src="js/charts/festspiele.js?v=39" defer></script>
+<script src="js/charts/fluss.js?v=39" defer></script>
+<script src="js/charts/dauer.js?v=39" defer></script>
+<script src="js/charts/verfestigung.js?v=39" defer></script>
+<script src="js/charts/selbstaendige.js?v=39" defer></script>
+<script src="js/charts/schulung.js?v=39" defer></script>
+<script src="js/charts/eukarte.js?v=39" defer></script>
+<script src="js/charts/eurang.js?v=39" defer></script>
+<script src="js/charts/stellen.js?v=39" defer></script>
+<script src="js/charts/branche.js?v=39" defer></script>
+<script src="js/einbetten.js?v=39" defer></script>
 
 <script>
 /* Startet das Dashboard, sobald ECharts und die js/-Module geladen sind. */

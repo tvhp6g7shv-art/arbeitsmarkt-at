@@ -14,7 +14,7 @@
 const EINBETT_HOEHEN = {
   zeitreihe: 460, ausbildung: 540, verlauf: 540, generationen: 460,
   karte: 680, fluss: 460, dauer: 440, verfestigung: 520, schulung: 420,
-  saison: 620, selbstaendige: 470,
+  saison: 620, selbstaendige: 470, festspiele: 420,
   stellen: 440, branche: 560, eukarte: 680, eurang: 440,
 };
 const EINBETT_TITEL = {
@@ -27,6 +27,7 @@ const EINBETT_TITEL = {
   dauer: "Dauer der bestehenden Arbeitslosigkeit",
   verfestigung: "Wie lange Arbeitslosigkeit dauert — nach Alter",
   saison: "Zwei Österreichs: Wann das Jahr schlecht läuft",
+  festspiele: "Wann sich die Kulturbranche arbeitslos meldet",
   selbstaendige: "Selbständig und arbeitslos — die Zahl, die niemand erhebt",
   schulung: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",
   stellen: "Offene Stellen und Arbeitslose je offener Stelle",

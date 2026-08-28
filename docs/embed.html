@@ -10,22 +10,23 @@
      Diagramme. defer hält die Reihenfolge ein. Ziffer bei jedem Upload
      hochzählen (Browser-Cache). kpi und einbetten braucht die
      Einbettseite nicht. -->
-<script src="js/kern.js?v=37" defer></script>
-<script src="js/charts/zeitreihe.js?v=36" defer></script>
-<script src="js/charts/ausbildung.js?v=36" defer></script>
-<script src="js/charts/verlauf.js?v=36" defer></script>
-<script src="js/charts/generationen.js?v=36" defer></script>
-<script src="js/charts/karte.js?v=36" defer></script>
-<script src="js/charts/fluss.js?v=36" defer></script>
-<script src="js/charts/dauer.js?v=36" defer></script>
-<script src="js/charts/verfestigung.js?v=36" defer></script>
-<script src="js/charts/selbstaendige.js?v=36" defer></script>
-<script src="js/charts/saison.js?v=36" defer></script>
-<script src="js/charts/schulung.js?v=36" defer></script>
-<script src="js/charts/eukarte.js?v=36" defer></script>
-<script src="js/charts/eurang.js?v=36" defer></script>
-<script src="js/charts/stellen.js?v=36" defer></script>
-<script src="js/charts/branche.js?v=36" defer></script>
+<script src="js/kern.js?v=39" defer></script>
+<script src="js/charts/zeitreihe.js?v=39" defer></script>
+<script src="js/charts/ausbildung.js?v=39" defer></script>
+<script src="js/charts/verlauf.js?v=39" defer></script>
+<script src="js/charts/generationen.js?v=39" defer></script>
+<script src="js/charts/karte.js?v=39" defer></script>
+<script src="js/charts/fluss.js?v=39" defer></script>
+<script src="js/charts/dauer.js?v=39" defer></script>
+<script src="js/charts/verfestigung.js?v=39" defer></script>
+<script src="js/charts/selbstaendige.js?v=39" defer></script>
+<script src="js/charts/saison.js?v=39" defer></script>
+<script src="js/charts/festspiele.js?v=39" defer></script>
+<script src="js/charts/schulung.js?v=39" defer></script>
+<script src="js/charts/eukarte.js?v=39" defer></script>
+<script src="js/charts/eurang.js?v=39" defer></script>
+<script src="js/charts/stellen.js?v=39" defer></script>
+<script src="js/charts/branche.js?v=39" defer></script>
 <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* ===================================================================
@@ -208,6 +209,7 @@ const CHARTS = {
   dauer:        { titel: "Dauer der bestehenden Arbeitslosigkeit",                   dateien: ["dauer"],                    bau: (A, d) => A.baueDauer(d.dauer) },
   verfestigung: { titel: "Wie lange Arbeitslosigkeit dauert — nach Alter",           dateien: ["verfestigung"],             bau: (A, d) => A.baueVerfestigung(d.verfestigung), hoch: true },
   saison:       { titel: "Zwei Österreichs: Wann das Jahr schlecht läuft",            dateien: ["bundeslaender"],           bau: (A, d) => A.baueSaison(d.bundeslaender), hoch: true },
+  festspiele:   { titel: "Wann sich die Kulturbranche arbeitslos meldet",             dateien: ["festspiele"],              bau: (A, d) => A.baueFestspiele(d.festspiele), hoch: true },
   selbstaendige:{ titel: "Selbständig und arbeitslos — die Zahl, die niemand erhebt", dateien: ["selbstaendige"],          bau: (A, d) => A.baueSelbstaendige(d.selbstaendige), hoch: true },
   schulung:     { titel: "Personen in Schulung — nicht in der Arbeitslosigkeit enthalten",                   dateien: ["schulung"],                 bau: (A, d) => A.baueSchulung(d.schulung) },
   stellen:      { titel: "Offene Stellen und Arbeitslose je offener Stelle",      dateien: ["stellen"],                  bau: (A, d) => A.baueStellen(d.stellen) },

@@ -11,9 +11,17 @@ import pandas as pd
 
 from gemeinsam import lade_optional, log, prozent, spalte_finden, warnen, zu_zahl
 
-def baue_branche() -> dict | None:
-    """Arbeitslose nach Wirtschaftszweig — Bau und Leiharbeit laufen vor."""
-    tabelle = lade_optional("branche")
+def baue_branche(tabelle: pd.DataFrame | None = None) -> dict | None:
+    """
+    Arbeitslose nach Wirtschaftszweig — Bau und Leiharbeit laufen vor.
+
+    `tabelle` wird seit v-festspiele von aussen hereingereicht: dieselbe
+    Datei traegt zwei Auswertungen, und `lade_optional` hat keinen
+    Zwischenspeicher — ohne Uebergabe wuerden 470 MB zweimal geladen.
+    Ohne Argument verhaelt sich die Funktion wie vorher.
+    """
+    if tabelle is None:
+        tabelle = lade_optional("branche")
     if tabelle is None:
         return None
 

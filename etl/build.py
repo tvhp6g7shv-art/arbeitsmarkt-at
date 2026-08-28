@@ -42,8 +42,8 @@ import datetime as dt
 import pandas as pd
 
 import config
-from gemeinsam import (LZBL, SCHEMA_REPORT, WARNUNGEN, log, schreibe, warnen,
-                       zeitkontext)
+from gemeinsam import (LZBL, SCHEMA_REPORT, WARNUNGEN, lade_optional, log,
+                       schreibe, warnen, zeitkontext)
 import uebersicht
 import regionen
 import ausbildung
@@ -55,6 +55,7 @@ from verfestigung import baue_verfestigung
 from schulung import baue_schulung
 from stellen import baue_stellen
 from branche import baue_branche
+from festspiele import baue_festspiele
 from karte import baue_kartenregionen
 from eukarte import baue_eu_karte
 
@@ -108,6 +109,10 @@ def main() -> None:
 
     # --- Zusatzauswertungen ------------------------------------------------
     log("\n[5b/6] Zusatzauswertungen")
+    # Einmal laden, zweimal auswerten. `AL_NACE_RGS.csv` ist die groesste
+    # Quelle der Pipeline (rund 470 MB); `lade_optional` hat keinen
+    # Zwischenspeicher, ein zweiter Aufruf wuerde den Download verdoppeln.
+    nace_tabelle = lade_optional("branche")
     for name, wert in [
         ("fluss",     baue_fluss(daten)),
         ("dauer",     baue_dauer(LZBL.get("tabelle"))),
@@ -115,7 +120,8 @@ def main() -> None:
         ("schulung",  baue_schulung(mapping)),
         ("eu",        eurostat.hole_eurostat_vergleich()),
         ("stellen",   baue_stellen(daten, mapping)),
-        ("branche",   baue_branche()),
+        ("branche",   baue_branche(nace_tabelle)),
+        ("festspiele", baue_festspiele(nace_tabelle)),
     ]:
         if wert:
             ausgaben[name] = wert

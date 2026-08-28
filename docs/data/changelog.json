@@ -1,10 +1,32 @@
 {
   "hinweis": "Maschinenlesbare Quelle des Changelogs. Wird NICHT von etl/build.py erzeugt und nicht von ihr angefasst — build.py schreibt ausschliesslich die Namen aus seinem ausgaben-Woerterbuch und loescht nichts. Beim Hochzaehlen einer Ausgabe hier oben einen neuen Eintrag ergaenzen. Der Bluesky-Bot liest diese Datei; siehe doku/changelog-bot.md. — Seit 20.08.2026 rendert auch die Changelog-Seite auf arbeitsmarkt-monitor.at aus dieser Datei (Feld `seite`, ein Absatz je Eintrag). Wer hier eine Ausgabe ergaenzt, ergaenzt damit Seite, Fusszeile und Bluesky in einem Zug. — Seit 21.08.2026 gilt fuer Bluesky eine zusaetzliche Bedingung: gepostet wird nur, wenn `charts` mindestens einen Namen enthaelt, der in keiner frueheren Ausgabe stand. Seite und Fusszeile aendern sich weiterhin bei jeder Ausgabe.",
-  "aktuell": "04",
+  "aktuell": "05",
   "basis_url": "https://arbeitsmarkt-monitor.at",
   "changelog_url": "https://arbeitsmarkt-monitor.at/changelog/",
   "pages_url": "https://tvhp6g7shv-art.github.io/arbeitsmarkt-at",
   "ausgaben": [
+    {
+      "nummer": "05",
+      "datum": "2026-08-28",
+      "datum_text": "28. August 2026",
+      "titel": "Wann sich die Kulturbranche arbeitslos meldet",
+      "veroeffentlicht": true,
+      "cacheziffer": 39,
+      "charts": [
+        "festspiele"
+      ],
+      "social": "Neu: Salzburgs Kulturbranche meldet sich im September arbeitslos, das übrige Österreich im Juli. Dazwischen liegen die Festspiele. Über alle Branchen hinweg liegt Salzburgs Berg dagegen im Jänner — die Spitze gehört der Branche, nicht der Region.\n\nhttps://arbeitsmarkt-monitor.at/",
+      "abschnitte": [
+        {
+          "chart": "festspiele",
+          "titel": "Wann sich die Kulturbranche arbeitslos meldet",
+          "alt": "Drei Linien über zwölf Monate zeigen, um wie viel die Zugänge in die Arbeitslosigkeit vom jeweiligen Jahresmittel abweichen. Salzburgs Kulturbranche steigt ab Juli steil an und erreicht im September plus 132 Prozent. Das übrige Österreich hat in derselben Branche seine Spitze im Juli bei plus 46 Prozent und im September nur plus 36. Die gestrichelte dritte Linie zeigt Salzburg über alle Branchen: dort liegt der höchste Wert im Jänner bei plus 37 Prozent, der September ist unauffällig."
+        }
+      ],
+      "seite": [
+        "Neuer Abschnitt „Wann sich die Kulturbranche arbeitslos meldet“: drei Linien über zwölf Monate, je Monat die Abweichung vom Jahresmittel der Zugänge in die Arbeitslosigkeit. Salzburgs Kulturbranche meldet sich im September (+132&nbsp;%), das übrige Österreich im Juli — über alle Branchen hinweg liegt Salzburgs Berg dagegen im Jänner."
+      ]
+    },
     {
       "nummer": "04",
       "datum": "2026-08-21",

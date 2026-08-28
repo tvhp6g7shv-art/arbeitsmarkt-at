@@ -37,9 +37,9 @@ let DATEN_BASIS = "./data";   // In Oxygen: "https://DEIN-GITHUB-NAME.github.io/
    ergänzen. Sonst behauptet die Fußzeile einen Stand, den der
    Changelog nicht kennt. */
 const VERSION = {
-  nummer:     "04",                   // 04: Abschnitt „Selbständig und arbeitslos — die Zahl, die niemand erhebt"
-  datum:      "2026-08-21",           // maschinenlesbar, für <time datetime>
-  datum_text: "21. August 2026",      // sichtbar
+  nummer:     "05",                   // 05: Abschnitt „Wann sich die Kulturbranche arbeitslos meldet"
+  datum:      "2026-08-28",           // maschinenlesbar, für <time datetime>
+  datum_text: "28. August 2026",      // sichtbar
   changelog:  "https://arbeitsmarkt-monitor.at/changelog/",
 };
 

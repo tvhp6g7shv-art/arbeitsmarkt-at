@@ -25,14 +25,31 @@ const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
         diagramme, schrift, istSchmal, legende } = AMS;
 
 /* Drei Stufen derselben monochromen Rampe, keine Kategorienfarben.
-   Serie 1/2/3 ist die einzige Dreierstufung, die in beiden Auslieferungen
-   trägt — die Reihenfolge der Serientöne ist je Palette verschieden.
-   Die gestrichelte dritte Linie ist Kontext, nicht Gegenspieler; der Strich
-   trägt diese Rolle unabhängig von der Farbwahrnehmung. */
+
+   WARUM 1/4/6 UND NICHT 1/2/3. Alle drei Linien teilen sich EINE
+   Zeichenfläche, also gilt für jede die 3 : 1 gegen die Karte. Nachgemessen
+   am ausgelieferten Tokensatz erfüllen das nur die Serien 1, 4 und 6:
+
+     Serie 1  hell 19,80 : 1   dunkel 13,75 : 1
+     Serie 2  hell  2,81       dunkel  6,54     — hell zu schwach
+     Serie 3  hell  1,66       dunkel  3,95     — hell deutlich zu schwach
+     Serie 4  hell  8,45       dunkel 10,22
+     Serie 5  hell  1,32       dunkel  3,00     — hell zu schwach
+     Serie 6  hell  4,74       dunkel  4,97
+
+   Die Rampe ist nach Helligkeit 1 > 4 > 6 > 2 > 3 > 5 geordnet; wer der
+   Nummernfolge folgt, landet bei 2 und 3 und damit unter der Schwelle. Der
+   erste Anlauf tat genau das — die dritte Linie war auf Weiß praktisch
+   unsichtbar.
+
+   Weil die Helligkeitsabstände zwischen 1, 4 und 6 klein sind (hell 2,34 und
+   1,78), tragen zwei weitere Unterschiede mit: die Strichstärke nimmt ab,
+   und die dritte Linie ist gestrichelt. Beides wirkt unabhängig von der
+   Farbwahrnehmung. */
 const LINIEN = [
-  { schluessel: "salzburg", name: "Salzburg · Kultur",              farbe: "--viz-series-1", breite: 2.5, typ: "solid"  },
-  { schluessel: "rest",     name: "Österreich ohne Salzburg · Kultur", farbe: "--viz-series-2", breite: 1.8, typ: "solid"  },
-  { schluessel: "alle",     name: "Salzburg · alle Branchen",        farbe: "--viz-series-3", breite: 1.5, typ: "dashed" },
+  { schluessel: "salzburg", name: "Salzburg · Kultur",                farbe: "--viz-series-1", breite: 2.5, typ: "solid"  },
+  { schluessel: "rest",     name: "Österreich ohne Salzburg · Kultur", farbe: "--viz-series-4", breite: 1.8, typ: "solid"  },
+  { schluessel: "alle",     name: "Salzburg · alle Branchen",          farbe: "--viz-series-6", breite: 1.5, typ: "dashed" },
 ];
 
 function baueFestspiele(daten) {
@@ -61,10 +78,24 @@ function baueFestspiele(daten) {
 
   /* Nur der höchste Punkt jeder Linie bekommt ein Symbol. Zwölf Punkte je
      Linie mal drei Linien sind 36 Kreise auf einer Fläche, auf der es um
-     drei Spitzen geht. */
-  const punkte = (werte) => {
-    const max = Math.max(...werte);
-    return werte.map((w) => (w === max ? 5 : 0));
+     drei Spitzen geht.
+
+     ZWEI ECharts-Fallen hintereinander, beide ohne Fehlermeldung:
+
+     1. `symbolSize` als ARRAY ist [Breite, Höhe] für ALLE Punkte, nicht ein
+        Wert je Punkt. Ein Array aus Nullen und Siebenen ergibt ein Symbol
+        der Größe 0 × 12 — also gar nichts.
+     2. In der Rückruffunktion ist das erste Argument NICHT die Zahl aus der
+        Datenreihe, sondern das kodierte Datenelement. Ein Vergleich
+        `wert === max` trifft deshalb nie, und alle 36 Symbole bekamen die
+        Skalierung 0. Verlässlich ist nur `params.dataIndex`.
+
+     Beides sah im Bild gleich aus: keine Punkte. Gefunden erst, als die
+     Prüfung die Skalierungen aus dem SVG gelesen hat statt die Symbole zu
+     zählen — gezeichnet werden sie nämlich alle, nur mit Größe 0. */
+  const punktGroesse = (werte) => {
+    const spitze = werte.indexOf(Math.max(...werte));
+    return (_wert, params) => (params.dataIndex === spitze ? 7 : 0);
   };
 
   d.setOption({
@@ -90,7 +121,8 @@ function baueFestspiele(daten) {
         formatter: (v) => (v > 0 ? "+" : "") + v + " %" } },
     series: LINIEN.map((l) => ({
       name: l.name, type: "line", data: daten.saison[l.schluessel],
-      symbol: "circle", symbolSize: punkte(daten.saison[l.schluessel]),
+      symbol: "circle", symbolSize: punktGroesse(daten.saison[l.schluessel]),
+      showSymbol: true,
       lineStyle: { width: l.breite, color: stil(l.farbe), type: l.typ },
       itemStyle: { color: stil(l.farbe),
                    borderColor: stil("--viz-surface"), borderWidth: 2 },

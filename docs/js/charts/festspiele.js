@@ -46,10 +46,19 @@ const { stil, zahl, pz, monat, basis, achse, tabelle, setzeText, setzeHtml,
    1,78), tragen zwei weitere Unterschiede mit: die Strichstärke nimmt ab,
    und die dritte Linie ist gestrichelt. Beides wirkt unabhängig von der
    Farbwahrnehmung. */
+/* KURZE NAMEN, WEIL DIE LEGENDE SONST BLAETTERT. Unter 560 px
+   Zeichenflaeche schaltet `legende()` auf `type: "scroll"`; die erste
+   Fassung („Österreich ohne Salzburg · Kultur") passte dort nicht und
+   versteckte zwei der drei Linien hinter einem Pfeil — ausgerechnet in
+   einer Grafik, deren Aussage an der dritten Linie haengt.
+
+   Dass „Kultur" bei den ersten beiden fehlen darf, traegt die
+   Ueberschrift: „Wann sich die Kulturbranche arbeitslos meldet". Der
+   dritte Name muss die Ausnahme benennen, deshalb bleibt er lang. */
 const LINIEN = [
-  { schluessel: "salzburg", name: "Salzburg · Kultur",                farbe: "--viz-series-1", breite: 2.5, typ: "solid"  },
-  { schluessel: "rest",     name: "Österreich ohne Salzburg · Kultur", farbe: "--viz-series-4", breite: 1.8, typ: "solid"  },
-  { schluessel: "alle",     name: "Salzburg · alle Branchen",          farbe: "--viz-series-6", breite: 1.5, typ: "dashed" },
+  { schluessel: "salzburg", name: "Salzburg",                farbe: "--viz-series-1", breite: 2.5, typ: "solid"  },
+  { schluessel: "rest",     name: "übriges Österreich",      farbe: "--viz-series-4", breite: 1.8, typ: "solid"  },
+  { schluessel: "alle",     name: "Salzburg, alle Branchen", farbe: "--viz-series-6", breite: 1.5, typ: "dashed" },
 ];
 
 function baueFestspiele(daten) {
